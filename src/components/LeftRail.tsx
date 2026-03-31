@@ -1,0 +1,275 @@
+import { useState } from "react";
+
+import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import Popover from "@mui/material/Popover";
+import MenuList from "@mui/material/MenuList";
+import MenuItem from "@mui/material/MenuItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Divider from "@mui/material/Divider";
+
+import GraphicEqRoundedIcon from "@mui/icons-material/GraphicEqRounded";
+import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
+import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
+import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import WidgetsOutlinedIcon from "@mui/icons-material/WidgetsOutlined";
+
+import type { LeftRailProps } from "../types/data.type";
+import { COLORS } from "../utils/Colors";
+import { RailItem } from "./RailItem";
+import useAuth from "../hooks/Auth/auth.hook";
+
+export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const { handleLogOut } = useAuth();
+
+  const open = Boolean(anchorEl);
+  const id = open ? "avatar-popover" : undefined;
+
+  return (
+    <Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: { xs: 76, sm: 88, md: 96 },
+        height: "100dvh",
+        bgcolor: COLORS.railBg,
+        borderRight: `1px solid ${COLORS.railBorder}`,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        zIndex: 1200,
+      }}
+    >
+      <Stack
+        alignItems="center"
+        sx={{
+          width: "100%",
+          height: "100%",
+          pt: { xs: 1.5, sm: 2, md: 2.5 },
+          pb: { xs: 1.5, sm: 2, md: 2.5 },
+        }}
+      >
+        <IconButton
+          sx={{
+            width: { xs: 32, sm: 30, md: 38 },
+            height: { xs: 32, sm: 30, md: 38 },
+            borderRadius: "50%",
+            bgcolor: COLORS.primary,
+            color: "#fff",
+            "&:hover": {
+              bgcolor: COLORS.primary,
+              opacity: 0.96,
+            },
+          }}
+        >
+          <GraphicEqRoundedIcon sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
+        </IconButton>
+
+        <Box sx={{ height: { xs: 36, sm: 54, md: 72 } }} />
+
+        <Stack
+          spacing={{ xs: 3, sm: 4.5, md: 5.5 }}
+          alignItems="center"
+          sx={{ width: "100%" }}
+        >
+          <RailItem
+            title="Profile"
+            active={activeRail === "profile"}
+            onClick={() => onChange("profile")}
+            icon={
+              <PersonOutlineRoundedIcon
+                sx={{ fontSize: { xs: 23, sm: 25, md: 27 } }}
+              />
+            }
+          />
+
+          <RailItem
+            title="Messages"
+            active={activeRail === "messages"}
+            onClick={() => onChange("messages")}
+            icon={
+              <ChatBubbleOutlineRoundedIcon
+                sx={{ fontSize: { xs: 16, sm: 18, md: 20 } }}
+              />
+            }
+          />
+
+          <RailItem
+            title="Groups"
+            active={activeRail === "groups"}
+            onClick={() => onChange("groups")}
+            icon={
+              <GroupOutlinedIcon
+                sx={{ fontSize: { xs: 22, sm: 24, md: 26 } }}
+              />
+            }
+          />
+
+          <RailItem
+            title="Contact"
+            active={activeRail === "contact"}
+            onClick={() => onChange("contact")}
+            icon={
+              <ManageAccountsOutlinedIcon
+                sx={{ fontSize: { xs: 22, sm: 24, md: 26 } }}
+              />
+            }
+          />
+
+          <RailItem
+            title="Settings"
+            active={activeRail === "settings"}
+            onClick={() => onChange("settings")}
+            icon={
+              <SettingsOutlinedIcon
+                sx={{ fontSize: { xs: 22, sm: 24, md: 26 } }}
+              />
+            }
+          />
+        </Stack>
+
+        <Box sx={{ flex: 1 }} />
+
+        <Stack
+          spacing={{ xs: 2.5, sm: 3, md: 3.5 }}
+          alignItems="center"
+          sx={{ width: "100%" }}
+        >
+          <RailItem
+            title="Language"
+            icon={
+              <LanguageOutlinedIcon
+                sx={{ fontSize: { xs: 22, sm: 24, md: 26 } }}
+              />
+            }
+          />
+
+          <Avatar
+            aria-describedby={id}
+            onClick={handleClick}
+            src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80&auto=format&fit=crop"
+            sx={{
+              width: { xs: 36, sm: 40, md: 44 },
+              height: { xs: 36, sm: 40, md: 44 },
+              cursor: "pointer",
+            }}
+          />
+        </Stack>
+      </Stack>
+
+      <Popover
+        id={id}
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        disableScrollLock
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        slotProps={{
+          paper: {
+            sx: {
+              width: 200,
+              borderRadius: "14px",
+              mt: -1,
+              ml: 1.5,
+              boxShadow: "0px 8px 30px rgba(0,0,0,0.12)",
+              border: "1px solid #ECECF3",
+              overflow: "hidden",
+            },
+          },
+        }}
+      >
+        <MenuList sx={{ py: 1 }}>
+          <MenuItem
+            onClick={handleClose}
+            sx={{
+              px: 2,
+              py: 1.5,
+              minHeight: 48,
+            }}
+          >
+            <ListItemText
+              primary="Profile"
+              primaryTypographyProps={{
+                fontSize: 16,
+                fontWeight: 500,
+                color: "#4A4F63",
+              }}
+            />
+            <ListItemIcon sx={{ minWidth: 32, justifyContent: "flex-end" }}>
+              <WidgetsOutlinedIcon sx={{ fontSize: 20, color: "#7E8499" }} />
+            </ListItemIcon>
+          </MenuItem>
+
+          <MenuItem
+            onClick={handleClose}
+            sx={{
+              px: 2,
+              py: 1.5,
+              minHeight: 48,
+            }}
+          >
+            <ListItemText
+              primary="Setting"
+              primaryTypographyProps={{
+                fontSize: 16,
+                fontWeight: 500,
+                color: "#4A4F63",
+              }}
+            />
+            <ListItemIcon sx={{ minWidth: 32, justifyContent: "flex-end" }}>
+              <SettingsOutlinedIcon sx={{ fontSize: 20, color: "#7E8499" }} />
+            </ListItemIcon>
+          </MenuItem>
+
+          <Divider />
+
+          <MenuItem
+            onClick={handleLogOut}
+            sx={{
+              px: 2,
+              py: 1.5,
+              minHeight: 48,
+            }}
+          >
+            <ListItemText
+              primary="Log out"
+              primaryTypographyProps={{
+                fontSize: 16,
+                fontWeight: 500,
+                color: "#4A4F63",
+              }}
+            />
+            <ListItemIcon sx={{ minWidth: 32, justifyContent: "flex-end" }}>
+              <LogoutRoundedIcon sx={{ fontSize: 20, color: "#7E8499" }} />
+            </ListItemIcon>
+          </MenuItem>
+        </MenuList>
+      </Popover>
+    </Box>
+  );
+}
