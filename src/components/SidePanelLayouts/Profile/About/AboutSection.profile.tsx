@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type SetStateAction, type SyntheticEvent } from "react";
+import { useState, type SyntheticEvent } from "react";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -20,29 +20,47 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 import type { EditableFieldKey, ProfileData } from "../../../../types/data.type";
 import { InfoRow } from "./InfoRow.profile";
+import { useForm } from "react-hook-form";
 
 type AboutSectionProps = {
     profile: ProfileData;
-    setProfile: Dispatch<SetStateAction<ProfileData>>;
     expanded: boolean;
     onChange: (_event: SyntheticEvent, isExpanded: boolean) => void;
+    onUpdate: (payload: object) => void
 };
+
+type ChangePasswordForm = {
+    currentPass: string
+    password: string
+    confirmPass: string
+}
 
 export function AboutSection({
     profile,
-    setProfile,
     expanded,
     onChange,
+    onUpdate
 }: AboutSectionProps) {
     const [editingField, setEditingField] = useState<EditableFieldKey | null>(null);
     const [editValue, setEditValue] = useState("");
     const [openPasswordModal, setOpenPasswordModal] = useState(false);
+    const [loading, setLoading] = useState<boolean>(false);
 
-    const [passwordForm, setPasswordForm] = useState({
-        currentPassword: "",
-        newPassword: "",
-        confirmNewPassword: "",
-    });
+    const {
+        register,
+        handleSubmit,
+        watch,
+        reset,
+        formState: { errors },
+    } = useForm<ChangePasswordForm>({
+        defaultValues: {
+            currentPass: "",
+            password: "",
+            confirmPass: ""
+        }
+    })
+
+    const password = watch("password")
 
     const handleStartEdit = (field: EditableFieldKey, value: string) => {
         setEditingField(field);
@@ -54,43 +72,45 @@ export function AboutSection({
         setEditValue("");
     };
 
-    const handleSaveEdit = () => {
-        if (!editingField) return;
+    const handleSaveEdit = async () => {
+        try {
+            if (!editingField) return;
 
-        setProfile((prev) => ({
-            ...prev,
-            [editingField]: editValue,
-        }));
+            const payload = {
+                [editingField]: editValue
+            }
 
-        setEditingField(null);
-        setEditValue("");
+            await onUpdate(payload)
+
+            setEditingField(null);
+            setEditValue("");
+        } catch (error: any) {
+            console.log(
+                "Error update profile data:",
+                error?.response?.data?.message || error?.message
+            )
+        }
     };
 
     const handleClosePasswordModal = () => {
         setOpenPasswordModal(false);
-        setPasswordForm({
-            currentPassword: "",
-            newPassword: "",
-            confirmNewPassword: "",
-        });
+        reset()
     };
 
-    const handleSubmitPassword = () => {
-        if (
-            !passwordForm.currentPassword ||
-            !passwordForm.newPassword ||
-            !passwordForm.confirmNewPassword
-        ) {
-            return;
+    const handleSubmitPassword = async (payload: ChangePasswordForm) => {
+        try {
+            setLoading(true)
+            await onUpdate(payload)
+            handleClosePasswordModal()
+        } catch (error: any) {
+            console.log(
+                "Error update profile data:",
+                error?.response?.data?.message || error?.message
+            )
+        } finally {
+            setLoading(false)
         }
-
-        if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
-            return;
-        }
-
-        console.log("change-password", passwordForm);
-        handleClosePasswordModal();
-    };
+    }
 
     return (
         <>
@@ -194,7 +214,7 @@ export function AboutSection({
                                 },
                             }}
                         >
-                            Đổi mật khẩu
+                            Change Password
                         </Button>
                     </Box>
                 </AccordionDetails>
@@ -220,7 +240,7 @@ export function AboutSection({
                         pr: 6,
                     }}
                 >
-                    Đổi mật khẩu
+                    Change Password
                     <IconButton
                         onClick={handleClosePasswordModal}
                         sx={{
@@ -234,95 +254,108 @@ export function AboutSection({
                     </IconButton>
                 </DialogTitle>
 
-                <DialogContent sx={{ pt: "8px !important" }}>
-                    <Stack spacing={2}>
-                        <TextField
-                            label="Mật khẩu hiện tại"
-                            type="password"
-                            fullWidth
-                            value={passwordForm.currentPassword}
-                            onChange={(event) =>
-                                setPasswordForm((prev) => ({
-                                    ...prev,
-                                    currentPassword: event.target.value,
-                                }))
-                            }
+                <form
+                    onSubmit={handleSubmit(handleSubmitPassword)}
+                >
+                    <DialogContent sx={{ pt: '8px !important' }}>
+                        <Stack spacing={2}>
+                            <TextField
+                                label="Mật khẩu hiện tại"
+                                type="password"
+                                fullWidth
+                                {...register("currentPass", {
+                                    required: "Vui lòng nhập vào mật khẩu hiện tại",
+                                },
+                                )}
+                                error={!!errors.currentPass}
+                                helperText={errors.currentPass?.message}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 2.5,
+                                    },
+                                }}
+                            />
+
+                            <TextField
+                                label="Mật khẩu mới"
+                                type="password"
+                                fullWidth
+                                {...register("password", {
+                                    required: "Vui lòng nhập vào mật khẩu",
+                                    minLength: {
+                                        value: 8,
+                                        message: "Mật khẩu phải có ít nhất 8 ký tự",
+                                    },
+                                    pattern: {
+                                        value:
+                                            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/,
+                                        message:
+                                            "Mật khẩu phải gồm ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt",
+                                    },
+                                })}
+                                error={!!errors.password}
+                                helperText={errors.password?.message}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 2.5,
+                                    },
+                                }}
+                            />
+
+                            <TextField
+                                label="Xác nhận mật khẩu mới"
+                                type="password"
+                                fullWidth
+                                {...register("confirmPass", {
+                                    required: "Vui lòng xác nhận mật khẩu",
+                                    validate: (value) =>
+                                        value === password || "Mật khẩu xác nhận không khớp",
+                                })}
+                                error={!!errors.confirmPass}
+                                helperText={errors.confirmPass?.message}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 2.5,
+                                    },
+                                }}
+                            />
+                        </Stack>
+                    </DialogContent>
+
+                    <DialogActions sx={{ px: 3, pb: 2, pt: 1 }}>
+                        <Button
+                            type="button"
+                            onClick={handleClosePasswordModal}
                             sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    borderRadius: 2.5,
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                color: '#7b8190',
+                            }}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            disabled={loading}
+                            sx={{
+                                borderRadius: 2.5,
+                                px: 2,
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                boxShadow: 'none',
+                                bgcolor: '#6f63f6',
+                                '&:hover': {
+                                    boxShadow: 'none',
+                                    bgcolor: '#5f53eb',
                                 },
                             }}
-                        />
-
-                        <TextField
-                            label="Mật khẩu mới"
-                            type="password"
-                            fullWidth
-                            value={passwordForm.newPassword}
-                            onChange={(event) =>
-                                setPasswordForm((prev) => ({
-                                    ...prev,
-                                    newPassword: event.target.value,
-                                }))
-                            }
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    borderRadius: 2.5,
-                                },
-                            }}
-                        />
-
-                        <TextField
-                            label="Xác nhận mật khẩu mới"
-                            type="password"
-                            fullWidth
-                            value={passwordForm.confirmNewPassword}
-                            onChange={(event) =>
-                                setPasswordForm((prev) => ({
-                                    ...prev,
-                                    confirmNewPassword: event.target.value,
-                                }))
-                            }
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    borderRadius: 2.5,
-                                },
-                            }}
-                        />
-                    </Stack>
-                </DialogContent>
-
-                <DialogActions sx={{ px: 3, pb: 2, pt: 1 }}>
-                    <Button
-                        onClick={handleClosePasswordModal}
-                        sx={{
-                            textTransform: "none",
-                            fontWeight: 700,
-                            color: "#7b8190",
-                        }}
-                    >
-                        Hủy
-                    </Button>
-
-                    <Button
-                        onClick={handleSubmitPassword}
-                        variant="contained"
-                        sx={{
-                            borderRadius: 2.5,
-                            px: 2,
-                            textTransform: "none",
-                            fontWeight: 700,
-                            boxShadow: "none",
-                            bgcolor: "#6f63f6",
-                            "&:hover": {
-                                boxShadow: "none",
-                                bgcolor: "#5f53eb",
-                            },
-                        }}
-                    >
-                        Cập nhật
-                    </Button>
-                </DialogActions>
+                        >
+                            Update
+                        </Button>
+                    </DialogActions>
+                </form>
             </Dialog>
         </>
     );

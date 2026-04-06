@@ -107,18 +107,24 @@ export function InfoRow({
                             }}
                         />
 
-                        <Stack direction="row" spacing={1}>
+                        <Stack direction="row" spacing={0.75} sx={{ flexShrink: 0 }}>
                             <Button
                                 onClick={onSaveEdit}
-                                startIcon={<SaveRoundedIcon />}
+                                startIcon={<SaveRoundedIcon sx={{ fontSize: 18 }} />}
                                 variant="contained"
+                                size="small"
                                 sx={{
-                                    minWidth: 100,
-                                    borderRadius: 2.5,
+                                    minWidth: 0,
+                                    px: 1.25,
+                                    height: 36,
+                                    borderRadius: 2,
                                     textTransform: 'none',
                                     fontWeight: 700,
                                     boxShadow: 'none',
                                     bgcolor: '#6f63f6',
+                                    '& .MuiButton-startIcon': {
+                                        mr: 0.5,
+                                    },
                                     '&:hover': {
                                         boxShadow: 'none',
                                         bgcolor: '#5f53eb',
@@ -131,11 +137,14 @@ export function InfoRow({
                             <Button
                                 onClick={onCancelEdit}
                                 variant="text"
+                                size="small"
                                 sx={{
-                                    minWidth: 90,
-                                    borderRadius: 2.5,
+                                    minWidth: 0,
+                                    px: 1,
+                                    height: 36,
+                                    borderRadius: 2,
                                     textTransform: 'none',
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     color: '#7b8190',
                                 }}
                             >

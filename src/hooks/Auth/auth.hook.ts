@@ -64,7 +64,6 @@ function useAuth() {
       setLoading(true);
 
       const res =  await dispatch(onLogin({ email, password, deviceId })).unwrap();
-      console.log(res);
       
       if (res) {
         enqueueSnackbar("Đăng nhập thành công", {
@@ -74,7 +73,7 @@ function useAuth() {
       }
     } catch (error: any) {
       console.error("Login failed:", error.response?.data?.message);
-      enqueueSnackbar(error?.response?.data?.message || "Đăng nhập thất bại", {
+      enqueueSnackbar(error?.response?.data?.message, {
         variant: "error",
       });
       throw error;

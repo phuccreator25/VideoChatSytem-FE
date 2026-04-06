@@ -1,31 +1,43 @@
-import { useEffect, useState } from "react";
-import type { ProfileData } from "../../types/data.type";
-import userApi from "../../api/User.api";
+import { useEffect } from "react";
+import { enqueueSnackbar } from "notistack";
+import { onGetProfile, onUpdateProfile } from "../../redux/auth.redux";
+import type { AppDispatch } from "../../redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@reduxjs/toolkit/query";
 
 export const useProfile = () => {
-    const [initialProfile, setProfile] = useState<ProfileData>({
-        fullname: "Patricia Smith",
-        username: "patricia.smith",
-        avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-        email: "saaaa"
-    });
+  const dispatch = useDispatch<AppDispatch>();
 
-    useEffect(() => {
-        const fetchProfileData = async () => {
-            try {
-                const response = await userApi.onGetDataUser();
-                setProfile(response.data.data);
-            } catch (err: any) {
-                console.log('Error fetching profile data:', err.response?.data?.message || err.message);
-                throw err;
-            }
-        };
+  const initialProfile = useSelector(
+    (state: RootState) => state.user.currentUser,
+  );
 
-        fetchProfileData();
-    }, []);
+  useEffect(() => {
+    dispatch(onGetProfile()).unwrap();
+  }, [dispatch]);
 
-    return {
-        initialProfile,
-        setProfile
-    };
+  const handleUpdateUser = async (payload: object) => {
+    try {
+      if (!payload) return;
+
+      const res = await dispatch(onUpdateProfile(payload)).unwrap();
+        
+      if (res) {
+        enqueueSnackbar("Cập nhật thông tin thành công", {
+          variant: "success",
+        });
+      }
+    } catch (error : any) {
+      console.log(
+        "Error update profile data:",
+        error?.response?.data?.message || error?.message,
+      );
+      throw error;
+    }
+  };
+
+  return {
+    initialProfile,
+    handleUpdateUser,
+  };
 };

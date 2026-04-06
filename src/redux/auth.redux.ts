@@ -3,6 +3,7 @@ import type { ProfileData } from '../types/data.type'
 import type { RootState } from './store'
 import authApi from '../api/Auth.api'
 import type { typeLogin } from '../types/auth.type'
+import userApi from '../api/User.api'
 
 const initialState: { currentUser: ProfileData | null } = {
   currentUser: null
@@ -12,6 +13,22 @@ export const onLogin = createAsyncThunk(
   'user/onLogin',
   async ({ email, password, deviceId }: typeLogin) => {
     const res = await authApi.onLogin({ email, password, deviceId })
+    return res.data.data as ProfileData
+  }
+)
+
+export const onUpdateProfile = createAsyncThunk(
+  'user/onUpdate',
+  async (payload: object) => {
+    const res = await userApi.onUpdateUser(payload)
+    return res.data.data as ProfileData
+  }
+)
+
+export const onGetProfile = createAsyncThunk(
+  'user/onGetProfile',
+  async () => {
+    const res = await userApi.onGetDataUser();
     return res.data.data as ProfileData
   }
 )
@@ -26,6 +43,12 @@ const userSlice = createSlice({
   },
   extraReducers: builder => {
     builder.addCase(onLogin.fulfilled, (state, action) => {
+      state.currentUser = action.payload
+    })
+    builder.addCase(onUpdateProfile.fulfilled, (state, action) => {
+      state.currentUser = action.payload
+    })
+    builder.addCase(onGetProfile.fulfilled, (state, action) => {
       state.currentUser = action.payload
     })
   }

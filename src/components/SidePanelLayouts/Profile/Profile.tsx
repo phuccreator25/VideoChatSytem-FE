@@ -62,7 +62,7 @@ type ExpandedPanel = "about" | "files" | false;
 
 export function MyProfile() {
 
-    const { initialProfile, setProfile } = useProfile();
+    const { initialProfile, handleUpdateUser } = useProfile();
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -79,13 +79,6 @@ export function MyProfile() {
     const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
-
-        const previewUrl = URL.createObjectURL(file);
-
-        setProfile((prev) => ({
-            ...prev,
-            avatar: previewUrl,
-        }));
 
         console.log("avatar-file", file);
     };
@@ -236,18 +229,17 @@ export function MyProfile() {
                                 fontSize: 16,
                                 lineHeight: 1.7,
                                 color: "#7b8198",
-                                textAlign: "left",
+                                textAlign: "center",
                             }}
                         >
-                            Cập nhật thông tin hồ sơ của bạn, quản lý avatar và thay đổi mật khẩu để bảo vệ tài
-                            khoản tốt hơn.
+                            Update your profile information, manage your avatar, and change your password to better protect your account.
                         </Typography>
 
                         <AboutSection
                             profile={initialProfile}
-                            setProfile={setProfile}
                             expanded={expandedPanel === "about"}
                             onChange={handleAccordionChange("about")}
+                            onUpdate={handleUpdateUser}
                         />
 
                         <AttachedFilesSection
