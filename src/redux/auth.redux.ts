@@ -25,6 +25,14 @@ export const onUpdateProfile = createAsyncThunk(
   }
 )
 
+export const onUpdateAvatar = createAsyncThunk(
+  'user/onUpdateAvatar',
+  async (payload: FormData) => {
+    const res = await userApi.onUpdateAvatar(payload)
+    return res.data.data as ProfileData
+  }
+)
+
 export const onGetProfile = createAsyncThunk(
   'user/onGetProfile',
   async () => {
@@ -49,6 +57,9 @@ const userSlice = createSlice({
       state.currentUser = action.payload
     })
     builder.addCase(onGetProfile.fulfilled, (state, action) => {
+      state.currentUser = action.payload
+    })
+    builder.addCase(onUpdateAvatar.fulfilled, (state, action) => {
       state.currentUser = action.payload
     })
   }

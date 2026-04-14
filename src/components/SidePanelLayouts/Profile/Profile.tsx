@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type SyntheticEvent } from "react";
+import { useState, type SyntheticEvent } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -10,14 +10,13 @@ import { useTheme } from "@mui/material/styles";
 
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-import styled from "@emotion/styled";
-
 import { customScrollbarSx } from "../../../utils/CustomScroll";
 import type { FileItem } from "../../../types/data.type";
 import { OpenAvatar } from "./OpenAvatar/OpenAvatar.profile";
 import { AboutSection } from "./About/AboutSection.profile";
 import { AttachedFilesSection } from "./AttachedFile/AttachedSection.profile";
 import { useProfile } from "../../../hooks/Profile/profile.hook";
+import { Alert } from "@mui/material";
 
 const attachedFiles: FileItem[] = [
     {
@@ -46,23 +45,11 @@ const attachedFiles: FileItem[] = [
     },
 ];
 
-const VisuallyHiddenInput = styled("input")({
-    clip: "rect(0 0 0 0)",
-    clipPath: "inset(50%)",
-    height: 1,
-    overflow: "hidden",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    whiteSpace: "nowrap",
-    width: 1,
-});
 
 type ExpandedPanel = "about" | "files" | false;
 
 export function MyProfile() {
-
-    const { initialProfile, handleUpdateUser } = useProfile();
+    const { initialProfile, handleUpdateUser, handleAvatarChange, messageFile, showAlert } =  useProfile();
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -72,16 +59,9 @@ export function MyProfile() {
 
     const handleAccordionChange =
         (panel: "about" | "files") =>
-        (_event: SyntheticEvent, isExpanded: boolean) => {
-            setExpandedPanel(isExpanded ? panel : false);
-        };
-
-    const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        console.log("avatar-file", file);
-    };
+            (_event: SyntheticEvent, isExpanded: boolean) => {
+                setExpandedPanel(isExpanded ? panel : false);
+            };
 
     return (
         <>
@@ -144,8 +124,8 @@ export function MyProfile() {
                                 }}
                             >
                                 <Avatar
-                                    src={initialProfile.avatar}
-                                    alt={initialProfile.fullname}
+                                    src={initialProfile?.avatar}
+                                    alt={initialProfile?.fullname}
                                     onClick={() => setOpenAvatarReview(true)}
                                     sx={{
                                         width: 96,
@@ -162,18 +142,36 @@ export function MyProfile() {
                                 profile={initialProfile}
                             />
 
+                            {showAlert && (
+                                <Alert sx={{ mb: 2, mt: 2, borderRadius: 3 }} severity="warning">
+                                    {messageFile}
+                                </Alert>
+                            )}
+
                             <Button
                                 component="label"
-                                role={undefined}
                                 variant="contained"
-                                tabIndex={-1}
                                 startIcon={<CloudUploadIcon />}
+                                sx={{
+                                    borderRadius: '12px',
+                                    px: 2.5,
+                                    py: 1.2,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    fontSize: '15px',
+                                    boxShadow: 'none',
+                                    background: 'linear-gradient(135deg, #1976d2, #42a5f5)',
+                                    '&:hover': {
+                                        boxShadow: '0 8px 20px rgba(25, 118, 210, 0.25)'
+                                    }
+                                }}
                             >
-                                Upload files
-                                <VisuallyHiddenInput
+                                Upload File
+                                <input
+                                    hidden
                                     type="file"
+                                    accept="image/*"
                                     onChange={handleAvatarChange}
-                                    multiple
                                 />
                             </Button>
 
@@ -186,7 +184,7 @@ export function MyProfile() {
                                     textAlign: "left",
                                 }}
                             >
-                                {initialProfile.fullname}
+                                {initialProfile?.fullname}
                             </Typography>
 
                             <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.75 }}>
@@ -205,7 +203,7 @@ export function MyProfile() {
                                         fontWeight: 500,
                                     }}
                                 >
-                                    {initialProfile.isActive ? "Active" : "Inactive"}
+                                    {initialProfile?.isActive ? "Active" : "Inactive"}
                                 </Typography>
                             </Stack>
                         </Box>

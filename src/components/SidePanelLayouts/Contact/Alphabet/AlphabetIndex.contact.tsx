@@ -3,9 +3,35 @@ import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 
 import { ContactRow } from "../ContactRow/ContactRow.contact";
-import type { ContactSection } from "../../../../types/data.type";
+import type { contacts, ContactSection } from "../../../../types/contact.type";
 
-export function AlphabetIndex({ section }: { section: ContactSection }) {
+type AlphabetType = {
+  section: ContactSection,
+  anchorEl: HTMLElement | null,
+  handleClosePopover: () => void,
+  handleOpenPopover: (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => void;
+  setOpenSetNicknameModal: React.Dispatch<React.SetStateAction<boolean>>
+  openSetNicknameModal:boolean,
+  onUpdateNickName: (data: contacts) => void
+  selectedContact: contacts | null,
+  setSelectedContact: React.Dispatch<React.SetStateAction<contacts | null>>
+}
+
+export function AlphabetIndex(
+  {
+    section,
+    anchorEl,
+    handleClosePopover,
+    handleOpenPopover,
+    setOpenSetNicknameModal,
+    onUpdateNickName,
+    openSetNicknameModal,
+    selectedContact,
+    setSelectedContact
+  }: AlphabetType
+) {
   return (
     <Box sx={{ mb: 2.5 }}>
       <Typography
@@ -19,12 +45,24 @@ export function AlphabetIndex({ section }: { section: ContactSection }) {
           letterSpacing: 0.4,
         }}
       >
-        {section.letter}aaa
+        {/* Key được UpCase IN HOA */}
+        {section.letter}
       </Typography>
 
       <List disablePadding>
         {section.items.map((item) => (
-          <ContactRow key={item.key} item={item} />
+          <ContactRow 
+          key={item.userId} 
+          item={item} 
+          anchorEl={anchorEl} 
+          handleClosePopover={handleClosePopover} 
+          handleOpenPopover={handleOpenPopover} 
+          setOpenSetNicknameModal={setOpenSetNicknameModal}
+            openSetNicknameModal={openSetNicknameModal}
+            onUpdateNickName={onUpdateNickName}
+            selectedContact={selectedContact}
+            setSelectedContact={setSelectedContact}
+          />
         ))}
       </List>
     </Box>

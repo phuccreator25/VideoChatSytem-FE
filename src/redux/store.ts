@@ -12,6 +12,8 @@ import {
 } from 'redux-persist'
 import { userReducer } from './auth.redux'
 import createWebStorage from 'redux-persist/es/storage/createWebStorage'
+import { invitationReducer } from './invitation.redux'
+import { contactReducer } from './contact.redux'
 const storage = createWebStorage('local')
 
 const persistConfig = {
@@ -21,7 +23,9 @@ const persistConfig = {
 }
 
 const rootReducer = combineReducers({
-  user: userReducer
+  user: userReducer,
+  invitation: invitationReducer,
+  contact: contactReducer
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

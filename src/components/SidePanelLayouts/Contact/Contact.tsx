@@ -1,3 +1,4 @@
+import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import InputBase from "@mui/material/InputBase";
@@ -11,149 +12,58 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
 
 import { customScrollbarSx } from "../../../utils/CustomScroll";
-import type { ContactSection } from "../../../types/data.type";
 import { AlphabetIndex } from "./Alphabet/AlphabetIndex.contact";
+import ModalAddContactModal from "./ModalAddContact/ModalAddContact.contact";
+import useInvitation from "../../../hooks/Invitation/Invitation.hook";
+import { InvitationPopover } from "./Invitation/InvitationPopover";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../redux/store";
+import { useContact } from "../../../hooks/Contact/contact.hook";
 
-const contactSections: ContactSection[] = [
-  {
-    key: "a",
-    letter: "A",
-    items: [
-      {
-        key: "albert-rodarte",
-        name: "Albert Rodarte",
-        onClick: () => {
-          console.log("Albert Rodarte");
-        },
-      },
-      {
-        key: "allison-etter",
-        name: "Allison Etter",
-        onClick: () => {
-          console.log("Allison Etter");
-        },
-      },
-    ],
-  },
-  {
-    key: "c",
-    letter: "C",
-    items: [
-      {
-        key: "craig-smiley",
-        name: "Craig Smiley",
-        onClick: () => {
-          console.log("Craig Smiley");
-        },
-      },
-    ],
-  },
-  {
-    key: "d",
-    letter: "D",
-    items: [
-      {
-        key: "daniel-clay",
-        name: "Daniel Clay",
-        onClick: () => {
-          console.log("Daniel Clay");
-        },
-      },
-      {
-        key: "doris-brown",
-        name: "Doris Brown",
-        onClick: () => {
-          console.log("Doris Brown");
-        },
-      },
-    ],
-  },
-  {
-    key: "i",
-    letter: "I",
-    items: [
-      {
-        key: "iris-wells",
-        name: "Iris Wells",
-        onClick: () => {
-          console.log("Iris Wells");
-        },
-      },
-    ],
-  },
-  {
-    key: "j",
-    letter: "J",
-    items: [
-      {
-        key: "juan-flakes",
-        name: "Juan Flakes",
-        onClick: () => {
-          console.log("Juan Flakes");
-        },
-      },
-      {
-        key: "john-hall",
-        name: "John Hall",
-        onClick: () => {
-          console.log("John Hall");
-        },
-      },
-      {
-        key: "joy-southern",
-        name: "Joy Southern",
-        onClick: () => {
-          console.log("Joy Southern");
-        },
-      },
-    ],
-  },
-  {
-    key: "m",
-    letter: "M",
-    items: [
-      {
-        key: "mary-farmer",
-        name: "Mary Farmer",
-        onClick: () => {
-          console.log("Mary Farmer");
-        },
-      },
-      {
-        key: "mark-messer",
-        name: "Mark Messer",
-        onClick: () => {
-          console.log("Mark Messer");
-        },
-      },
-      {
-        key: "michael-hinton",
-        name: "Michael Hinton",
-        onClick: () => {
-          console.log("Michael Hinton");
-        },
-      },
-    ],
-  },
-  {
-    key: "o",
-    letter: "O",
-    items: [
-      {
-        key: "ossie-wilson",
-        name: "Ossie Wilson",
-        onClick: () => {
-          console.log("Ossie Wilson");
-        },
-      },
-    ],
-  },
-];
 
 export function ContactsView() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const countReceived = useSelector(
+    (state: RootState) => state.invitation.countReceived
+  );
+
+  const {
+    openModal,
+    anchorEl,
+    openPopover,
+    receivedInvitations,
+    sentInvitations,
+    setSentInvitations,
+    setReceivedInvitations,
+    getTimeAgo,
+    handleOpenInvitationPopover,
+    handleCloseInvitationPopover,
+    handleAcceptInvitation,
+    handleDeclineInvitation,
+    handleCancelSentInvitation,
+    handleOpenAddContactModal,
+    handleViewAllRequests,
+    handleCloseModal,
+    onHandleAddContact,
+    handleRemoveReceivedInvitation,
+    handleRemoveSentInvitation
+  } = useInvitation();
+
+  const {
+    contactsAfterFilter,
+    searchValue,
+    setSearchValue,
+    anchorElRowAction,
+    handleClosePopover,
+    handleOpenPopover,
+    setOpenSetNicknameModal,
+    openSetNicknameModal,
+    onUpdateNickName,
+    selectedContact,
+    setSelectedContact
+  } = useContact()
   return (
     <Box
       sx={{
@@ -197,20 +107,30 @@ export function ContactsView() {
               Contacts
             </Typography>
 
-            <IconButton
-              sx={{
-                color: "#7d84a0",
-                "&:hover": {
-                  bgcolor: "rgba(111, 99, 246, 0.08)",
-                  color: "#6f63f6",
-                },
-              }}
-              onClick={() => {
-                console.log("add-contact");
+            <Badge
+              badgeContent={countReceived}
+              color="error"
+              max={99}
+              overlap="circular"
+              invisible={countReceived === 0}
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
               }}
             >
-              <PersonAddAlt1RoundedIcon sx={{ fontSize: 22 }} />
-            </IconButton>
+              <IconButton
+                onClick={handleOpenInvitationPopover}
+                sx={{
+                  color: "#7d84a0",
+                  "&:hover": {
+                    bgcolor: "rgba(111, 99, 246, 0.08)",
+                    color: "#6f63f6",
+                  },
+                }}
+              >
+                <PersonAddAlt1RoundedIcon sx={{ fontSize: 22 }} />
+              </IconButton>
+            </Badge>
           </Stack>
 
           <Box
@@ -240,6 +160,8 @@ export function ContactsView() {
             <InputBase
               placeholder="Search users.."
               fullWidth
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
               sx={{
                 fontSize: 15,
                 color: "#1f2430",
@@ -262,12 +184,68 @@ export function ContactsView() {
             ...customScrollbarSx,
           }}
         >
-          {contactSections.map((section) => (
-            <AlphabetIndex key={section.key} section={section} />
+          {contactsAfterFilter.map((section) => (
+            <AlphabetIndex 
+            key={section.key} 
+            section={section} 
+            anchorEl={anchorElRowAction} 
+            handleClosePopover={handleClosePopover} 
+            handleOpenPopover={handleOpenPopover} 
+            setOpenSetNicknameModal={setOpenSetNicknameModal}
+            openSetNicknameModal={openSetNicknameModal}
+            onUpdateNickName={onUpdateNickName}
+            selectedContact={selectedContact}
+            setSelectedContact={setSelectedContact}
+            />
           ))}
+
+          {contactsAfterFilter.length === 0 && (
+            <Box
+              sx={{
+                py: 6,
+                textAlign: "center",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 15,
+                  color: "#8a91a3",
+                }}
+              >
+                No contacts found
+              </Typography>
+            </Box>
+          )}
 
           {isMobile && <Box sx={{ height: 12 }} />}
         </Box>
+
+        <InvitationPopover
+          openPopover={openPopover}
+          anchorEl={anchorEl}
+          handleCloseInvitationPopover={handleCloseInvitationPopover}
+          handleOpenAddContactModal={handleOpenAddContactModal}
+          receivedInvitations={receivedInvitations}
+          setReceivedInvitations={setReceivedInvitations}
+          handleDeclineInvitation={handleDeclineInvitation}
+          handleAcceptInvitation={handleAcceptInvitation}
+          sentInvitations={sentInvitations}
+          getTimeAgo={getTimeAgo}
+          handleCancelSentInvitation={handleCancelSentInvitation}
+          handleViewAllRequests={handleViewAllRequests}
+          handleRemoveReceivedInvitation={handleRemoveReceivedInvitation}
+          handleRemoveSentInvitation={handleRemoveSentInvitation}
+          setSentInvitations={setSentInvitations}
+        />
+
+        <ModalAddContactModal
+          open={openModal}
+          onClose={handleCloseModal}
+          onSubmit={onHandleAddContact}
+          onAcceptRequest={handleAcceptInvitation}
+          onDeclineRequest={handleDeclineInvitation}
+          onCancelInvitation={handleCancelSentInvitation}
+        />
       </Paper>
     </Box>
   );

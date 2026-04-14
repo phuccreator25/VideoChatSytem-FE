@@ -15,6 +15,7 @@ import ChatPage from "../../pages/Chat/Chat.page";
 import ActiveSuccess from "../../pages/Auth/ActiveSuccess.page";
 import { useSelector } from "react-redux";
 import { SelectcurrentUser } from "../../redux/auth.redux";
+import InvitationPages from "../../pages/Invitation/Invitaiton.page";
 
 const CheckAuth = () => {
   const user = useSelector(SelectcurrentUser)
@@ -47,6 +48,7 @@ export default function ClientRoute() {
 
         <Route element={<CheckAuth/>}>
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/invitation" element={<InvitationPages />} />
         </Route>
 
         <Route path="/" element={<HomeRedirect />} />

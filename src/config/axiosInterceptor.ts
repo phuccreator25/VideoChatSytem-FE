@@ -7,9 +7,6 @@ import { store, persistor } from '../redux/store'
 
 const axiosInterceptor = axios.create({
   baseURL: CONFIG.API_HOST,
-  headers: {
-    'Content-Type': 'application/json',
-  },
   withCredentials: true,
 })
 

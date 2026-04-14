@@ -37,7 +37,7 @@ export type OpenAvatarProps = {
   profile: {
     avatar: string;
     fullname: string;
-  };
+  } | null;
 };
 
 export type GroupItem = {
@@ -68,17 +68,7 @@ export type Conversation = {
     active?: boolean;
 };
 
-export type ContactItem = {
-  key: string;
-  name: string;
-  onClick?: () => void;
-};
 
-export type ContactSection = {
-  key: string;
-  letter: string;
-  items: ContactItem[];
-};
 
 export type Message =
   | {

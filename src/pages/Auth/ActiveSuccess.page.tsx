@@ -21,6 +21,8 @@ export default function ActivateSuccessPage() {
   const email = searchParams.get("email");
   const navigate = useNavigate();
   useEffect(() => {
+    console.log(email);
+    
     if (!email) {
       navigate("/login");
       return;
@@ -28,8 +30,7 @@ export default function ActivateSuccessPage() {
 
     const handleActivate = async () => {
       try {
-        const res = await authApi.onActivAccount(email);
-        console.log(res.data);
+        await authApi.onActivAccount({email: email});
       } catch (error: any) {
         console.log("Lỗi:", error.response?.data?.message);
         navigate("/login");

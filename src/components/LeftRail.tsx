@@ -25,6 +25,10 @@ import type { LeftRailProps } from "../types/data.type";
 import { COLORS } from "../utils/Colors";
 import { RailItem } from "./RailItem";
 import useAuth from "../hooks/Auth/auth.hook";
+import { useSelector } from "react-redux";
+import type { RootState } from "../redux/store";
+
+import Badge from "@mui/material/Badge";
 
 export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -32,6 +36,8 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+
+  const user = useSelector((state: RootState) => state.user.currentUser)
 
   const handleClose = () => {
     setAnchorEl(null);
@@ -41,6 +47,10 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
 
   const open = Boolean(anchorEl);
   const id = open ? "avatar-popover" : undefined;
+
+  const countReceived = useSelector(
+    (state: RootState) => state.invitation.countReceived
+  );
 
   return (
     <Box
@@ -128,9 +138,30 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
             active={activeRail === "contact"}
             onClick={() => onChange("contact")}
             icon={
-              <ManageAccountsOutlinedIcon
-                sx={{ fontSize: { xs: 22, sm: 24, md: 26 } }}
-              />
+              <Badge
+                badgeContent={countReceived || 0}
+                color="error"
+                max={99}
+                overlap="circular"
+                invisible={!countReceived}
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                sx={{
+                  "& .MuiBadge-badge": {
+                    fontSize: 10,
+                    minWidth: 16,
+                    height: 16,
+                    padding: "0 4px",
+                    fontWeight: 700,
+                  },
+                }}
+              >
+                <ManageAccountsOutlinedIcon
+                  sx={{ fontSize: { xs: 22, sm: 24, md: 26 } }}
+                />
+              </Badge>
             }
           />
 
@@ -165,7 +196,7 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
           <Avatar
             aria-describedby={id}
             onClick={handleClick}
-            src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80&auto=format&fit=crop"
+            src={user?.avatar}
             sx={{
               width: { xs: 36, sm: 40, md: 44 },
               height: { xs: 36, sm: 40, md: 44 },
@@ -205,7 +236,10 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
       >
         <MenuList sx={{ py: 1 }}>
           <MenuItem
-            onClick={handleClose}
+            onClick={() => {
+              onChange("profile")
+              handleClose()
+            }}
             sx={{
               px: 2,
               py: 1.5,
@@ -217,11 +251,14 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
               primaryTypographyProps={{
                 fontSize: 16,
                 fontWeight: 500,
-                color: "#4A4F63",
               }}
             />
             <ListItemIcon sx={{ minWidth: 32, justifyContent: "flex-end" }}>
-              <WidgetsOutlinedIcon sx={{ fontSize: 20, color: "#7E8499" }} />
+              <WidgetsOutlinedIcon
+                sx={{
+                  fontSize: 20,
+                }}
+              />
             </ListItemIcon>
           </MenuItem>
 
