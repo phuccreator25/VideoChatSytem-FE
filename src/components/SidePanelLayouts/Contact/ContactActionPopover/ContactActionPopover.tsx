@@ -3,24 +3,20 @@ import Divider from "@mui/material/Divider";
 import MenuItem from "@mui/material/MenuItem";
 import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
+
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRenameOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+
 import { SetNicknameModal } from "./ModalSetNickName";
-import type { contacts } from "../../../../types/contact.type";
+import { ViewUserInfoModal } from "./ModalViewInfo";
+import { ConfirmRemoveFriendModal } from "./ModalConfirmRemove";
+import { ConfirmBlockModal } from "./ModalConfirmBlock";
+import type { RowActionProps } from "../../../../types/contact.type";
 
 type ContactActionPopoverProps = {
-    anchorEl: HTMLElement | null;
-    open: boolean;
-    onClose: () => void;
-    onViewInfo?: (userId: string) => void;
-    onBlockUser?: (userId: string) => void;
-    onRemoveFriend?: (userId: string) => void;
-    setOpenSetNicknameModal: React.Dispatch<React.SetStateAction<boolean>>
-    openSetNicknameModal: boolean,
-    onUpdateNickName: (data: contacts) => void
-    selectedContact: contacts | null
+    rowAction: RowActionProps;
 };
 
 const itemSx = {
@@ -38,22 +34,15 @@ const itemSx = {
     },
 };
 
-export function ContactActionPopover({
-    anchorEl,
-    open,
-    onClose,
-    onViewInfo,
-    onBlockUser,
-    onRemoveFriend,
-    setOpenSetNicknameModal, openSetNicknameModal, onUpdateNickName, selectedContact
-}: ContactActionPopoverProps) {
+export function ContactActionPopover({ rowAction }: ContactActionPopoverProps) {
+    const { data, ui, handlers } = rowAction;
 
     return (
         <>
             <Popover
-                open={open}
-                anchorEl={anchorEl}
-                onClose={onClose}
+                open={Boolean(ui.anchorEl)}
+                anchorEl={ui.anchorEl}
+                onClose={handlers.handleClosePopover}
                 anchorOrigin={{
                     vertical: "bottom",
                     horizontal: "right",
@@ -75,7 +64,13 @@ export function ContactActionPopover({
                 }}
             >
                 <Box sx={{ py: 1 }}>
-                    <MenuItem sx={itemSx} onClick={() => onViewInfo}>
+                    <MenuItem
+                        sx={itemSx}
+                        onClick={() => {
+                            handlers.setOpenModalViewInfo(true);
+                            handlers.handleClosePopover();
+                        }}
+                    >
                         <InfoOutlinedIcon sx={{ fontSize: 18, color: "#6f63f6" }} />
                         <Typography sx={{ fontSize: 15, fontWeight: 550, color: "#6f63f6" }}>
                             View info
@@ -84,11 +79,13 @@ export function ContactActionPopover({
 
                     <Divider sx={{ borderColor: "#f3e8ff" }} />
 
-                    <MenuItem sx={itemSx} 
+                    <MenuItem
+                        sx={itemSx}
                         onClick={() => {
-                        setOpenSetNicknameModal(true); 
-                        onClose()
-                    }}>
+                            handlers.setOpenSetNicknameModal(true);
+                            handlers.handleClosePopover();
+                        }}
+                    >
                         <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 18, color: "#6f63f6" }} />
                         <Typography sx={{ fontSize: 15, fontWeight: 550, color: "#6f63f6" }}>
                             Set nickname
@@ -97,17 +94,26 @@ export function ContactActionPopover({
 
                     <Divider sx={{ borderColor: "#f3e8ff" }} />
 
-                    <MenuItem sx={itemSx} onClick={() => onBlockUser}>
+                    <MenuItem
+                        sx={itemSx}
+                        onClick={() => {
+                            handlers.setOpenModalBlock(true);
+                            handlers.handleClosePopover();
+                        }}
+                    >
                         <BlockRoundedIcon sx={{ fontSize: 18, color: "#6f63f6" }} />
                         <Typography sx={{ fontSize: 15, fontWeight: 550, color: "#6f63f6" }}>
-                            Block this user
+                            {data.selectedContact?.isBlocked ? "Unblock this user" : "Block this user"}
                         </Typography>
                     </MenuItem>
 
                     <Divider sx={{ borderColor: "#f3e8ff" }} />
 
                     <MenuItem
-                        onClick={() => onRemoveFriend}
+                        onClick={() => {
+                            handlers.setOpenModalRemove(true);
+                            handlers.handleClosePopover();
+                        }}
                         sx={{
                             ...itemSx,
                             color: "#dc2626",
@@ -123,11 +129,36 @@ export function ContactActionPopover({
                     </MenuItem>
                 </Box>
             </Popover>
+
             <SetNicknameModal
-                open={openSetNicknameModal}
-                onClose={() => setOpenSetNicknameModal(false)}
-                onConfirm={onUpdateNickName}
-                selectedContact={selectedContact}
+                open={ui.openSetNicknameModal}
+                onClose={() => handlers.setOpenSetNicknameModal(false)}
+                onConfirm={handlers.onUpdateNickName}
+                selectedContact={data.selectedContact}
+            />
+
+            <ViewUserInfoModal
+                open={ui.openModalViewInfo}
+                onClose={() => handlers.setOpenModalViewInfo(false)}
+                user={data.selectedContact}
+                setOpenSetNicknameModal={handlers.setOpenSetNicknameModal}
+                setOpenModalRemove={handlers.setOpenModalRemove}
+                setOpenModalBlock={handlers.setOpenModalBlock}
+            />
+
+            <ConfirmRemoveFriendModal
+                open={ui.openModalRemove}
+                onClose={() => handlers.setOpenModalRemove(false)}
+                onConfirm={handlers.onRemoveFriend}
+                selectedContact={data.selectedContact}
+            />
+
+            <ConfirmBlockModal
+                open={ui.openModalBlock}
+                onClose={() => handlers.setOpenModalBlock(false)}
+                onConfirm={handlers.handleBlock}
+                selectedContact={data.selectedContact}
+                handleUnblock={handlers.handleUnblock}
             />
         </>
     );

@@ -34,14 +34,8 @@ function InvitationSectionTitle({
 }
 
 export default function InvitationsFrame() {
-  const {
-    handleAcceptInvitation,
-    handleCancelSentInvitation,
-    handleDeclineInvitation,
-    getTimeAgo,
-    handleRemoveReceivedInvitation,
-    handleRemoveSentInvitation
-  } = useInvitation();
+
+  const { helpers } = useInvitation();
 
   const {
     receivedAllInvitations,
@@ -52,7 +46,8 @@ export default function InvitationsFrame() {
     hasMoreSent,
     handleLoadMoreReceived,
     handleLoadMoreSent,
-    countReceived
+    countReceived,
+    countSent
   } = useInvitationAll({ pageSize: 3 });
 
   return (
@@ -126,10 +121,7 @@ export default function InvitationsFrame() {
                 <ReceivedInvitationCard
                   key={item.id}
                   item={item}
-                  onAccept={handleAcceptInvitation}
-                  onDecline={handleDeclineInvitation}
-                  getTimeAgo={getTimeAgo}
-                  handleRemoveReceivedInvitation={handleRemoveReceivedInvitation}
+                  getTimeAgo={helpers.getTimeAgo}
                 />
               ))}
             </Box>
@@ -176,7 +168,7 @@ export default function InvitationsFrame() {
           <Box>
             <InvitationSectionTitle
               title="Lời mời đã gửi"
-              count={sentInvitations.length}
+              count={countSent}
             />
 
             <Box
@@ -196,9 +188,7 @@ export default function InvitationsFrame() {
                 <SentInvitationCard
                   key={item.id}
                   item={item}
-                  onRecall={handleCancelSentInvitation}
-                  getTimeAgo={getTimeAgo}
-                  handleRemoveSentInvitation={handleRemoveSentInvitation}
+                  getTimeAgo={helpers.getTimeAgo}
                 />
               ))}
             </Box>

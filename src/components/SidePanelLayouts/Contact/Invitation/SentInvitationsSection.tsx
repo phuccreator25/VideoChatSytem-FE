@@ -1,30 +1,37 @@
 import { useState } from "react";
 import { Alert, Box, Button, Stack, Typography } from "@mui/material";
-import type { SentInvitationProps } from "../../../../types/Invitation";
 import { useDispatch, useSelector } from "react-redux";
+
 import type { AppDispatch, RootState } from "../../../../redux/store";
-import { setInvitationActionStatus } from "../../../../redux/invitation.redux";
+import { onCancelSentInvitation, setInvitationActionStatus } from "../../../../redux/invitation.redux";
+import type { SentInvitationsSectionGroup } from "../../../../types/Invitation";
+
+type SentInvitationsSectionProps = {
+  sentInvitationsSection: SentInvitationsSectionGroup;
+};
 
 export function SentInvitationsSection({
-  sentInvitations,
-  handleCancelSentInvitation,
-  getTimeAgo,
-  handleRemoveSentInvitation,
-  setSentInvitations
-}: SentInvitationProps) {
+  sentInvitationsSection,
+}: SentInvitationsSectionProps) {
+  const { data, handlers, helpers } = sentInvitationsSection;
+
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const dispatch = useDispatch<AppDispatch>()
-  const cancelledMap = useSelector((state : RootState) => state.invitation.actionStatusById)
+  const dispatch = useDispatch<AppDispatch>();
+  const totalCountSent = useSelector((state: RootState) => state.invitation.countSent);
+
+  const cancelledMap = useSelector(
+    (state: RootState) => state.invitation.actionStatusById
+  );
 
   const handleCancel = async (id: string) => {
     if (loadingId === id) return;
 
     try {
       setLoadingId(id);
-      const result = await handleCancelSentInvitation(id);
+      const result = await dispatch(onCancelSentInvitation(id)).unwrap();
 
       if (result) {
-        dispatch(
+        await dispatch(
           setInvitationActionStatus({
             id,
             status: "cancelled",
@@ -32,9 +39,8 @@ export function SentInvitationsSection({
         );
 
         setTimeout(() => {
-          setSentInvitations((prev) => prev.filter((item) => item.id !== id))
-          handleRemoveSentInvitation(id)
-        }, 700)
+          handlers.handleRemoveSentInvitation(id);
+        }, 700);
       }
     } finally {
       setLoadingId(null);
@@ -66,13 +72,13 @@ export function SentInvitationsSection({
             color: "#8a91a3",
           }}
         >
-          {sentInvitations.length}
+          {totalCountSent}
         </Typography>
       </Stack>
 
-      {sentInvitations.length > 0 ? (
+      {data.sentInvitations.length > 0 ? (
         <Stack spacing={1.25}>
-          {sentInvitations.map((invitation) => (
+          {data.sentInvitations.map((invitation) => (
             <Box
               key={invitation.id}
               sx={{
@@ -109,7 +115,7 @@ export function SentInvitationsSection({
                         lineHeight: 1.35,
                       }}
                     >
-                      Sent {"" + getTimeAgo(invitation.sentAt)}
+                      Sent {helpers.getTimeAgo(invitation.sentAt)}
                     </Typography>
                   </Box>
 
@@ -131,7 +137,7 @@ export function SentInvitationsSection({
                   )}
                 </Stack>
 
-                {cancelledMap[invitation.id] === 'cancelled' && (
+                {cancelledMap[invitation.id] === "cancelled" && (
                   <Alert
                     severity="success"
                     sx={{

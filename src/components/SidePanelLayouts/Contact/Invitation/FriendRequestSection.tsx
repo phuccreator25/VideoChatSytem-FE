@@ -8,32 +8,44 @@ import {
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useState } from "react";
-import type {  FriendRequestsSectionProps } from "../../../../types/Invitation";
 import { useDispatch, useSelector } from "react-redux";
+
 import { type AppDispatch, type RootState } from "../../../../redux/store";
-import { setInvitationActionStatus } from "../../../../redux/invitation.redux";
+import {
+  onAcceptInvitation,
+  onDeclineInvitation,
+  setInvitationActionStatus,
+} from "../../../../redux/invitation.redux";
+import type { FriendRequestsSectionGroup } from "../../../../types/Invitation";
 import { onGetDataContact } from "../../../../redux/contact.redux";
 
+type FriendRequestsSectionProps = {
+  friendRequestsSection: FriendRequestsSectionGroup;
+};
+
 export function FriendRequestsSection({
-  receivedInvitations,
-  handleDeclineInvitation,
-  handleAcceptInvitation,
-  getTimeAgo,
-  handleRemoveReceivedInvitation,
-  setReceivedInvitations
+  friendRequestsSection,
 }: FriendRequestsSectionProps) {
 
+  const { data, handlers, helpers } = friendRequestsSection;
+
   const [submitingId, setSubmitingId] = useState<string | null>(null);
-  
-  const dispatch = useDispatch<AppDispatch>()  
-  
+
+  const dispatch = useDispatch<AppDispatch>();
+
   const actionStatusById = useSelector(
     (state: RootState) => state.invitation.actionStatusById
   );
 
+  const countReceived = useSelector(
+    (state: RootState) => state.invitation.countReceived
+  );
+
   const onAccept = async (id: string) => {
     setSubmitingId(id);
-    const result = await handleAcceptInvitation(id);
+    
+    const result = await dispatch(onAcceptInvitation(id)).unwrap();
+    
     setSubmitingId(null);
 
     if (result) {
@@ -45,15 +57,16 @@ export function FriendRequestsSection({
       );
       await dispatch(onGetDataContact());
       setTimeout(() => {
-        handleRemoveReceivedInvitation(id)
-        setReceivedInvitations((prev) => prev.filter((item) => item.id !== id))
-      }, 700)
+        handlers.handleRemoveReceivedInvitation(id);
+      }, 700);
     }
   };
 
   const onDecline = async (id: string) => {
     setSubmitingId(id);
-    const result = await handleDeclineInvitation(id);
+    
+    const result = await dispatch(onDeclineInvitation(id)).unwrap();
+    
     setSubmitingId(null);
 
     if (result) {
@@ -63,15 +76,12 @@ export function FriendRequestsSection({
           status: "declined",
         })
       );
-      
+
       setTimeout(() => {
-        handleRemoveReceivedInvitation(id)
-        setReceivedInvitations((prev) => prev.filter((item) => item.id !== id))
-      }, 700)
+        handlers.handleRemoveReceivedInvitation(id);
+      }, 700);
     }
   };
-
-  const countReceived = useSelector((state : RootState) => state.invitation.countReceived)
 
   return (
     <>
@@ -102,12 +112,12 @@ export function FriendRequestsSection({
         </Typography>
       </Stack>
 
-      {receivedInvitations.length > 0 ? (
+      {data.receivedInvitations.length > 0 ? (
         <Stack spacing={1.25}>
-          {receivedInvitations.map((invitation) => {
-            const actionStatus = actionStatusById[invitation.id]; // Để lấy giá trị status đã set khi Accept hoặc Decline
-            const isHandled = !!actionStatus; // Nếu xem nếu không có status trong actionStatusById thì không hiênr thị X
-            const isSubmitting = submitingId === invitation.id; // Chặn spam
+          {data.receivedInvitations.map((invitation) => {
+            const actionStatus = actionStatusById[invitation.id];
+            const isHandled = !!actionStatus;
+            const isSubmitting = submitingId === invitation.id;
 
             return (
               <Box
@@ -154,7 +164,7 @@ export function FriendRequestsSection({
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {"" + getTimeAgo(invitation.receiveAt)}
+                        {helpers.getTimeAgo(invitation.receiveAt)}
                       </Typography>
                     </Box>
 
@@ -175,7 +185,9 @@ export function FriendRequestsSection({
                   {isHandled && (
                     <IconButton
                       size="small"
-                      onClick={() => handleRemoveReceivedInvitation(invitation.id)}
+                      onClick={() =>
+                        handlers.handleRemoveReceivedInvitation(invitation.id)
+                      }
                       sx={{
                         mt: -0.5,
                         color: "#98a0b3",

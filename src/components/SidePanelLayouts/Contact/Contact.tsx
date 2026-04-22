@@ -19,7 +19,7 @@ import { InvitationPopover } from "./Invitation/InvitationPopover";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../redux/store";
 import { useContact } from "../../../hooks/Contact/contact.hook";
-
+import { useBlock } from "../../../hooks/Block/block.hook";
 
 export function ContactsView() {
   const theme = useTheme();
@@ -30,40 +30,88 @@ export function ContactsView() {
   );
 
   const {
-    openModal,
-    anchorEl,
-    openPopover,
-    receivedInvitations,
-    sentInvitations,
-    setSentInvitations,
-    setReceivedInvitations,
-    getTimeAgo,
-    handleOpenInvitationPopover,
-    handleCloseInvitationPopover,
-    handleAcceptInvitation,
-    handleDeclineInvitation,
-    handleCancelSentInvitation,
-    handleOpenAddContactModal,
-    handleViewAllRequests,
-    handleCloseModal,
-    onHandleAddContact,
-    handleRemoveReceivedInvitation,
-    handleRemoveSentInvitation
+    data: invitationData,
+    ui: invitationUi,
+    handlers: invitationHandlers,
+    helpers: invitationHelpers,
   } = useInvitation();
 
   const {
-    contactsAfterFilter,
-    searchValue,
-    setSearchValue,
-    anchorElRowAction,
-    handleClosePopover,
-    handleOpenPopover,
-    setOpenSetNicknameModal,
-    openSetNicknameModal,
-    onUpdateNickName,
-    selectedContact,
-    setSelectedContact
-  } = useContact()
+    data: contactData,
+    ui: contactUi,
+    handlers: contactHandlers,
+  } = useContact();
+
+  const {
+    ui: blockUi,
+    handlers: blockHandlers,
+  } = useBlock();
+
+  const addContactModal = {
+    ui: {
+      open: invitationUi.openModal,
+    },
+    handlers: {
+      onClose: invitationHandlers.handleCloseModal,
+      onSubmit: invitationHandlers.onHandleAddContact,
+    },
+  };
+
+  const invitationPopover = {
+    data: {
+      receivedInvitations: invitationData.receivedInvitations,
+      sentInvitations: invitationData.sentInvitations,
+    },
+    ui: {
+      openPopover: invitationUi.openPopover,
+      anchorEl: invitationUi.anchorEl,
+    },
+    handlers: {
+      handleCloseInvitationPopover:
+        invitationHandlers.handleCloseInvitationPopover,
+      handleOpenAddContactModal:
+        invitationHandlers.handleOpenAddContactModal,
+      handleViewAllRequests: invitationHandlers.handleViewAllRequests,
+      handleRemoveSentInvitation:
+        invitationHandlers.handleRemoveSentInvitation,
+      handleRemoveReceivedInvitation:
+        invitationHandlers.handleRemoveReceivedInvitation,
+      setReceivedInvitations: invitationHandlers.setReceivedInvitations,
+      setSentInvitations: invitationHandlers.setSentInvitations,
+      refreshPopoverReceivedInvitations: invitationHandlers.refreshPopoverReceivedInvitations,
+      refreshPopoverSentInvitations: invitationHandlers.refreshPopoverSentInvitations
+    },
+    helpers: {
+      getTimeAgo: invitationHelpers.getTimeAgo,
+    },
+  };
+
+  const rowAction = {
+    data: {
+      selectedContact: contactData.selectedContact,
+    },
+    ui: {
+      anchorEl: contactUi.anchorElRowAction,
+      openSetNicknameModal: contactUi.openSetNicknameModal,
+      openModalViewInfo: contactUi.openModalViewInfo,
+      openModalRemove: contactUi.openModalRemove,
+      openModalBlock: blockUi.openModalBlock,
+    },
+    handlers: {
+      handleClosePopover: contactHandlers.handleClosePopover,
+      handleOpenPopover: contactHandlers.handleOpenPopover,
+      setOpenSetNicknameModal: contactHandlers.setOpenSetNicknameModal,
+      onUpdateNickName: contactHandlers.onUpdateNickName,
+      setSelectedContact: contactHandlers.setSelectedContact,
+      setOpenModalViewInfo: contactHandlers.setOpenModalViewInfo,
+      setOpenModalRemove: contactHandlers.setOpenModalRemove,
+      onRemoveFriend: contactHandlers.onRemoveFriend,
+      handleBlock: blockHandlers.handleBlock,
+      handleUnblock: blockHandlers.handleUnblock,
+      setOpenModalBlock: blockHandlers.setOpenModalBlock,
+    },
+  };
+
   return (
     <Box
       sx={{
@@ -119,7 +167,7 @@ export function ContactsView() {
               }}
             >
               <IconButton
-                onClick={handleOpenInvitationPopover}
+                onClick={invitationHandlers.handleOpenInvitationPopover}
                 sx={{
                   color: "#7d84a0",
                   "&:hover": {
@@ -160,8 +208,8 @@ export function ContactsView() {
             <InputBase
               placeholder="Search users.."
               fullWidth
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              value={contactUi.searchValue}
+              onChange={(e) => contactHandlers.setSearchValue(e.target.value)}
               sx={{
                 fontSize: 15,
                 color: "#1f2430",
@@ -184,22 +232,15 @@ export function ContactsView() {
             ...customScrollbarSx,
           }}
         >
-          {contactsAfterFilter.map((section) => (
-            <AlphabetIndex 
-            key={section.key} 
-            section={section} 
-            anchorEl={anchorElRowAction} 
-            handleClosePopover={handleClosePopover} 
-            handleOpenPopover={handleOpenPopover} 
-            setOpenSetNicknameModal={setOpenSetNicknameModal}
-            openSetNicknameModal={openSetNicknameModal}
-            onUpdateNickName={onUpdateNickName}
-            selectedContact={selectedContact}
-            setSelectedContact={setSelectedContact}
+          {contactData.contactsAfterFilter.map((section) => (
+            <AlphabetIndex
+              key={section.key}
+              section={section}
+              rowAction={rowAction}
             />
           ))}
 
-          {contactsAfterFilter.length === 0 && (
+          {contactData.contactsAfterFilter.length === 0 && (
             <Box
               sx={{
                 py: 6,
@@ -220,32 +261,9 @@ export function ContactsView() {
           {isMobile && <Box sx={{ height: 12 }} />}
         </Box>
 
-        <InvitationPopover
-          openPopover={openPopover}
-          anchorEl={anchorEl}
-          handleCloseInvitationPopover={handleCloseInvitationPopover}
-          handleOpenAddContactModal={handleOpenAddContactModal}
-          receivedInvitations={receivedInvitations}
-          setReceivedInvitations={setReceivedInvitations}
-          handleDeclineInvitation={handleDeclineInvitation}
-          handleAcceptInvitation={handleAcceptInvitation}
-          sentInvitations={sentInvitations}
-          getTimeAgo={getTimeAgo}
-          handleCancelSentInvitation={handleCancelSentInvitation}
-          handleViewAllRequests={handleViewAllRequests}
-          handleRemoveReceivedInvitation={handleRemoveReceivedInvitation}
-          handleRemoveSentInvitation={handleRemoveSentInvitation}
-          setSentInvitations={setSentInvitations}
-        />
+        <InvitationPopover invitationPopover={invitationPopover} />
 
-        <ModalAddContactModal
-          open={openModal}
-          onClose={handleCloseModal}
-          onSubmit={onHandleAddContact}
-          onAcceptRequest={handleAcceptInvitation}
-          onDeclineRequest={handleDeclineInvitation}
-          onCancelInvitation={handleCancelSentInvitation}
-        />
+        <ModalAddContactModal addContactModal={addContactModal} />
       </Paper>
     </Box>
   );

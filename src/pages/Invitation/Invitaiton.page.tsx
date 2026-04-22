@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react';
 import ChatLayout from '../../layouts/Chat.layout';
 import type { RailKey } from '../../components/LeftRail';
 import { ContactsView } from '../../components/SidePanelLayouts/Contact/Contact';
-import { useDispatch } from 'react-redux';
-import type { AppDispatch } from '../../redux/store';
-import { onGetCountReceivedInvitation } from '../../redux/invitation.redux';
 import InvitationsFrame from '../../components/SidePanelLayouts/Contact/Invitation/InvitationsView';
 import { MyProfile } from '../../components/SidePanelLayouts/Profile/Profile';
 import ConversationList from '../../components/SidePanelLayouts/ConversationList/ConversationList';
@@ -32,12 +29,7 @@ export default function InvitationPages() {
       }
     };
 
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    dispatch(onGetCountReceivedInvitation());
-  }, [dispatch]);
 
   useEffect(() => {
     if (activeRail !== "contact") {

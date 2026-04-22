@@ -8,31 +8,51 @@ import {
 } from "@mui/material";
 import { FriendRequestsSection } from "./FriendRequestSection";
 import { SentInvitationsSection } from "./SentInvitationsSection";
-import type { InvitationPopoverProps } from "../../../../types/Invitation";
+import type { InvitationPopoverGroup } from "../../../../types/Invitation";
+
+type InvitationPopoverProps = {
+    invitationPopover: InvitationPopoverGroup;
+};
 
 export function InvitationPopover({
-    openPopover,
-    anchorEl,
-    handleCloseInvitationPopover,
-    handleOpenAddContactModal,
-    receivedInvitations,
-    setReceivedInvitations,
-    handleDeclineInvitation,
-    handleAcceptInvitation,
-    sentInvitations,
-    handleCancelSentInvitation,
-    handleViewAllRequests,
-    getTimeAgo,
-    handleRemoveSentInvitation,
-    handleRemoveReceivedInvitation,
-    setSentInvitations
+    invitationPopover,
 }: InvitationPopoverProps) {
+    
+    const { data, ui, handlers, helpers } = invitationPopover;
+
+    const friendRequestsSection = {
+        data: {
+            receivedInvitations: data.receivedInvitations,
+        },
+        handlers: {
+            handleRemoveReceivedInvitation: handlers.handleRemoveReceivedInvitation,
+            setReceivedInvitations: handlers.setReceivedInvitations,
+            refreshPopoverReceivedInvitations: handlers.refreshPopoverReceivedInvitations
+        },
+        helpers: {
+            getTimeAgo: helpers.getTimeAgo,
+        },
+    };
+
+    const sentInvitationsSection = {
+        data: {
+            sentInvitations: data.sentInvitations,
+        },
+        handlers: {
+            handleRemoveSentInvitation: handlers.handleRemoveSentInvitation,
+            setSentInvitations: handlers.setSentInvitations,
+            refreshPopoverSentInvitations: handlers.refreshPopoverSentInvitations
+        },
+        helpers: {
+            getTimeAgo: helpers.getTimeAgo,
+        },
+    };
 
     return (
         <Popover
-            open={openPopover}
-            anchorEl={anchorEl}
-            onClose={handleCloseInvitationPopover}
+            open={ui.openPopover}
+            anchorEl={ui.anchorEl}
+            onClose={handlers.handleCloseInvitationPopover}
             anchorOrigin={{
                 vertical: "bottom",
                 horizontal: "right",
@@ -72,7 +92,7 @@ export function InvitationPopover({
                     </Typography>
 
                     <Button
-                        onClick={handleOpenAddContactModal}
+                        onClick={handlers.handleOpenAddContactModal}
                         sx={{
                             minWidth: "auto",
                             px: 1,
@@ -88,28 +108,17 @@ export function InvitationPopover({
 
                 <Divider sx={{ mb: 1.5 }} />
 
-                <FriendRequestsSection
-                    receivedInvitations={receivedInvitations}
-                    handleDeclineInvitation={handleDeclineInvitation}
-                    handleAcceptInvitation={handleAcceptInvitation}
-                    getTimeAgo={getTimeAgo}
-                    handleRemoveReceivedInvitation={handleRemoveReceivedInvitation}
-                    setReceivedInvitations={setReceivedInvitations}
-                />
+                <FriendRequestsSection friendRequestsSection={friendRequestsSection} />
 
                 <Divider sx={{ my: 1.5 }} />
 
                 <SentInvitationsSection
-                    sentInvitations={sentInvitations}
-                    handleCancelSentInvitation={handleCancelSentInvitation}
-                    getTimeAgo={getTimeAgo}
-                    handleRemoveSentInvitation={handleRemoveSentInvitation}
-                    setSentInvitations={setSentInvitations}
+                    sentInvitationsSection={sentInvitationsSection}
                 />
 
                 <Button
                     fullWidth
-                    onClick={handleViewAllRequests}
+                    onClick={handlers.handleViewAllRequests}
                     sx={{
                         mt: 1.5,
                         borderRadius: 2,

@@ -3,17 +3,18 @@ import type { contacts, ContactSection } from "../../types/contact.type";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../../redux/store";
 import { onGetDataContact } from "../../redux/contact.redux";
+import ContactApi from "../../api/Contact.api";
 
 export function useContact() {
   const contacts = useSelector((state: RootState) => state.contact.contacts);
 
   const [searchValue, setSearchValue] = useState<string>("");
-  const [anchorElRowAction, setAnchorEl] = useState<HTMLButtonElement | null>(
-    null,
-  );
+  const [anchorElRowAction, setAnchorElRowAction] =
+    useState<HTMLButtonElement | null>(null);
   const [openSetNicknameModal, setOpenSetNicknameModal] =
     useState<boolean>(false);
-
+  const [openModalViewInfo, setOpenModalViewInfo] = useState<boolean>(false);
+  const [openModalRemove, setOpenModalRemove] = useState<boolean>(false);
   const [selectedContact, setSelectedContact] = useState<contacts | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -21,11 +22,10 @@ export function useContact() {
   useEffect(() => {
     const fetchContacts = async () => {
       await dispatch(onGetDataContact());
-      console.log(openSetNicknameModal);
     };
 
     fetchContacts();
-  }, []);
+  }, [dispatch]);
 
   const filteredContacts = useMemo(() => {
     const keyword = searchValue.trim().toLowerCase();
@@ -38,7 +38,8 @@ export function useContact() {
         contact.fullname ||
         ""
       ).toLowerCase();
-      return displayName.includes(keyword); //Nếu có thì trảvefe true (Giữ lại contacts đó trong mảng mới)
+
+      return displayName.includes(keyword);
     });
   }, [contacts, searchValue]);
 
@@ -46,16 +47,14 @@ export function useContact() {
     const grouped: Record<string, contacts[]> = {};
 
     filteredContacts.forEach((contact: contacts) => {
-      // Đây là những contact được lọc ở trên rồi
       const displayName = contact.nickname || contact.fullname || "";
-      const letter = displayName.charAt(0).toUpperCase() || "#"; //Lấy ra kí tự đầu tiên trong tên IN HOA lên
+      const letter = displayName.charAt(0).toUpperCase() || "#";
 
       if (!grouped[letter]) {
         grouped[letter] = [];
       }
 
       grouped[letter].push({
-        // Thêm vào mảng với key là Kí tự đầu tiên trong tên
         ...contact,
         onClick: () => {
           console.log("Open contact:", contact.userId);
@@ -63,45 +62,82 @@ export function useContact() {
       });
     });
 
-    return Object.keys(grouped) // Lấy toàn bộ key ra
-      .sort((a, b) => a.localeCompare(b, "vi", { sensitivity: "base" })) // Sắp xếp bảng chữ cái
+    return Object.keys(grouped)
+      .sort((a, b) => a.localeCompare(b, "vi", { sensitivity: "base" }))
       .map((letter) => ({
-        // Map theo ContactSection type
         key: letter.toLowerCase(),
         letter,
-        items: grouped[letter], //trả về db phù hợp theo key
+        items: grouped[letter],
       }));
   }, [filteredContacts]);
 
   const handleOpenPopover = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
+    setAnchorElRowAction(event.currentTarget);
   };
 
   const handleClosePopover = () => {
-    setAnchorEl(null);
+    setAnchorElRowAction(null);
   };
 
   const onUpdateNickName = async (data: contacts) => {
     try {
-      console.log(data);
+      if (!data) return false;
+
+      const res = await ContactApi.onUpdateContact(data);
+
+      setSelectedContact((prev) => {
+        if (!prev) return prev;
+        if (prev.userId !== data.userId) return prev;
+
+        return {
+          ...prev,
+          nickname: data.nickname,
+        };
+      });
+
+      return res.status === 201;
     } catch (error) {
       console.log(error);
+      return false;
+    }
+  };
+
+  const onRemoveFriend = async () => {
+    try {
+      if (!selectedContact) return false;
+
+      const res = await ContactApi.onRemoveContact(selectedContact.userId);
+      return res.status === 201;
+    } catch (error) {
+      console.log(error);
+      return false;
     }
   };
 
   return {
-    contacts,
-    filteredContacts,
-    contactsAfterFilter,
-    searchValue,
-    setSearchValue,
-    anchorElRowAction,
-    handleOpenPopover,
-    handleClosePopover,
-    onUpdateNickName,
-    openSetNicknameModal,
-    setOpenSetNicknameModal,
-    selectedContact,
-    setSelectedContact,
+    data: {
+      contacts,
+      filteredContacts,
+      contactsAfterFilter,
+      selectedContact,
+    },
+    ui: {
+      searchValue,
+      anchorElRowAction,
+      openSetNicknameModal,
+      openModalViewInfo,
+      openModalRemove,
+    },
+    handlers: {
+      setSearchValue,
+      handleOpenPopover,
+      handleClosePopover,
+      onUpdateNickName,
+      onRemoveFriend,
+      setOpenSetNicknameModal,
+      setSelectedContact,
+      setOpenModalViewInfo,
+      setOpenModalRemove,
+    },
   };
 }

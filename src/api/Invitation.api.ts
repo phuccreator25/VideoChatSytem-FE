@@ -13,6 +13,9 @@ const InvitationsAPI = {
   onGetCountFriendRequest: () =>
     axiosInterceptor.get("/invitations/friend-request/count"),
 
+  onGetCountSentInvitation: () =>
+    axiosInterceptor.get("/invitations/sent-invitation/count"),
+
   onAcceptInvitation: (payload: object) =>
     axiosInterceptor.post("/invitations/accept", payload),
   

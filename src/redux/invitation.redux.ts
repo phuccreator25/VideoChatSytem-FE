@@ -7,19 +7,29 @@ type InvitationState = {
   receivedAllInvitations: InvitationItem[];
   sentInvitations: SentInvitationItem[];
   actionStatusById: Record<string, InvitationActionStatus>;
+  countSent: number;
 };
 
 const initialState: InvitationState = {
   countReceived: 0,
   receivedAllInvitations: [],
   sentInvitations: [],
-  actionStatusById: {}
+  actionStatusById: {},
+  countSent: 0,
 };
 
 export const onGetCountReceivedInvitation = createAsyncThunk(
   "invitation/onGetCountReceivedInvitation",
   async () => {
     const res = await InvitationsAPI.onGetCountFriendRequest();
+    return res.data.data as number;
+  },
+);
+
+export const onGetCountSentInvitation = createAsyncThunk(
+  "invitation/onGetCountSentInvitation",
+  async () => {
+    const res = await InvitationsAPI.onGetCountSentInvitation();
     return res.data.data as number;
   },
 );
@@ -44,6 +54,30 @@ export const onGetListSentInvitation = createAsyncThunk(
     });
     return (res.data.data || []) as SentInvitationItem[];
   },
+);
+
+export const onAcceptInvitation = createAsyncThunk(
+  "invitation/onAcceptInvitation",
+  async (id: string) => {
+    const res = await InvitationsAPI.onAcceptInvitation({id});
+    return res.status === 200;
+  },
+);
+
+export const onDeclineInvitation = createAsyncThunk(
+  "invitation/onDeclineInvitation",
+  async (id: string) => {
+    const res = await InvitationsAPI.onDeclineInvitation({id});
+    return res.status === 200;
+  },
+);
+
+export const onCancelSentInvitation = createAsyncThunk(
+  "invitation/onCancelSentInvitation",
+  async (id: string) => {
+    const res = await InvitationsAPI.onCancelSentInvitation({id});
+    return res.status === 200;
+  }
 );
 
 const invitationSlice = createSlice({
@@ -90,6 +124,10 @@ const invitationSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(onGetCountReceivedInvitation.fulfilled, (state, action) => {
       state.countReceived = action.payload;
+    });
+
+    builder.addCase(onGetCountSentInvitation.fulfilled, (state, action) => {
+      state.countSent = action.payload;
     });
 
     builder.addCase(onGetListFriendRequests.fulfilled, (state, action) => {

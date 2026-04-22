@@ -4,50 +4,58 @@ import {
   Avatar,
   Box,
   Button,
-  Paper,
+Paper,
   Stack,
   Typography,
 } from "@mui/material";
 import type { InvitationActionStatus, SentInvitationItem } from "../../../../types/Invitation";
 import { useDispatch, useSelector } from "react-redux";
 import {type AppDispatch, type RootState } from "../../../../redux/store";
-import { setInvitationActionStatus } from "../../../../redux/invitation.redux";
+import {clearInvitationActionStatus, onCancelSentInvitation, onGetCountSentInvitation, onGetListSentInvitation, setInvitationActionStatus } from "../../../../redux/invitation.redux";
 
 export function SentInvitationCard({
   item,
-  onRecall,
   getTimeAgo,
-  handleRemoveSentInvitation
 }: {
   item: SentInvitationItem;
-  onRecall: (id: string) => Promise<boolean> | boolean;
   getTimeAgo: (dateString: string) => string;
-  handleRemoveSentInvitation: (id: string) => void
 }) {
+  
   const [isCancelling, setIsCancelling] = useState(false);
+  
   const isCancelled = useSelector(
     (state : RootState) => 
     state.invitation.actionStatusById?.[item.id] as InvitationActionStatus | undefined
   )    
   const dispatch = useDispatch<AppDispatch>();
 
+  const refreshViewAllSent = async () => {
+    await Promise.all([
+      dispatch(onGetCountSentInvitation()),
+      dispatch(onGetListSentInvitation({})),
+    ]);
+  };
+
   const onCancel = async (id: string) => {
     if (isCancelling || isCancelled) return;
 
     try {
       setIsCancelling(true);
-      const res = await onRecall(id);
+      const res = await dispatch(onCancelSentInvitation(id)).unwrap();
 
       if (res) {
-        dispatch(
+        await dispatch(
           setInvitationActionStatus({
             id: item.id,
             status: "cancelled"
           })
         )
+        
+        await refreshViewAllSent();
+
         setTimeout(() => {
-          handleRemoveSentInvitation(item.id)
-        }, 500)
+          dispatch(clearInvitationActionStatus(item.id));
+        }, 700)
       }
     } finally {
       setIsCancelling(false);

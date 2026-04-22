@@ -5,26 +5,19 @@ import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
-import type { contacts } from "../../../../types/contact.type";
+import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
+
+import type { contacts, RowActionProps } from "../../../../types/contact.type";
 import { ContactActionPopover } from "../ContactActionPopover/ContactActionPopover";
 
 type ContactRowType = {
-  item: contacts,
-  anchorEl: HTMLElement | null,
-  handleClosePopover: () => void,
-  handleOpenPopover: (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => void;
-  setOpenSetNicknameModal: React.Dispatch<React.SetStateAction<boolean>>
-  openSetNicknameModal: boolean,
-  onUpdateNickName: (data: contacts) => void
-  selectedContact: contacts | null,
-  setSelectedContact: React.Dispatch<React.SetStateAction<contacts | null>>
-}
+  item: contacts;
+  rowAction: RowActionProps;
+};
 
-export function ContactRow(
-  { item, anchorEl, handleClosePopover, handleOpenPopover, setOpenSetNicknameModal, openSetNicknameModal, onUpdateNickName, selectedContact, setSelectedContact }: ContactRowType
-) {
+export function ContactRow({ item, rowAction }: ContactRowType) {
+  const { handlers } = rowAction;
+
   const displayName = item.nickname ?? item.fullname;
   const avatarLetter = displayName?.charAt(0)?.toUpperCase() || "?";
 
@@ -45,22 +38,54 @@ export function ContactRow(
           },
         }}
       >
-        <Avatar
-          src={item.avatar || undefined}
-          alt={displayName}
+        <Box
           sx={{
-            width: 36,
-            height: 36,
+            position: "relative",
             mr: 1.5,
-            fontSize: 15,
-            fontWeight: 600,
-            bgcolor: item.avatar ? undefined : "#e9ecf5",
-            color: "#5b647a",
             flexShrink: 0,
           }}
         >
-          {avatarLetter}
-        </Avatar>
+          <Avatar
+            src={item.avatar || undefined}
+            alt={displayName}
+            sx={{
+              width: 36,
+              height: 36,
+              fontSize: 15,
+              fontWeight: 600,
+              bgcolor: item.avatar ? undefined : "#e9ecf5",
+              color: "#5b647a",
+            }}
+          >
+            {avatarLetter}
+          </Avatar>
+
+          {item.isBlocked && (
+            <Box
+              sx={{
+                position: "absolute",
+                right: -3,
+                bottom: -3,
+                width: 16,
+                height: 16,
+                borderRadius: "50%",
+                backgroundColor: "#7c3aed",
+                border: "2px solid #ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 2px 6px rgba(124, 58, 237, 0.25)",
+              }}
+            >
+              <BlockRoundedIcon
+                sx={{
+                  fontSize: 10,
+                  color: "#ffffff",
+                }}
+              />
+            </Box>
+          )}
+        </Box>
 
         <Box
           sx={{
@@ -102,8 +127,8 @@ export function ContactRow(
           size="small"
           onClick={(event) => {
             event.stopPropagation();
-            setSelectedContact(item);
-            handleOpenPopover(event);
+            handlers.setSelectedContact(item);
+            handlers.handleOpenPopover(event);
           }}
           sx={{
             ml: 1,
@@ -113,19 +138,8 @@ export function ContactRow(
           <MoreVertRoundedIcon sx={{ fontSize: 18 }} />
         </IconButton>
       </ListItemButton>
-      <ContactActionPopover
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleClosePopover}
-        setOpenSetNicknameModal={setOpenSetNicknameModal}
-        onUpdateNickName={onUpdateNickName}
-        openSetNicknameModal={openSetNicknameModal}
-        selectedContact={selectedContact}
-      // onViewInfo={}
-      // onSetNickname={}
-      // onBlockUser={}
-      // onRemoveFriend={}
-      />
+
+      <ContactActionPopover rowAction={rowAction} />
     </>
   );
 }

@@ -11,84 +11,104 @@ import {
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 
-import type { InvitationItem, InvitationActionStatus } from "../../../../types/Invitation";
+import type {
+  InvitationItem,
+  InvitationActionStatus,
+} from "../../../../types/Invitation";
 import type { AppDispatch, RootState } from "../../../../redux/store";
 import {
   clearInvitationActionStatus,
+  onAcceptInvitation,
+  onDeclineInvitation,
+  onGetCountReceivedInvitation,
+  onGetListFriendRequests,
   setInvitationActionStatus,
 } from "../../../../redux/invitation.redux";
 import { onGetDataContact } from "../../../../redux/contact.redux";
 
 export function ReceivedInvitationCard({
   item,
-  onAccept,
-  onDecline,
   getTimeAgo,
-  handleRemoveReceivedInvitation,
 }: {
   item: InvitationItem;
-  onAccept?: (id: string) => Promise<boolean> | boolean;
-  onDecline?: (id: string) => Promise<boolean> | boolean;
   getTimeAgo: (dateString: string) => string;
-  handleRemoveReceivedInvitation: (id: string) => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
-  const [loadingAction, setLoadingAction] = useState<"accept" | "decline" | null>(null);
+  const [loadingAction, setLoadingAction] = useState<
+    "accept" | "decline" | null
+  >(null);
 
   const actionStatus = useSelector(
     (state: RootState) =>
-      state.invitation.actionStatusById?.[item.id] as InvitationActionStatus | undefined
+      state.invitation.actionStatusById?.[item.id] as
+        | InvitationActionStatus
+        | undefined
   );
 
   const isResolved =
     actionStatus === "accepted" || actionStatus === "declined";
 
-  const handleAcceptClick = async () => {
-    if (!onAccept || loadingAction || isResolved) return;
+  const refreshViewAllReceived = async () => {
+    await Promise.all([
+      dispatch(onGetDataContact()),
+      dispatch(onGetCountReceivedInvitation()),
+      dispatch(onGetListFriendRequests({})),
+    ]);
+  };
+
+  const handleAccept = async () => {
+    if (loadingAction || isResolved) return;
 
     try {
       setLoadingAction("accept");
-      const success = await onAccept(item.id);
+
+      const success = await dispatch(onAcceptInvitation(item.id)).unwrap();
 
       if (success) {
-        await dispatch(
+        dispatch(
           setInvitationActionStatus({
             id: item.id,
             status: "accepted",
           })
         );
-        await dispatch(onGetDataContact());
+
+        await refreshViewAllReceived();
 
         setTimeout(() => {
-          handleRemoveReceivedInvitation(item.id);
           dispatch(clearInvitationActionStatus(item.id));
-        }, 500);
+        }, 700);
       }
+    } catch (error) {
+      console.log(error);
     } finally {
       setLoadingAction(null);
     }
   };
 
-  const handleDeclineClick = async () => {
-    if (!onDecline || loadingAction || isResolved) return;
+  const handleDecline = async () => {
+    if (loadingAction || isResolved) return;
 
     try {
       setLoadingAction("decline");
-      const success = await onDecline(item.id);
+
+      const success = await dispatch(onDeclineInvitation(item.id)).unwrap();
 
       if (success) {
-        await dispatch(
+        dispatch(
           setInvitationActionStatus({
             id: item.id,
             status: "declined",
           })
         );
 
+        await refreshViewAllReceived();
+
         setTimeout(() => {
-          handleRemoveReceivedInvitation(item.id);
           dispatch(clearInvitationActionStatus(item.id));
-        }, 500);
+        }, 700);
       }
+    } catch (error) {
+      console.log(error);
     } finally {
       setLoadingAction(null);
     }
@@ -233,7 +253,7 @@ export function ReceivedInvitationCard({
             <Button
               fullWidth
               variant="contained"
-              onClick={handleDeclineClick}
+              onClick={handleDecline}
               disabled={!!loadingAction}
               sx={{
                 height: 44,
@@ -256,7 +276,7 @@ export function ReceivedInvitationCard({
             <Button
               fullWidth
               variant="contained"
-              onClick={handleAcceptClick}
+              onClick={handleAccept}
               disabled={!!loadingAction}
               sx={{
                 height: 44,

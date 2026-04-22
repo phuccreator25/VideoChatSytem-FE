@@ -17,20 +17,28 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import { Controller, useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
-import userApi from "../../../../api/User.api";
-import type { RootState } from "../../../../redux/store";
+import { useDispatch, useSelector } from "react-redux";
 import { enqueueSnackbar } from "notistack";
-import type { AddContactData, AddContactModalProps, UserOption, RelationStatus } from "../../../../types/Invitation.tsx";
+
+import userApi from "../../../../api/User.api";
+import type { AppDispatch, RootState } from "../../../../redux/store";
+import type {
+  AddContactData,
+  UserOption,
+  RelationStatus,
+  AddContactModalGroup,
+} from "../../../../types/Invitation.tsx";
+import { onGetCountSentInvitation } from "../../../../redux/invitation.redux.ts";
+
+type AddContactModalProps = {
+  addContactModal: AddContactModalGroup;
+};
 
 const AddContactModal: React.FC<AddContactModalProps> = ({
-  open,
-  onClose,
-  onSubmit,
-  onAcceptRequest,
-  onDeclineRequest,
-  onCancelInvitation,
+  addContactModal,
 }) => {
+  const { ui, handlers } = addContactModal;
+
   const user = useSelector((state: RootState) => state.user.currentUser);
 
   const {
@@ -49,13 +57,15 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
   const [searchKeyword, setSearchKeyword] = useState("");
   const [options, setOptions] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(false);
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null); //Id Item hiển thị Status
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   const selectedUser = watch("selectedUser");
   const selectedStatus = selectedUser?.statusInvitation || "none";
 
+  const dispatch = useDispatch<AppDispatch>();
+
   useEffect(() => {
-    if (!open) return;
+    if (!ui.open) return;
 
     const searchValue = searchKeyword.trim();
 
@@ -70,14 +80,16 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
 
         const res = await userApi.onSearchUser(searchValue);
 
-        const mappedOptions: UserOption[] = (res?.data?.data || []).map((item: any) => ({
-          id: item._id,
-          fullname: item.fullname,
-          email: item.email,
-          avatar: item.avatar || "",
-          statusInvitation: item.relationStatus || "none",
-          invitationId: item.invitationId
-        }));
+        const mappedOptions: UserOption[] = (res?.data?.data || []).map(
+          (item: any) => ({
+            id: item._id,
+            fullname: item.fullname,
+            email: item.email,
+            avatar: item.avatar || "",
+            statusInvitation: item.relationStatus || "none",
+            invitationId: item.invitationId,
+          })
+        );
 
         setOptions(mappedOptions);
       } catch (error) {
@@ -89,7 +101,7 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchKeyword, open]);
+  }, [searchKeyword, ui.open]);
 
   const handleClose = () => {
     reset({
@@ -99,14 +111,18 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
     setSearchKeyword("");
     setOptions([]);
     setActionLoadingId(null);
-    onClose();
+    handlers.onClose();
   };
 
-  //Cập nhật trạng thái khi click handleQuickAction
-  const updateOptionStatus = (invitationId: string, nextStatus: RelationStatus) => {
+  const updateOptionStatus = (
+    invitationId: string,
+    nextStatus: RelationStatus
+  ) => {
     setOptions((prev) =>
       prev.map((item) =>
-        item.invitationId === invitationId ? { ...item, statusInvitation: nextStatus } : item
+        item.invitationId === invitationId
+          ? { ...item, statusInvitation: nextStatus }
+          : item
       )
     );
 
@@ -131,33 +147,33 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
       setActionLoadingId(option.invitationId);
 
       if (action === "accept") {
-        const result = await onAcceptRequest?.(option.invitationId);
+        const result = await handlers.onAcceptRequest?.(option.invitationId);
         if (result) {
           updateOptionStatus(option.invitationId, "accepted");
           enqueueSnackbar("Đã chấp nhận lời mời thành công", {
-            variant: "success"
-          })
+            variant: "success",
+          });
         }
         return;
       }
 
       if (action === "decline") {
-        const result = await onDeclineRequest?.(option.invitationId);
+        const result = await handlers.onDeclineRequest?.(option.invitationId);
         if (result) {
           updateOptionStatus(option.invitationId, "none");
           enqueueSnackbar("Đã từ chối lời mời thành công", {
-            variant: "success"
-          })
+            variant: "success",
+          });
         }
         return;
       }
 
       if (action === "cancel") {
-        const result = await onCancelInvitation?.(option.invitationId);
+        const result = await handlers.onCancelInvitation?.(option.invitationId);
         if (result) {
           enqueueSnackbar("Đã thu hồi lời mời thành công", {
-            variant: "success"
-          })
+            variant: "success",
+          });
           updateOptionStatus(option.invitationId, "none");
         }
       }
@@ -168,7 +184,7 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
     }
   };
 
-  const submitLabel = () => { ///Set btn label
+  const submitLabel = () => {
     if (!selectedUser) return "Invite Contact";
     if (selectedStatus === "accepted") return "Already Friends";
     if (selectedStatus === "pending_sent") return "Invitation Sent";
@@ -176,25 +192,27 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
     return "Invite Contact";
   };
 
-  const isSubmitDisabled = () => { // Nếu đã là bạn bè hay đã gửi rồi thì khong có thao tác
+  const isSubmitDisabled = () => {
     return !selectedUser || selectedStatus !== "none";
   };
 
   const onAddContact = async (data: AddContactData) => {
-    if (!data.selectedUser || data.selectedUser.statusInvitation !== "none") return;
+    if (!data.selectedUser || data.selectedUser.statusInvitation !== "none") {
+      return;
+    }
 
-    await onSubmit?.({
+    await handlers.onSubmit({
       userId: data.selectedUser.id,
       invitationMessage: data.invitationMessage,
     });
-
-    updateOptionStatus(data.selectedUser.id, "pending_sent");
+    await dispatch(onGetCountSentInvitation());
+    await updateOptionStatus(data.selectedUser.id, "pending_sent");
     handleClose();
   };
 
   return (
     <Dialog
-      open={open}
+      open={ui.open}
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
@@ -257,11 +275,15 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
                     loading={loading}
                     value={field.value}
                     onChange={(_, newValue) => field.onChange(newValue)}
-                    onInputChange={(_, newInputValue) => setSearchKeyword(newInputValue)}
+                    onInputChange={(_, newInputValue) =>
+                      setSearchKeyword(newInputValue)
+                    }
                     getOptionLabel={(option) =>
                       option ? `${option.fullname} (${option.email})` : ""
                     }
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
                     noOptionsText={
                       searchKeyword.trim()
                         ? "Không tìm thấy user"
@@ -275,7 +297,8 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
                       },
                     }}
                     renderOption={(props, option) => {
-                      const isActionLoading = actionLoadingId === option.id;
+                      const isActionLoading =
+                        actionLoadingId === option.invitationId;
 
                       return (
                         <Box

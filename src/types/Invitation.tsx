@@ -1,5 +1,4 @@
-import {type Dispatch, type SetStateAction } from "react";
-import type { ContactSection } from "./data.type";
+import type { ContactSection } from "./contact.type";
 
 export type InvitationItem = {
     id: string;
@@ -17,22 +16,29 @@ export type SentInvitationItem = {
     avatar?:string
 };
 
-export type InvitationPopoverProps = {
+export type InvitationPopoverGroup = {
+  data: {
+    receivedInvitations: InvitationItem[];
+    sentInvitations: SentInvitationItem[];
+  };
+  ui: {
     openPopover: boolean;
     anchorEl: HTMLElement | null;
+  };
+  handlers: {
     handleCloseInvitationPopover: () => void;
     handleOpenAddContactModal: () => void;
-    receivedInvitations: InvitationItem[];
-    setReceivedInvitations: Dispatch<SetStateAction<InvitationItem[]>>;
-    handleDeclineInvitation: (id: string) => void;
-    handleAcceptInvitation: (id: string) => void;
-    sentInvitations: SentInvitationItem[];
-    handleCancelSentInvitation: (id: string) => Promise<boolean>;
     handleViewAllRequests: () => void;
-    getTimeAgo: (dateString: string) => void;
-    handleRemoveReceivedInvitation: (id: string) => void;
     handleRemoveSentInvitation: (id: string) => void;
-    setSentInvitations: Dispatch<SetStateAction<SentInvitationItem[]>>;
+    handleRemoveReceivedInvitation: (id: string) => void;
+    setReceivedInvitations: React.Dispatch<React.SetStateAction<InvitationItem[]>>;
+    setSentInvitations: React.Dispatch<React.SetStateAction<SentInvitationItem[]>>;
+    refreshPopoverReceivedInvitations: () => Promise<void>;
+    refreshPopoverSentInvitations: () => Promise<void>;
+  };
+  helpers: {
+    getTimeAgo: (dateString: string) => string;
+  };
 };
 
 //Friend Request
@@ -41,23 +47,38 @@ export type InvitationActionStatus =   | "accepted"
   | "cancelled"
   | null;
 
-export type FriendRequestsSectionProps = {
-  receivedInvitations: InvitationItem[];
-  setReceivedInvitations: Dispatch<SetStateAction<InvitationItem[]>>;
-  handleDeclineInvitation: (id: string) => Promise<boolean> | void;
-  handleAcceptInvitation: (id: string) => Promise<boolean> | void;
-  getTimeAgo: (dateString: string) => string | void;
-  handleRemoveReceivedInvitation: (id: string) => void
+export type FriendRequestsSectionGroup = {
+  data: {
+    receivedInvitations: InvitationItem[];
+  };
+  handlers: {
+    handleRemoveReceivedInvitation: (id: string) => void;
+    setReceivedInvitations: React.Dispatch<
+      React.SetStateAction<InvitationItem[]>
+    >;
+    refreshPopoverReceivedInvitations: () => Promise<void>;
+  };
+  helpers: {
+    getTimeAgo: (dateString: string) => string;
+  };
 };
 
 //Sentinvitation
 
-export type SentInvitationProps = {
-  sentInvitations: SentInvitationItem[];
-  handleCancelSentInvitation: (id: string) => Promise<boolean>;
-  getTimeAgo: (dateString: string) => string | void;
-  handleRemoveSentInvitation: (id: string) => void
-  setSentInvitations: Dispatch<SetStateAction<SentInvitationItem[]>>;
+export type SentInvitationsSectionGroup = {
+  data: {
+    sentInvitations: SentInvitationItem[];
+  };
+  handlers: {
+    handleRemoveSentInvitation: (id: string) => void;
+    setSentInvitations: React.Dispatch<
+      React.SetStateAction<SentInvitationItem[]>
+    >;
+    refreshPopoverSentInvitations: () => Promise<void>;
+  };
+  helpers: {
+    getTimeAgo: (dateString: string) => string;
+  };
 };
 
 //Modal Contact
@@ -76,13 +97,14 @@ export type UserOption = {
   invitationId: string
 };
 
-export type AddContactModalProps = {
-  open: boolean;
-  onClose: () => void;
-  onSubmit?: (data: { userId: string; invitationMessage: string }) => Promise<void> | void;
-  onAcceptRequest?: (invitationId: string) => Promise<boolean> | void;
-  onDeclineRequest?: (invitationId: string) => Promise<boolean> | void;
-  onCancelInvitation?: (invitationId: string) => Promise<boolean> | void;
+export type AddContactModalGroup = {
+  ui: {
+    open: boolean;
+  };
+  handlers: {
+    onClose: () => void;
+    onSubmit: (payload: AddContactDataHook) => boolean | Promise<boolean>;
+  };
 };
 
 export type AddContactData = {

@@ -8,14 +8,12 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import type { contacts } from "../../../../types/contact.type";
-
-type SetNicknameModalProps = {
-    open: boolean;
-    onClose: () => void;
-    onConfirm?: (data: contacts) => void;
-    selectedContact: contacts | null
-};
+import type {SetNicknameModalProps } from "../../../../types/contact.type";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "../../../../redux/store";
+import { onGetDataContact } from "../../../../redux/contact.redux";
+import { enqueueSnackbar } from "notistack";
+import Zoom from "@mui/material/Zoom";
 
 export function SetNicknameModal({
     open,
@@ -26,18 +24,25 @@ export function SetNicknameModal({
     const [nickname, setNickname] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const dispatch = useDispatch<AppDispatch>()
+
     useEffect(() => {
-        if (open) {
-            setNickname(selectedContact?.nickname || selectedContact?.fullname || "");
-        }
-    }, [open, selectedContact]);
+      setNickname(selectedContact?.nickname ?? "");
+    }, [selectedContact]);
 
     const handleConfirm = async () => {
         try {
             if (!selectedContact) return;
             setIsSubmitting(true)
-            await onConfirm?.({ ...selectedContact, nickname });
-            // onClose();
+            const result = await onConfirm?.({ ...selectedContact, nickname });
+            
+            if(result){
+                enqueueSnackbar("Đã cập nhật biệt danh thành công", {
+                    variant: 'success'
+                })
+                onClose();
+                dispatch(onGetDataContact())
+            }
         } catch (error) {
             console.log(error);
         } finally {
@@ -48,21 +53,23 @@ export function SetNicknameModal({
     return (
         <>
             <Dialog
-                open={open}
-                onClose={onClose}
-                maxWidth="xs"
-                fullWidth
-                hideBackdrop
-                PaperProps={{
-                    sx: {
-                        borderRadius: 3,
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #ede9fe",
-                        boxShadow: "none",
-                        overflow: "hidden",
-                        m: 0
-                    },
-                }}
+            open={open}
+            onClose={onClose}
+            maxWidth="xs"
+            fullWidth
+            hideBackdrop
+            TransitionComponent={Zoom}
+            transitionDuration={220}
+            PaperProps={{
+                sx: {
+                borderRadius: 3,
+                backgroundColor: "#ffffff",
+                border: "1px solid #ede9fe",
+                boxShadow: "none",
+                overflow: "hidden",
+                m: 0
+                },
+            }}
             >
                 <DialogTitle
                     sx={{
@@ -147,7 +154,7 @@ export function SetNicknameModal({
 
                         <TextField
                             fullWidth
-                            placeholder="Enter nickname"
+                            placeholder={selectedContact?.fullname}
                             value={nickname}
                             onChange={(event) => setNickname(event.target.value)}
                             autoFocus
@@ -209,7 +216,7 @@ export function SetNicknameModal({
                     <Button
                         onClick={handleConfirm}
                         variant="contained"
-                        disabled={!nickname.trim() || isSubmitting}
+                        disabled={ !(nickname != selectedContact?.nickname) || isSubmitting}
                         sx={{
                             minWidth: 110,
                             height: 44,

@@ -9,12 +9,16 @@ import type {
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../../redux/store";
-import { clearInvitationActionStatus, onGetCountReceivedInvitation, onGetListSentInvitation, removeReceivedInvitation, removeSentInvitation } from "../../redux/invitation.redux";
+import {
+  clearInvitationActionStatus,
+  onGetCountReceivedInvitation,
+  onGetCountSentInvitation,
+  onGetListFriendRequests,
+  onGetListSentInvitation,
+} from "../../redux/invitation.redux";
 
 function useInvitation() {
   const [openModal, setOpenModal] = useState<boolean>(false);
-
-  
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const [receivedInvitations, setReceivedInvitations] = useState<
@@ -22,17 +26,13 @@ function useInvitation() {
   >([]);
 
   const [sentInvitations, setSentInvitations] = useState<SentInvitationItem[]>(
-    [],
+    []
   );
 
   const openPopover = Boolean(anchorEl);
   const navigate = useNavigate();
-
   const dispatch = useDispatch<AppDispatch>();
 
- 
-
-  //Modal invitation
   const handleOpenModal = () => {
     setOpenModal(true);
   };
@@ -41,55 +41,14 @@ function useInvitation() {
     setOpenModal(false);
   };
 
-  //Popover invitation
   const handleOpenInvitationPopover = (
-    event: React.MouseEvent<HTMLElement>,
+    event: React.MouseEvent<HTMLElement>
   ) => {
     setAnchorEl(event.currentTarget);
   };
 
   const handleCloseInvitationPopover = () => {
     setAnchorEl(null);
-  };
-
-  //Handle
-  const handleAcceptInvitation = async (id: string) => {
-    try {
-      const res = await InvitationsAPI.onAcceptInvitation({ id });
-      return res.status === 200;
-    } catch (error) {
-      console.log(error);
-      enqueueSnackbar("Vui lòng thử lại", {
-        variant: "error",
-      });
-      return false;
-    }
-  };
-
-  const handleDeclineInvitation = async (id: string) => {
-    try {
-      const res = await InvitationsAPI.onDeclineInvitation({ id });
-      return res.status === 200;
-    } catch (error) {
-      console.log(error);
-      enqueueSnackbar("Vui lòng thử lại", {
-        variant: "error",
-      });
-      return false;
-    }
-  };
-
-  const handleCancelSentInvitation = async (id: string) => {
-    try {
-      const res = await InvitationsAPI.onCancelSentInvitation({ id });
-      return res.status === 200;
-    } catch (error) {
-      console.log(error);
-      enqueueSnackbar("Vui lòng thử lại", {
-        variant: "error",
-      });
-      return false;
-    }
   };
 
   const handleOpenAddContactModal = () => {
@@ -99,7 +58,7 @@ function useInvitation() {
 
   const onHandleAddContact = async (payload: AddContactDataHook) => {
     try {
-      if (!payload?.userId) return;
+      if (!payload?.userId) return false;
 
       const res = await InvitationsAPI.onAddContacts(payload);
 
@@ -107,10 +66,14 @@ function useInvitation() {
         enqueueSnackbar("Đã gửi lời mời kết bạn thành công", {
           variant: "success",
         });
-        dispatch(onGetListSentInvitation({pageSize: 3}))
 
+        dispatch(onGetListSentInvitation({ pageSize: 3 }));
+        await refreshPopoverSentInvitations();
         handleCloseModal();
+        return true;
       }
+
+      return false;
     } catch (error: any) {
       console.log("ERROR ADD CONTACT:", error?.message);
 
@@ -118,48 +81,63 @@ function useInvitation() {
         error?.response?.data?.message || "Gửi lời mời kết bạn thất bại",
         {
           variant: "error",
-        },
+        }
       );
+
+      return false;
     }
   };
 
-  //Fetch Data API
+  const refreshPopoverReceivedInvitations = async () => {
+    const friendRes = await InvitationsAPI.onGetFriendRequest({
+      limit: 3,
+      skip: 0,
+    });
+
+    setReceivedInvitations(friendRes.data.data || []);
+  };
+
+  const refreshPopoverSentInvitations = async () => {
+    const sentRes = await InvitationsAPI.onGetSentInvitation({
+      limit: 3,
+      skip: 0,
+    });
+
+    setSentInvitations(sentRes.data.data || []);
+  };
+
   useEffect(() => {
-    if (!anchorEl) return;
+  if (!anchorEl) return;
 
     const fetchInvitationData = async () => {
-      const [friendRes, sentRes] = await Promise.all([
-        InvitationsAPI.onGetFriendRequest({ limit: 3, skip: 0 }),
-        InvitationsAPI.onGetSentInvitation({ limit: 3, skip: 0 }),
+      await Promise.all([
+        refreshPopoverReceivedInvitations(),
+        refreshPopoverSentInvitations(),
       ]);
-
-      setReceivedInvitations(friendRes.data.data || []);
-      setSentInvitations(sentRes.data.data || []);
     };
 
     fetchInvitationData();
   }, [anchorEl]);
 
-  // OverView Invitation
   const handleViewAllRequests = async () => {
     navigate("/invitation");
     handleCloseInvitationPopover();
   };
 
-  //Remove invitation When success
-
-  const handleRemoveReceivedInvitation = (id: string) => {
-    dispatch(removeReceivedInvitation(id));
-    dispatch(clearInvitationActionStatus(id));
-    dispatch(onGetCountReceivedInvitation())
-  };
-
-  const handleRemoveSentInvitation = (id: string) => {
-    dispatch(removeSentInvitation(id));
+  const handleRemoveReceivedInvitation = async (id: string) => {
+    await dispatch(onGetListFriendRequests({}));
+    await refreshPopoverReceivedInvitations();
+    await dispatch(onGetCountReceivedInvitation());
     dispatch(clearInvitationActionStatus(id));
   };
 
-  //Chuyển fortmat thời gian
+  const handleRemoveSentInvitation = async (id: string) => {
+    await dispatch(onGetListSentInvitation({}));
+    await refreshPopoverSentInvitations();
+    await dispatch(onGetCountSentInvitation());
+    dispatch(clearInvitationActionStatus(id));
+  };
+
   const getTimeAgo = (dateString: string) => {
     const now = Date.now();
     const sentTime = new Date(dateString).getTime();
@@ -178,33 +156,39 @@ function useInvitation() {
   };
 
   return {
-    openModal,
-    anchorEl,
-    openPopover,
-    receivedInvitations,
-    sentInvitations,
-    setSentInvitations,
-    setReceivedInvitations,
-    getTimeAgo,
+    data: {
+      receivedInvitations,
+      sentInvitations,
+    },
+    ui: {
+      openModal,
+      anchorEl,
+      openPopover,
+    },
+    helpers: {
+      getTimeAgo,
+    },
+    handlers: {
+      setSentInvitations,
+      setReceivedInvitations,
 
-    handleOpenModal,
-    handleCloseModal,
+      handleOpenModal,
+      handleCloseModal,
 
-    handleOpenInvitationPopover,
-    handleCloseInvitationPopover,
+      handleOpenInvitationPopover,
+      handleCloseInvitationPopover,
 
-    handleAcceptInvitation,
-    handleDeclineInvitation,
-    handleCancelSentInvitation,
+      handleOpenAddContactModal,
+      handleViewAllRequests,
 
-    handleOpenAddContactModal,
-    handleViewAllRequests,
+      onHandleAddContact,
 
-    onHandleAddContact,
+      handleRemoveReceivedInvitation,
+      handleRemoveSentInvitation,
 
-    handleRemoveReceivedInvitation,
-    handleRemoveSentInvitation
-
+      refreshPopoverReceivedInvitations,
+      refreshPopoverSentInvitations
+    },
   };
 }
 

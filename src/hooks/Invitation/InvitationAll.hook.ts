@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 
 import InvitationsAPI from "../../api/Invitation.api";
 import {
+  onGetCountReceivedInvitation,
+  onGetCountSentInvitation,
   onGetListFriendRequests,
   onGetListSentInvitation,
   setReceivedAllInvitations,
@@ -21,6 +23,10 @@ export default function useInvitationAll({
     (state: RootState) => state.invitation.countReceived
   );
 
+  const countSent = useSelector(
+    (state: RootState) => state.invitation.countSent
+  );
+
   const receivedAllInvitations = useSelector(
     (state: RootState) => state.invitation.receivedAllInvitations
   );
@@ -32,9 +38,6 @@ export default function useInvitationAll({
   const [loadingReceived, setLoadingReceived] = useState(false);
   const [loadingSent, setLoadingSent] = useState(false);
 
-  const [hasMoreReceived, setHasMoreReceived] = useState(true);
-  const [hasMoreSent, setHasMoreSent] = useState(true);
-
   const receivedSkip = useMemo(
     () => receivedAllInvitations.length,
     [receivedAllInvitations]
@@ -45,29 +48,22 @@ export default function useInvitationAll({
     [sentInvitations]
   );
 
+  const hasMoreReceived = receivedAllInvitations.length < countReceived;
+  const hasMoreSent = sentInvitations.length < countSent;
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setLoadingReceived(true);
         setLoadingSent(true);
-
-        const [receivedAction, sentAction] = await Promise.all([
+        console.log('okokok 2');
+        
+        await Promise.all([
+          dispatch(onGetCountReceivedInvitation()),
+          dispatch(onGetCountSentInvitation()),
           dispatch(onGetListFriendRequests({ pageSize })),
           dispatch(onGetListSentInvitation({ pageSize })),
         ]);
-
-        const receivedData =
-          onGetListFriendRequests.fulfilled.match(receivedAction)
-            ? receivedAction.payload || []
-            : [];
-
-        const sentData =
-          onGetListSentInvitation.fulfilled.match(sentAction)
-            ? sentAction.payload || []
-            : [];
-
-        setHasMoreReceived(receivedData.length === pageSize);
-        setHasMoreSent(sentData.length === pageSize);
       } finally {
         setLoadingReceived(false);
         setLoadingSent(false);
@@ -98,10 +94,6 @@ export default function useInvitationAll({
           ])
         );
       }
-
-      if (newItems.length < pageSize) {
-        setHasMoreReceived(false);
-      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -130,10 +122,6 @@ export default function useInvitationAll({
           ])
         );
       }
-
-      if (newItems.length < pageSize) {
-        setHasMoreSent(false);
-      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -149,6 +137,7 @@ export default function useInvitationAll({
     hasMoreReceived,
     hasMoreSent,
     countReceived,
+    countSent,
     handleLoadMoreReceived,
     handleLoadMoreSent,
   };
