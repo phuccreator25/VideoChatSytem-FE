@@ -4,6 +4,7 @@ import { CONFIG } from './appConfig'
 import authApi from '../api/Auth.api'
 import { clearCurrentUser } from '../redux/auth.redux'
 import { store, persistor } from '../redux/store'
+import { connectSocket } from '../socket/socket'
 
 const axiosInterceptor = axios.create({
   baseURL: CONFIG.API_HOST,
@@ -71,6 +72,7 @@ axiosInterceptor.interceptors.response.use(
     try {
       
       await authApi.onRefreshToken()     
+      connectSocket() // Kết nối lại socket sau khi refresh token thành công
       processQueue()  
       return axiosInterceptor(originalRequest)
     

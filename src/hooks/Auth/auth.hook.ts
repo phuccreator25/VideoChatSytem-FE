@@ -7,6 +7,7 @@ import { useSnackbar } from "notistack";
 import { clearCurrentUser, onLogin } from "../../redux/auth.redux";
 import { useDispatch } from 'react-redux'
 import type { AppDispatch } from '../../redux/store'
+import { bindOnlineUsers, connectSocket, disconnectSocket } from "../../socket/socket";
 
 type ForgotPasswordPayload = {
   email: string;
@@ -66,6 +67,12 @@ function useAuth() {
       const res =  await dispatch(onLogin({ email, password, deviceId })).unwrap();
       
       if (res) {
+        connectSocket();
+        bindOnlineUsers((userIds: string[]) => {
+          console.log("ONLINE USERS:", userIds);
+          // SET DS USER CONTECT ĐANG ONLINE
+        });
+
         enqueueSnackbar("Đăng nhập thành công", {
           variant: "success",
         });
@@ -87,6 +94,7 @@ function useAuth() {
       const res = await authApi.onLogOut();
 
       if (res.status === 200) {
+        disconnectSocket();
         enqueueSnackbar("Đăng xuất thành công", {
           variant: "success",
         });

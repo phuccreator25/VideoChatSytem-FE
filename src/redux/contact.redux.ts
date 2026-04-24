@@ -14,8 +14,6 @@ export const onGetDataContact = createAsyncThunk(
   'contact/onGetDataContact',
   async () => {
     const res = await ContactApi.onGetContact()
-    console.log(res.data.data);
-    
     return (res.data.data || []) as contacts[]
   }
 )
