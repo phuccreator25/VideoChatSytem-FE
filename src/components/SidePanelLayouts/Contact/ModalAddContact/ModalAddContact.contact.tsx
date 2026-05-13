@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
-import Avatar from "@mui/material/Avatar";
+
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -10,17 +10,12 @@ import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
+
 import { Controller, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { enqueueSnackbar } from "notistack";
 
-import userApi from "../../../../api/User.api";
 import type { AppDispatch, RootState } from "../../../../redux/store";
 import type {
   AddContactData,
@@ -29,12 +24,14 @@ import type {
   AddContactModalGroup,
 } from "../../../../types/Invitation.tsx";
 import { onGetCountSentInvitation } from "../../../../redux/invitation.redux.ts";
+import { useLocation } from "react-router-dom";
+import UserSearchOptions from "./UserSearchOptions.contact.tsx";
 
 type AddContactModalProps = {
   addContactModal: AddContactModalGroup;
 };
 
-const AddContactModal: React.FC<AddContactModalProps> = ({
+const ModalAddContactModal: React.FC<AddContactModalProps> = ({
   addContactModal,
 }) => {
   const { ui, handlers } = addContactModal;
@@ -57,12 +54,12 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
   const [searchKeyword, setSearchKeyword] = useState("");
   const [options, setOptions] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(false);
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   const selectedUser = watch("selectedUser");
   const selectedStatus = selectedUser?.statusInvitation || "none";
 
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation()
 
   useEffect(() => {
     if (!ui.open) return;
@@ -78,18 +75,7 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
       try {
         setLoading(true);
 
-        const res = await userApi.onSearchUser(searchValue);
-
-        const mappedOptions: UserOption[] = (res?.data?.data || []).map(
-          (item: any) => ({
-            id: item._id,
-            fullname: item.fullname,
-            email: item.email,
-            avatar: item.avatar || "",
-            statusInvitation: item.relationStatus || "none",
-            invitationId: item.invitationId,
-          })
-        );
+        const mappedOptions = await handlers.handleSearchUser(searchValue)
 
         setOptions(mappedOptions);
       } catch (error) {
@@ -101,7 +87,7 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchKeyword, ui.open]);
+  }, [searchKeyword, ui.open, handlers.handleSearchUser]);
 
   const handleClose = () => {
     reset({
@@ -110,7 +96,7 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
     });
     setSearchKeyword("");
     setOptions([]);
-    setActionLoadingId(null);
+    handlers.setActionLoadingId(null);
     handlers.onClose();
   };
 
@@ -135,53 +121,16 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
     }
   };
 
-  const handleQuickAction = async (
-    event: React.MouseEvent,
+  const handleQuickAction = (
+    event: React.SyntheticEvent,
     option: UserOption,
     action: "accept" | "decline" | "cancel"
   ) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    try {
-      setActionLoadingId(option.invitationId);
-
-      if (action === "accept") {
-        const result = await handlers.onAcceptRequest?.(option.invitationId);
-        if (result) {
-          updateOptionStatus(option.invitationId, "accepted");
-          enqueueSnackbar("Đã chấp nhận lời mời thành công", {
-            variant: "success",
-          });
-        }
-        return;
-      }
-
-      if (action === "decline") {
-        const result = await handlers.onDeclineRequest?.(option.invitationId);
-        if (result) {
-          updateOptionStatus(option.invitationId, "none");
-          enqueueSnackbar("Đã từ chối lời mời thành công", {
-            variant: "success",
-          });
-        }
-        return;
-      }
-
-      if (action === "cancel") {
-        const result = await handlers.onCancelInvitation?.(option.invitationId);
-        if (result) {
-          enqueueSnackbar("Đã thu hồi lời mời thành công", {
-            variant: "success",
-          });
-          updateOptionStatus(option.invitationId, "none");
-        }
-      }
-    } catch (error) {
-      console.error("Invitation action failed:", error);
-    } finally {
-      setActionLoadingId(null);
-    }
+    handlers.handleQuickAction(action, {
+      event,
+      option,
+      onUpdateOptionStatus: updateOptionStatus,
+    });
   };
 
   const submitLabel = () => {
@@ -205,8 +154,9 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
       userId: data.selectedUser.id,
       invitationMessage: data.invitationMessage,
     });
-    await dispatch(onGetCountSentInvitation());
-    await updateOptionStatus(data.selectedUser.id, "pending_sent");
+
+
+    if (location.pathname === '/invitation') { await dispatch(onGetCountSentInvitation()) };
     handleClose();
   };
 
@@ -298,7 +248,7 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
                     }}
                     renderOption={(props, option) => {
                       const isActionLoading =
-                        actionLoadingId === option.invitationId;
+                        ui.actionLoadingId === option.invitationId;
 
                       return (
                         <Box
@@ -317,124 +267,11 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
                             },
                           }}
                         >
-                          <Avatar
-                            src={option.avatar}
-                            alt={option.fullname}
-                            sx={{ width: 38, height: 38, flexShrink: 0 }}
-                          >
-                            {option.fullname?.charAt(0)?.toUpperCase()}
-                          </Avatar>
-
-                          <Box sx={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
-                            <Typography
-                              sx={{
-                                fontSize: 14,
-                                fontWeight: 600,
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                color: "#1f2430",
-                              }}
-                            >
-                              {option.fullname}
-                            </Typography>
-
-                            <Typography
-                              sx={{
-                                fontSize: 13,
-                                color: "#6b7280",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                              }}
-                            >
-                              {option.email}
-                            </Typography>
-                          </Box>
-
-                          {isActionLoading ? (
-                            <CircularProgress size={18} />
-                          ) : option.statusInvitation === "pending_received" ? (
-                            <Stack direction="row" spacing={0.5}>
-                              <Tooltip title="Accept">
-                                <IconButton
-                                  size="small"
-                                  onClick={(e) =>
-                                    handleQuickAction(e, option, "accept")
-                                  }
-                                  sx={{
-                                    width: 30,
-                                    height: 30,
-                                    bgcolor: "rgba(34, 197, 94, 0.12)",
-                                    color: "#16a34a",
-                                    "&:hover": {
-                                      bgcolor: "rgba(34, 197, 94, 0.18)",
-                                    },
-                                  }}
-                                >
-                                  <CheckRoundedIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                              </Tooltip>
-
-                              <Tooltip title="Decline">
-                                <IconButton
-                                  size="small"
-                                  onClick={(e) =>
-                                    handleQuickAction(e, option, "decline")
-                                  }
-                                  sx={{
-                                    width: 30,
-                                    height: 30,
-                                    bgcolor: "rgba(239, 68, 68, 0.10)",
-                                    color: "#dc2626",
-                                    "&:hover": {
-                                      bgcolor: "rgba(239, 68, 68, 0.16)",
-                                    },
-                                  }}
-                                >
-                                  <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                              </Tooltip>
-                            </Stack>
-                          ) : option.statusInvitation === "pending_sent" ? (
-                            <Tooltip title="Cancel invitation">
-                              <IconButton
-                                size="small"
-                                onClick={(e) =>
-                                  handleQuickAction(e, option, "cancel")
-                                }
-                                sx={{
-                                  width: 30,
-                                  height: 30,
-                                  bgcolor: "rgba(245, 158, 11, 0.12)",
-                                  color: "#d97706",
-                                  "&:hover": {
-                                    bgcolor: "rgba(245, 158, 11, 0.18)",
-                                  },
-                                }}
-                              >
-                                <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                              </IconButton>
-                            </Tooltip>
-                          ) : option.statusInvitation === "accepted" ? (
-                            <Tooltip title="Already friends">
-                              <Box
-                                sx={{
-                                  width: 30,
-                                  height: 30,
-                                  borderRadius: "50%",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  bgcolor: "rgba(34, 197, 94, 0.10)",
-                                  color: "#16a34a",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                <GroupRoundedIcon sx={{ fontSize: 18 }} />
-                              </Box>
-                            </Tooltip>
-                          ) : null}
+                          <UserSearchOptions
+                            option={option}
+                            isActionLoading={isActionLoading}
+                            handleQuickAction={handleQuickAction}
+                          />
                         </Box>
                       );
                     }}
@@ -569,4 +406,4 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
   );
 };
 
-export default AddContactModal;
+export default ModalAddContactModal;

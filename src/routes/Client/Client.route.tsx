@@ -40,14 +40,14 @@ export default function ClientRoute() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/check-email/:email" element={<CheckEmailPage />} />
           <Route
-            path="/reset-password/:email"
+            path="/reset-password"
             element={<ResetPasswordPage />}
           />
           <Route path="/active-account" element={<ActiveSuccess />} />
         </Route>
 
         <Route element={<CheckAuth/>}>
-          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/chat/:conversationId?" element={<ChatPage />} />
           <Route path="/invitation" element={<InvitationPages />} />
         </Route>
 

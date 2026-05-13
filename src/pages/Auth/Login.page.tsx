@@ -19,14 +19,14 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors },} = useForm({
-    defaultValues: {
-      email:emailParams || '' ,
-      password: ''
-    }
-  })
-  
-  const {handleLogin, loading} = useAuth();
+    formState: { errors }, } = useForm({
+      defaultValues: {
+        email: emailParams || '',
+        password: ''
+      }
+    })
+
+  const { handleLogin, loading } = useAuth();
 
   const onLogin = async (data: typeLogin) => {
     try {
@@ -37,10 +37,10 @@ export default function LoginPage() {
         password: data.password,
         deviceId,
       });
-      
+
     } catch (error) {
       console.error('Login error:', error);
-    } 
+    }
   };
 
 
@@ -74,7 +74,7 @@ export default function LoginPage() {
               {...register("email", {
                 required: "Vui lòng nhập vào email"
               })}
-              error= {!!errors.email}
+              error={!!errors.email}
               helperText={errors.email?.message}
             />
 
@@ -86,7 +86,7 @@ export default function LoginPage() {
               {...register("password", {
                 required: "Vui lòng nhập vào mật khẩu"
               })}
-              error= {!!errors.password}
+              error={!!errors.password}
               helperText={errors.email?.message}
             />
 

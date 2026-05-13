@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 
 import { customScrollbarSx } from "../../utils/CustomScroll";
 import type { Message } from "../../types/data.type";
@@ -11,49 +13,70 @@ import { COLORS } from "../../utils/Colors";
 import { Header } from "./Header/header.chat";
 import { MessageItem } from "./Messages/MessgesItem.chat";
 import { InputBar } from "./InputBar/InputBar.chat";
-
-const leftAvatar =
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop";
-const rightAvatar =
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80&auto=format&fit=crop";
-
-const gallery1 =
-  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=900&q=80&auto=format&fit=crop";
-const gallery2 =
-  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=900&q=80&auto=format&fit=crop";
-
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    type: "gallery",
-    sender: "left",
-    name: "Doris Brown",
-    avatar: leftAvatar,
-    time: "10:30",
-    images: [gallery1, gallery2],
-  },
-  {
-    id: 2,
-    type: "file",
-    sender: "right",
-    name: "Patricia Smith",
-    avatar: rightAvatar,
-    time: "01:30",
-    fileName: "admin_v1.0.zip",
-    fileSize: "12.5 MB",
-  },
-  {
-    id: 3,
-    type: "typing",
-    sender: "left",
-    name: "Doris Brown",
-    avatar: leftAvatar,
-  },
-];
+import type { ConversationUserInfo, MessageType } from "../../types/chat.type";
+import ConversationsAPI from "../../api/conversation.api";
+import { bindOnlineUsers, bindUserPresenceChanged, unbindOnlineUsers, unbindUserPresenceChanged } from "../../socket/authSocket.socket";
 
 export default function ChatFrame() {
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<MessageType[]>();
   const [input, setInput] = useState("");
+
+  const { conversationId } = useParams();
+  const [userData, setUserData] = useState<ConversationUserInfo>();
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!conversationId) return;
+
+      const res = await ConversationsAPI.getConversationById(conversationId);
+      setUserData(res.data.data.user);
+      setMessages(res.data.data.messages || []);
+    };
+
+    fetchMessages();
+  }, [conversationId]);
+
+  useEffect(() => {
+    const handleOnlineUsers = (userIds: string[]) => {
+      if (!userData?.userId) return;
+
+      const isUserOnline = userIds.includes(userData.userId);
+
+      setUserData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          isOnline: isUserOnline ? 'online' : 'offline',
+        };
+      });
+    };
+
+    const handlePresenceChanged = (payload: {
+      userId: string;
+      isOnline: boolean;
+      lastSeenAt?: string | null;
+    }) => {
+      setUserData((prev) => {
+        if (!prev || prev.userId !== payload.userId) return prev;
+
+        return {
+          ...prev,
+          isOnline: payload.isOnline ? 'online' : 'offline',
+          lastSeenAt: payload.lastSeenAt ?? prev.lastSeenAt,
+        };
+      });
+    };
+
+    bindOnlineUsers(handleOnlineUsers);
+    bindUserPresenceChanged(handlePresenceChanged);
+
+    return () => {
+      unbindOnlineUsers(handleOnlineUsers);
+      unbindUserPresenceChanged(handlePresenceChanged);
+    };
+  }, [userData?.userId]);
+
 
   const handleSend = () => {
     const text = input.trim();
@@ -64,7 +87,7 @@ export default function ChatFrame() {
       type: "file",
       sender: "right",
       name: "Patricia Smith",
-      avatar: rightAvatar,
+      avatar: 'rightAvatar',
       time: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -76,6 +99,39 @@ export default function ChatFrame() {
     setMessages((prev) => [...prev, newMessage]);
     setInput("");
   };
+
+
+
+  if (!conversationId) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          width: "100%",
+          height: "100%",
+          borderRadius: 4,
+          bgcolor: COLORS.pageBg,
+          border: "1px solid #e7e7ee",
+          boxShadow: "0 10px 30px rgba(20, 20, 43, 0.08)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: 0,
+        }}
+      >
+        <Box sx={{ textAlign: "center" }}>
+          <Typography
+            sx={{ fontSize: 22, fontWeight: 700, color: COLORS.title, mb: 1 }}
+          >
+            Chọn một cuộc trò chuyện
+          </Typography>
+          <Typography sx={{ fontSize: 15, color: COLORS.textMuted }}>
+            Hãy chọn contact hoặc conversation để bắt đầu nhắn tin
+          </Typography>
+        </Box>
+      </Paper>
+    );
+  }
 
   return (
     <Paper
@@ -93,7 +149,7 @@ export default function ChatFrame() {
         minHeight: 0,
       }}
     >
-      <Header />
+      <Header userData={userData} />
       <Divider sx={{ borderColor: COLORS.border }} />
 
       <Box
@@ -107,7 +163,7 @@ export default function ChatFrame() {
         }}
       >
         <Stack spacing={4}>
-          {messages.map((msg) => (
+          {messages?.map((msg) => (
             <MessageItem key={msg.id} msg={msg} />
           ))}
         </Stack>

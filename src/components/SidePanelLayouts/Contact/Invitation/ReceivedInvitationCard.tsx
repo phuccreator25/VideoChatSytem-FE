@@ -50,7 +50,6 @@ export function ReceivedInvitationCard({
 
   const refreshViewAllReceived = async () => {
     await Promise.all([
-      dispatch(onGetDataContact()),
       dispatch(onGetCountReceivedInvitation()),
       dispatch(onGetListFriendRequests({})),
     ]);
@@ -72,6 +71,7 @@ export function ReceivedInvitationCard({
           })
         );
 
+        await dispatch(onGetDataContact())
         await refreshViewAllReceived();
 
         setTimeout(() => {

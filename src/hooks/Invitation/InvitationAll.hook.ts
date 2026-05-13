@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import InvitationsAPI from "../../api/Invitation.api";
@@ -11,6 +11,16 @@ import {
   setSentInvitations,
 } from "../../redux/invitation.redux";
 import type { AppDispatch, RootState } from "../../redux/store";
+import {
+  bindInvitationAccept,
+  bindInvitationCancel,
+  bindInvitationCreated,
+  bindInvitationDecline,
+  unbindInvitationAccept,
+  unbindInvitationCancel,
+  unbindInvitationCreated,
+  unbindInvitationDecline,
+} from "../../socket/invitationSocket.socket";
 
 export default function useInvitationAll({
   pageSize = 3,
@@ -20,19 +30,19 @@ export default function useInvitationAll({
   const dispatch = useDispatch<AppDispatch>();
 
   const countReceived = useSelector(
-    (state: RootState) => state.invitation.countReceived
+    (state: RootState) => state.invitation.countReceived,
   );
 
   const countSent = useSelector(
-    (state: RootState) => state.invitation.countSent
+    (state: RootState) => state.invitation.countSent,
   );
 
   const receivedAllInvitations = useSelector(
-    (state: RootState) => state.invitation.receivedAllInvitations
+    (state: RootState) => state.invitation.receivedAllInvitations,
   );
 
   const sentInvitations = useSelector(
-    (state: RootState) => state.invitation.sentInvitations
+    (state: RootState) => state.invitation.sentInvitations,
   );
 
   const [loadingReceived, setLoadingReceived] = useState(false);
@@ -40,37 +50,78 @@ export default function useInvitationAll({
 
   const receivedSkip = useMemo(
     () => receivedAllInvitations.length,
-    [receivedAllInvitations]
+    [receivedAllInvitations],
   );
 
-  const sentSkip = useMemo(
-    () => sentInvitations.length,
-    [sentInvitations]
-  );
+  const sentSkip = useMemo(() => sentInvitations.length, [sentInvitations]);
 
   const hasMoreReceived = receivedAllInvitations.length < countReceived;
   const hasMoreSent = sentInvitations.length < countSent;
 
+  const initializedRef = useRef(false);
+
   useEffect(() => {
+    let mounted = true;
+
     const fetchInitialData = async () => {
       try {
         setLoadingReceived(true);
         setLoadingSent(true);
-        console.log('okokok 2');
-        
+
         await Promise.all([
-          dispatch(onGetCountReceivedInvitation()),
           dispatch(onGetCountSentInvitation()),
           dispatch(onGetListFriendRequests({ pageSize })),
           dispatch(onGetListSentInvitation({ pageSize })),
         ]);
+
+        if (mounted) initializedRef.current = true;
       } finally {
-        setLoadingReceived(false);
-        setLoadingSent(false);
+        if (mounted) {
+          setLoadingReceived(false);
+          setLoadingSent(false);
+        }
       }
     };
 
     fetchInitialData();
+    return () => {
+      mounted = false;
+    };
+  }, [dispatch, pageSize]);
+
+  useEffect(() => {
+    const onReceived = async () => {
+      if (!initializedRef.current) return;
+      await dispatch(onGetListFriendRequests({ pageSize }));
+    };
+
+    const onCancelled = async () => {
+      if (!initializedRef.current) return;
+      await dispatch(onGetListFriendRequests({ pageSize }));
+    };
+
+    const onAccepted = async () => {
+      if (!initializedRef.current) return;
+      await dispatch(onGetCountSentInvitation());
+      await dispatch(onGetListSentInvitation({ pageSize }));
+    };
+
+    const onDeclined = async () => {
+      if (!initializedRef.current) return;
+      await dispatch(onGetCountSentInvitation());
+      await dispatch(onGetListSentInvitation({ pageSize }));
+    };
+
+    bindInvitationCreated(onReceived);
+    bindInvitationAccept(onAccepted);
+    bindInvitationDecline(onDeclined);
+    bindInvitationCancel(onCancelled);
+    return () => {
+      unbindInvitationCreated(onReceived);
+      unbindInvitationAccept(onAccepted);
+      unbindInvitationDecline(onDeclined);
+      unbindInvitationCancel(onCancelled);
+    };
   }, [dispatch, pageSize]);
 
   const handleLoadMoreReceived = async () => {
@@ -88,10 +139,7 @@ export default function useInvitationAll({
 
       if (newItems.length > 0) {
         dispatch(
-          setReceivedAllInvitations([
-            ...receivedAllInvitations,
-            ...newItems,
-          ])
+          setReceivedAllInvitations([...receivedAllInvitations, ...newItems]),
         );
       }
     } catch (error) {
@@ -106,6 +154,7 @@ export default function useInvitationAll({
 
     try {
       setLoadingSent(true);
+      console.log("2");
 
       const res = await InvitationsAPI.onGetSentInvitation({
         limit: pageSize,
@@ -115,12 +164,7 @@ export default function useInvitationAll({
       const newItems = res?.data?.data || [];
 
       if (newItems.length > 0) {
-        dispatch(
-          setSentInvitations([
-            ...sentInvitations,
-            ...newItems,
-          ])
-        );
+        dispatch(setSentInvitations([...sentInvitations, ...newItems]));
       }
     } catch (error) {
       console.log(error);

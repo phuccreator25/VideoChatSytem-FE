@@ -1,13 +1,12 @@
 import { useState } from "react";
 import authApi from "../../api/Auth.api";
-import { CONFIG } from "../../config/appConfig";
 import type { typeLogin, typeRegister } from "../../types/auth.type";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { clearCurrentUser, onLogin } from "../../redux/auth.redux";
 import { useDispatch } from 'react-redux'
 import type { AppDispatch } from '../../redux/store'
-import { bindOnlineUsers, connectSocket, disconnectSocket } from "../../socket/socket";
+import {connectSocket, disconnectSocket } from "../../socket/socket";
 
 type ForgotPasswordPayload = {
   email: string;
@@ -21,8 +20,11 @@ function useAuth() {
   const [isShowAlert, setisShowAlert] = useState<boolean>(false);
   const [typeAlert, settypeAlert] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [searchParams] = useSearchParams();
 
-  const { email } = useParams<{ email: string }>();
+  const token = searchParams.get("token");
+
+  // const { email } = useParams<{ email: string }>();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -32,21 +34,17 @@ function useAuth() {
     try {
       setLoading(true);
 
-      const dataRegister = {
-        ...payload,
-        link: `${CONFIG.APP_HOST}/active-account?${new URLSearchParams({
-          email: payload.email,
-        }).toString()}`,
-      };
-
-      const res = await authApi.onRegister(dataRegister);
+      const res = await authApi.onRegister(payload);
 
       if (res.status === 201) {
         setisShowAlert(true);
         settypeAlert("success");
-        enqueueSnackbar("Đăng ký thành công, vui lòng kiểm tra email để kích hoạt tài khoản", {
-          variant: "success",
-        });
+        enqueueSnackbar(
+          "Đăng ký thành công, vui lòng kiểm tra email để kích hoạt tài khoản",
+          {
+            variant: "success",
+          }
+        );
       }
     } catch (error: any) {
       console.error("Register failed:", error.response?.data?.message);
@@ -67,12 +65,6 @@ function useAuth() {
       const res =  await dispatch(onLogin({ email, password, deviceId })).unwrap();
       
       if (res) {
-        connectSocket();
-        bindOnlineUsers((userIds: string[]) => {
-          console.log("ONLINE USERS:", userIds);
-          // SET DS USER CONTECT ĐANG ONLINE
-        });
-
         enqueueSnackbar("Đăng nhập thành công", {
           variant: "success",
         });
@@ -136,19 +128,20 @@ function useAuth() {
 
   const handleResetPass = async (payload: ResetPasswordPayload) => {
     try {
-      if (!email) {
+      if (!token) {
         throw new Error("Yêu cầu không hợp lệ. Vui lòng thử lại");
       }
 
       setLoading(true);
-
-      const res = await authApi.onResetPassword(email, payload);
+      console.log(token, payload);
+      
+      const res = await authApi.onResetPassword(token, payload);
 
       if (res.status === 200) {
         enqueueSnackbar("Đặt lại mật khẩu thành công", {
           variant: "success",
         });
-        navigate(`/login?email=${encodeURIComponent(email)}`);
+        navigate(`/login?email=${encodeURIComponent(res.data.data.email)}`);
       }
     } catch (error: any) {
       console.error("Reset failed:", error.response?.data?.message || error.message);

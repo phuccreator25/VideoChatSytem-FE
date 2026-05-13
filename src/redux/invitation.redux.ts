@@ -48,6 +48,7 @@ export const onGetListFriendRequests = createAsyncThunk(
 export const onGetListSentInvitation = createAsyncThunk(
   "invitation/onGetListSentInvitation",
   async ({ pageSize = 3 }: { pageSize?: number }) => {
+    
     const res = await InvitationsAPI.onGetSentInvitation({
       limit: pageSize,
       skip: 0,

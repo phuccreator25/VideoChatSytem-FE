@@ -6,7 +6,7 @@ const BASE_URL =
 
 let socketInstance: Socket | null = null;
 
-export const connectSocket = () => {
+export const getSocket = () => {
   if (!socketInstance) {
     socketInstance = io(BASE_URL, {
       withCredentials: true,
@@ -14,24 +14,22 @@ export const connectSocket = () => {
     });
   }
 
-  if (!socketInstance.connected) {
-    socketInstance.connect();
-  }
-
   return socketInstance;
 };
 
-export const bindOnlineUsers = (callback: (userIds: string[]) => void) => {
-  if (!socketInstance) return;
+export const connectSocket = () => {
+  const socket = getSocket();
 
-  socketInstance.off("getOnlineUsers");
-  socketInstance.on("getOnlineUsers", callback); // Khi nhận được event thì run function callback được truyền vào
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+  return socket;
 };
 
 export const disconnectSocket = () => {
   if (!socketInstance) return;
 
-  socketInstance.off("getOnlineUsers");
   socketInstance.disconnect();
   socketInstance = null;
 };

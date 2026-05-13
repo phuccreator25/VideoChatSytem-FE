@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { contacts, ContactSection } from "../../types/contact.type";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../../redux/store";
 import { onGetDataContact } from "../../redux/contact.redux";
 import ContactApi from "../../api/Contact.api";
+import ConversationsAPI from "../../api/conversation.api";
+import { useNavigate } from "react-router-dom";
 
 export function useContact() {
   const contacts = useSelector((state: RootState) => state.contact.contacts);
@@ -17,6 +19,7 @@ export function useContact() {
   const [openModalRemove, setOpenModalRemove] = useState<boolean>(false);
   const [selectedContact, setSelectedContact] = useState<contacts | null>(null);
 
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
@@ -43,6 +46,22 @@ export function useContact() {
     });
   }, [contacts, searchValue]);
 
+  const handleOpenConversation = useCallback(
+    async (userId: string) => {
+      try {
+        const res = await ConversationsAPI.getOrCreateConversation(userId);
+
+        if (res.status === 200) {
+          const conversationId = res.data.data._id;
+          navigate(`/chat/${conversationId}`);
+        }
+      } catch (error) {
+        console.error("Get or create conversation failed:", error);
+      }
+    },
+    [navigate],
+  );
+
   const contactsAfterFilter = useMemo<ContactSection[]>(() => {
     const grouped: Record<string, contacts[]> = {};
 
@@ -56,9 +75,7 @@ export function useContact() {
 
       grouped[letter].push({
         ...contact,
-        onClick: () => {
-          console.log("Open contact:", contact.userId);
-        },
+        onClick: () => handleOpenConversation(contact.userId),
       });
     });
 
@@ -69,7 +86,7 @@ export function useContact() {
         letter,
         items: grouped[letter],
       }));
-  }, [filteredContacts]);
+  }, [filteredContacts, handleOpenConversation]);
 
   const handleOpenPopover = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorElRowAction(event.currentTarget);

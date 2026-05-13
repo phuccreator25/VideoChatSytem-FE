@@ -18,19 +18,17 @@ import authApi from "../../api/Auth.api";
 
 export default function ActivateSuccessPage() {
   const [searchParams] = useSearchParams();
-  const email = searchParams.get("email");
+  const token = searchParams.get("token");
   const navigate = useNavigate();
   useEffect(() => {
-    console.log(email);
-    
-    if (!email) {
+    if (!token) {
       navigate("/login");
       return;
     }
 
     const handleActivate = async () => {
       try {
-        await authApi.onActivAccount({email: email});
+        await authApi.onActiveAccount({ token: token });
       } catch (error: any) {
         console.log("Lỗi:", error.response?.data?.message);
         navigate("/login");
@@ -38,7 +36,7 @@ export default function ActivateSuccessPage() {
     };
 
     handleActivate();
-  }, [email]);
+  }, [token]);
 
   return (
     <Box>
@@ -68,7 +66,7 @@ export default function ActivateSuccessPage() {
           severity="success"
           sx={{ mt: 2 }}
         >
-          Kích hoạt tài khoản <b>{email}</b> thành công. Bây giờ bạn có thể đăng
+          Kích hoạt tài khoản thành công. Bây giờ bạn có thể đăng
           nhập để bắt đầu chat và gọi video.
         </Alert>
       </Box>
@@ -111,7 +109,7 @@ export default function ActivateSuccessPage() {
           size="large"
           variant="contained"
           component={RouterLink}
-          to={`/login?email=${email}`}
+          to={`/login`}
           sx={{
             mt: 1,
             py: 1.4,
