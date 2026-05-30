@@ -35,7 +35,7 @@ export type RowActionProps = {
     setSelectedContact: React.Dispatch<React.SetStateAction<contacts | null>>;
     setOpenModalViewInfo: React.Dispatch<React.SetStateAction<boolean>>;
     setOpenModalRemove: React.Dispatch<React.SetStateAction<boolean>>;
-    onRemoveFriend: () => void;
+    onRemoveFriend: () => boolean | Promise<boolean>;
     handleBlock: (payload: contacts) => boolean | Promise<boolean>;
     handleUnblock: (payload: contacts) => boolean | Promise<boolean>;
     setOpenModalBlock: React.Dispatch<React.SetStateAction<boolean>>;
@@ -71,9 +71,14 @@ export type ViewUserInfoModalProps = {
 export type ConfirmRemoveFriendModalProps = {
     open: boolean;
     onClose: () => void;
-    onConfirm?: () => void;
+    onConfirm?: () => boolean | Promise<boolean>;
     selectedContact: contacts | null;
 };
+
+export type ContactRemoveSocket = {
+  senderId: string;
+  receiverId: string;
+}
 
 export type ConfirmBlockModalProps = {
     open: boolean;

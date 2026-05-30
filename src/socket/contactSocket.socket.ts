@@ -1,12 +1,13 @@
+import type { ContactRemoveSocket } from "../types/contact.type";
 import { getSocket } from "./socket";
 
-export const bindContactRemove = (callback: (payload: any) => void) => {
+export const bindContactRemove = (callback: (payload: ContactRemoveSocket) => void) => {
     const socket = getSocket();
     socket.off("contact:removed", callback);
     socket.on("contact:removed", callback)
 }
 
-export const unbindContactRemove = (callback: (payload: any) => void) => {
+export const unbindContactRemove = (callback: (payload: ContactRemoveSocket) => void) => {
     const socket = getSocket();
     socket.off("contact:removed", callback);
 }

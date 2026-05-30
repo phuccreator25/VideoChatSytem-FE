@@ -25,7 +25,6 @@ export const bindOnlineUsers = (callback: (userIds: string[]) => void) => {
   }
 
   const handler = (userIds: string[]) => {
-    console.log("presence:online_users", userIds);
     callback(userIds);
   };
 
@@ -53,7 +52,6 @@ export const bindUserPresenceChanged = (
   }
 
   const handler = (payload: PresencePayload) => {
-    console.log("presence:changed", payload);
     callback(payload);
   };
 

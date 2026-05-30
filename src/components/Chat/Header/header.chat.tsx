@@ -12,11 +12,10 @@ import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 
-import { COLORS } from "../../../utils/Colors";
 import type { ConversationUserInfo } from "../../../types/chat.type";
 
 type HeaderProps = {
-  userData?: ConversationUserInfo;
+  userData?: ConversationUserInfo | null;
 };
 
 export function Header({ userData }: HeaderProps) {
@@ -42,30 +41,33 @@ export function Header({ userData }: HeaderProps) {
   const displayName = userData?.nickname ?? userData?.fullname ?? "Unknown user";
 
   const actionButtonSx = {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     borderRadius: "50%",
-    color: "#5f6b7a",
-    backgroundColor: "#f8fafc",
-    border: "1px solid #eef2f7",
-    transition: "all 0.2s ease",
+    color: "#4b5563",
+    backgroundColor: "rgba(255,255,255,0.75)",
+    border: "1px solid rgba(148, 163, 184, 0.2)",
+    backdropFilter: "blur(10px)",
+    transition: "all 0.22s ease",
     "&:hover": {
-      backgroundColor: "#eef2ff",
-      color: "#4f46e5",
-      borderColor: "#dbe4ff",
+      backgroundColor: "#ffffff",
+      color: "#312e81",
+      borderColor: "rgba(99, 102, 241, 0.35)",
+      transform: "translateY(-1px)",
     },
   };
 
   return (
     <Box
       sx={{
-        height: 84,
-        px: 2.5,
+        height: 88,
+        px: 2.75,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        bgcolor: COLORS.white,
-        borderBottom: "1px solid #eef2f7",
+        bgcolor: "rgba(255, 255, 255, 0.84)",
+        borderBottom: "1px solid rgba(148, 163, 184, 0.2)",
+        backdropFilter: "blur(12px)",
         flexShrink: 0,
       }}
     >
@@ -73,7 +75,7 @@ export function Header({ userData }: HeaderProps) {
         <Badge
           overlap="circular"
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          invisible={!userData?.isOnline}
+          invisible={userData?.isOnline !== "online"}
           badgeContent={
             <Box
               sx={{
@@ -82,7 +84,7 @@ export function Header({ userData }: HeaderProps) {
                 borderRadius: "50%",
                 bgcolor: userData?.isOnline === 'online' ? "#22c55e" : "#94a3b8",
                 border: "2px solid #ffffff",
-                boxShadow: "0 0 0 1px rgba(34, 197, 94, 0.15)",
+                boxShadow: "0 0 0 1px rgba(34, 197, 94, 0.2)",
               }}
             />
           }
@@ -91,9 +93,10 @@ export function Header({ userData }: HeaderProps) {
             src={userData?.avatar}
             alt={displayName}
             sx={{
-              width: 48,
-              height: 48,
-              boxShadow: "0 2px 10px rgba(15, 23, 42, 0.08)",
+              width: 50,
+              height: 50,
+              boxShadow: "0 8px 20px rgba(15, 23, 42, 0.14)",
+              border: "2px solid rgba(255,255,255,0.9)",
             }}
           />
         </Badge>
@@ -102,8 +105,8 @@ export function Header({ userData }: HeaderProps) {
           <Typography
             sx={{
               fontSize: 19,
-              fontWeight: 700,
-              color: "#111827",
+              fontWeight: 600,
+              color: "#0f172a",
               lineHeight: 1.2,
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -127,7 +130,7 @@ export function Header({ userData }: HeaderProps) {
             <Typography
               sx={{
                 fontSize: 13,
-                fontWeight: 500,
+                fontWeight: 600,
                 color: userData?.isOnline === 'online' ? "#16a34a" : "#6b7280",
                 lineHeight: 1.2,
               }}

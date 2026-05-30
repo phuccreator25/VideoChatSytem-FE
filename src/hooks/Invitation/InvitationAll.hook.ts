@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import InvitationsAPI from "../../api/Invitation.api";
 import {
   onGetCountReceivedInvitation,
   onGetCountSentInvitation,
@@ -11,16 +10,7 @@ import {
   setSentInvitations,
 } from "../../redux/invitation.redux";
 import type { AppDispatch, RootState } from "../../redux/store";
-import {
-  bindInvitationAccept,
-  bindInvitationCancel,
-  bindInvitationCreated,
-  bindInvitationDecline,
-  unbindInvitationAccept,
-  unbindInvitationCancel,
-  unbindInvitationCreated,
-  unbindInvitationDecline,
-} from "../../socket/invitationSocket.socket";
+import { useSearchParams } from "react-router-dom";
 
 export default function useInvitationAll({
   pageSize = 3,
@@ -58,7 +48,21 @@ export default function useInvitationAll({
   const hasMoreReceived = receivedAllInvitations.length < countReceived;
   const hasMoreSent = sentInvitations.length < countSent;
 
-  const initializedRef = useRef(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const invitationTab = searchParams.get("invitationTab");
+
+  //Load more received
+  const limitParam = Number(searchParams.get("resolvedLimit"));
+  const resolvedLimit =
+    Number.isFinite(limitParam) && limitParam > 0 ? limitParam : pageSize;
+
+  //Load more sent
+  const limitSentParam = Number(searchParams.get("resolvedLimitSent"));
+  const resolvedLimitSent =
+    Number.isFinite(limitSentParam) && limitSentParam > 0
+      ? limitSentParam
+      : pageSize;
 
   useEffect(() => {
     let mounted = true;
@@ -70,11 +74,21 @@ export default function useInvitationAll({
 
         await Promise.all([
           dispatch(onGetCountSentInvitation()),
-          dispatch(onGetListFriendRequests({ pageSize })),
-          dispatch(onGetListSentInvitation({ pageSize })),
+          dispatch(onGetCountReceivedInvitation()),
+          dispatch(
+            onGetListFriendRequests({
+              pageSize: invitationTab === "received" ? resolvedLimit : pageSize,
+              skip: 0,
+            }),
+          ),
+          dispatch(
+            onGetListSentInvitation({
+              pageSize: invitationTab === "sent" ? resolvedLimitSent : pageSize,
+              skip: 0,
+            }),
+          ),
         ]);
 
-        if (mounted) initializedRef.current = true;
       } finally {
         if (mounted) {
           setLoadingReceived(false);
@@ -87,42 +101,7 @@ export default function useInvitationAll({
     return () => {
       mounted = false;
     };
-  }, [dispatch, pageSize]);
-
-  useEffect(() => {
-    const onReceived = async () => {
-      if (!initializedRef.current) return;
-      await dispatch(onGetListFriendRequests({ pageSize }));
-    };
-
-    const onCancelled = async () => {
-      if (!initializedRef.current) return;
-      await dispatch(onGetListFriendRequests({ pageSize }));
-    };
-
-    const onAccepted = async () => {
-      if (!initializedRef.current) return;
-      await dispatch(onGetCountSentInvitation());
-      await dispatch(onGetListSentInvitation({ pageSize }));
-    };
-
-    const onDeclined = async () => {
-      if (!initializedRef.current) return;
-      await dispatch(onGetCountSentInvitation());
-      await dispatch(onGetListSentInvitation({ pageSize }));
-    };
-
-    bindInvitationCreated(onReceived);
-    bindInvitationAccept(onAccepted);
-    bindInvitationDecline(onDeclined);
-    bindInvitationCancel(onCancelled);
-    return () => {
-      unbindInvitationCreated(onReceived);
-      unbindInvitationAccept(onAccepted);
-      unbindInvitationDecline(onDeclined);
-      unbindInvitationCancel(onCancelled);
-    };
-  }, [dispatch, pageSize]);
+  }, [dispatch, pageSize, invitationTab, resolvedLimit, resolvedLimitSent]);
 
   const handleLoadMoreReceived = async () => {
     if (loadingReceived || !hasMoreReceived) return;
@@ -130,18 +109,29 @@ export default function useInvitationAll({
     try {
       setLoadingReceived(true);
 
-      const res = await InvitationsAPI.onGetFriendRequest({
-        limit: pageSize,
-        skip: receivedSkip,
-      });
+      const res = await dispatch(
+        onGetListFriendRequests({
+          pageSize,
+          skip: receivedSkip,
+        }),
+      ).unwrap();
 
-      const newItems = res?.data?.data || [];
+      const newItems = res || [];
 
       if (newItems.length > 0) {
         dispatch(
           setReceivedAllInvitations([...receivedAllInvitations, ...newItems]),
         );
       }
+
+      const nextSkip = receivedSkip + newItems.length;
+
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("invitationTab", "received");
+        next.set("resolvedLimit", String(nextSkip));
+        return next;
+      });
     } catch (error) {
       console.log(error);
     } finally {
@@ -154,18 +144,28 @@ export default function useInvitationAll({
 
     try {
       setLoadingSent(true);
-      console.log("2");
 
-      const res = await InvitationsAPI.onGetSentInvitation({
-        limit: pageSize,
-        skip: sentSkip,
-      });
+      const res = await dispatch(
+        onGetListSentInvitation({
+          pageSize,
+          skip: sentSkip,
+        }),
+      ).unwrap();
 
-      const newItems = res?.data?.data || [];
+      const newItems = res || [];
 
       if (newItems.length > 0) {
         dispatch(setSentInvitations([...sentInvitations, ...newItems]));
       }
+
+      const nextSkip = sentSkip + newItems.length;
+
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("invitationTab", "sent");
+        next.set("resolvedLimitSent", String(nextSkip));
+        return next;
+      });
     } catch (error) {
       console.log(error);
     } finally {

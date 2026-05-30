@@ -16,15 +16,10 @@ import { AlphabetIndex } from "./Alphabet/AlphabetIndex.contact";
 import ModalAddContactModal from "./ModalAddContact/ModalAddContact.contact";
 import useInvitation from "../../../hooks/Invitation/Invitation.hook";
 import { InvitationPopover } from "./Invitation/InvitationPopover";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "../../../redux/store";
+import {  useSelector } from "react-redux";
+import type { RootState } from "../../../redux/store";
 import { useContact } from "../../../hooks/Contact/contact.hook";
 import { useBlock } from "../../../hooks/Block/block.hook";
-import { useEffect } from "react";
-import { onGetDataContact } from "../../../redux/contact.redux";
-import { bindInvitationAccept, unbindInvitationAccept } from "../../../socket/invitationSocket.socket";
-import { bindContactRemove, unbindContactRemove } from "../../../socket/contactSocket.socket";
-
 
 export function ContactsView() {
   const theme = useTheme();
@@ -83,12 +78,6 @@ export function ContactsView() {
       handleRemoveSentInvitation: invitationHandlers.handleRemoveSentInvitation,
       handleRemoveReceivedInvitation:
         invitationHandlers.handleRemoveReceivedInvitation,
-      setReceivedInvitations: invitationHandlers.setReceivedInvitations,
-      setSentInvitations: invitationHandlers.setSentInvitations,
-      refreshPopoverReceivedInvitations:
-        invitationHandlers.refreshPopoverReceivedInvitations,
-      refreshPopoverSentInvitations:
-        invitationHandlers.refreshPopoverSentInvitations,
     },
     helpers: {
       getTimeAgo: invitationHelpers.getTimeAgo,
@@ -120,26 +109,6 @@ export function ContactsView() {
       setOpenModalBlock: blockHandlers.setOpenModalBlock,
     },
   };
-
-  const dispatch = useDispatch<AppDispatch>();
-
-  useEffect(() => {
-    const handleGetDataContact = async () => {
-      await dispatch(onGetDataContact())
-    }
-
-    const handleContactRemove = async () => {
-      await dispatch(onGetDataContact());
-    };
-
-    bindInvitationAccept(handleGetDataContact)
-    bindContactRemove(handleContactRemove);
-
-    return () => {
-      unbindInvitationAccept(handleGetDataContact)
-      unbindContactRemove(handleContactRemove);
-    }
-  }, [dispatch])
 
   return (
     <Box

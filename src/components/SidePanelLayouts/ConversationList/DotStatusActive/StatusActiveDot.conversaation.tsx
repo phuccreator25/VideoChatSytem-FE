@@ -1,10 +1,8 @@
 import { Box } from "@mui/material";
 import { COLORS } from "../../../../utils/Colors";
 
-export function StatusActive({ status = 'none' }: { status?: 'online' | 'away' | 'none' }) {
-    if (status === 'none') return null;
-
-    const bg = status === 'online' ? COLORS.online : COLORS.away;
+export function StatusActive({status = 'offline'}) {
+    if (status === 'offline') return null;
 
     return (
         <Box
@@ -12,7 +10,7 @@ export function StatusActive({ status = 'none' }: { status?: 'online' | 'away' |
                 width: 11,
                 height: 11,
                 borderRadius: '50%',
-                bgcolor: bg,
+                bgcolor: COLORS.online,
                 border: '2px solid #fff',
             }}
         />

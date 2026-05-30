@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import InvitationsAPI from "../api/Invitation.api";
-import type { InvitationActionStatus, InvitationItem, SentInvitationItem } from "../types/Invitation";
+import type { AddContactDataHook, InvitationActionStatus, InvitationItem, SentInvitationItem } from "../types/Invitation";
 
 type InvitationState = {
   countReceived: number;
@@ -8,6 +8,15 @@ type InvitationState = {
   sentInvitations: SentInvitationItem[];
   actionStatusById: Record<string, InvitationActionStatus>;
   countSent: number;
+  isPopoverInvitationOpen: boolean;
+};
+
+type InvitationAddContacted = {
+  invitationId: string;
+  senderId: string,
+  receiverId: string,
+  message: string,
+  status: string
 };
 
 const initialState: InvitationState = {
@@ -16,6 +25,7 @@ const initialState: InvitationState = {
   sentInvitations: [],
   actionStatusById: {},
   countSent: 0,
+  isPopoverInvitationOpen: false,
 };
 
 export const onGetCountReceivedInvitation = createAsyncThunk(
@@ -36,22 +46,25 @@ export const onGetCountSentInvitation = createAsyncThunk(
 
 export const onGetListFriendRequests = createAsyncThunk(
   "invitation/onGetListFriendRequests",
-  async ({ pageSize = 3 }: { pageSize?: number }) => {
+  async ({ pageSize = 3, skip }: { pageSize?: number; skip?: number }) => {
     const res = await InvitationsAPI.onGetFriendRequest({
       limit: pageSize,
-      skip: 0,
+      skip: skip || 0,
     });
+
+    console.log('ôjojo: ', res.data.data);
+    
+
     return (res.data.data || []) as InvitationItem[];
   },
 );
 
 export const onGetListSentInvitation = createAsyncThunk(
   "invitation/onGetListSentInvitation",
-  async ({ pageSize = 3 }: { pageSize?: number }) => {
-    
+  async ({ pageSize = 3, skip }: { pageSize?: number; skip?: number }) => {
     const res = await InvitationsAPI.onGetSentInvitation({
       limit: pageSize,
-      skip: 0,
+      skip: skip || 0,
     });
     return (res.data.data || []) as SentInvitationItem[];
   },
@@ -78,6 +91,14 @@ export const onCancelSentInvitation = createAsyncThunk(
   async (id: string) => {
     const res = await InvitationsAPI.onCancelSentInvitation({id});
     return res.status === 200;
+  }
+);
+
+export const onAddContact = createAsyncThunk(
+  "invitation/onAddContact",
+  async (payload: AddContactDataHook) => {
+    const res = await InvitationsAPI.onAddContacts(payload);
+    return res.data.data as InvitationAddContacted;
   }
 );
 
@@ -110,17 +131,10 @@ const invitationSlice = createSlice({
       state.sentInvitations = action.payload || [];
     },
 
-    removeReceivedInvitation(state, action) { //Xóa item đã bị accept hoặc decline đồng bộ ở Popover và View All
-      state.receivedAllInvitations = state.receivedAllInvitations.filter(
-        (item) => item.id !== action.payload,
-      );
-    },
+    setIsPopoverInvitationOpen(state, action) {
+      state.isPopoverInvitationOpen = action.payload;
+    }
 
-    removeSentInvitation(state, action) { //Xóa item đã bị cancelled đồng bộ với Popover và View All
-      state.sentInvitations = state.sentInvitations.filter(
-        (item) => item.id !== action.payload,
-      );
-    },
   },
   extraReducers: (builder) => {
     builder.addCase(onGetCountReceivedInvitation.fulfilled, (state, action) => {
@@ -146,8 +160,7 @@ export const {
   clearInvitationActionStatus,
   setReceivedAllInvitations,
   setSentInvitations,
-  removeReceivedInvitation,
-  removeSentInvitation,
+  setIsPopoverInvitationOpen,
 } = invitationSlice.actions;
 
 export const invitationReducer = invitationSlice.reducer;

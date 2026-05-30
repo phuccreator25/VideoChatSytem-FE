@@ -1,122 +1,41 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
 import { customScrollbarSx } from "../../utils/CustomScroll";
-import type { Message } from "../../types/data.type";
 import { COLORS } from "../../utils/Colors";
 import { Header } from "./Header/header.chat";
 import { MessageItem } from "./Messages/MessgesItem.chat";
 import { InputBar } from "./InputBar/InputBar.chat";
-import type { ConversationUserInfo, MessageType } from "../../types/chat.type";
-import ConversationsAPI from "../../api/conversation.api";
-import { bindOnlineUsers, bindUserPresenceChanged, unbindOnlineUsers, unbindUserPresenceChanged } from "../../socket/authSocket.socket";
+import { useChatFrame } from "../../hooks/Chat/chat.hook";
+import { ContactRelationBar } from "./ContactRelationBar/ContactRelationBar.chat";
 
 export default function ChatFrame() {
-  const [messages, setMessages] = useState<MessageType[]>();
-  const [input, setInput] = useState("");
+  const {
+    ui,
+    data,
+    handler,
+    ref: { messagesEndRef },
+  } = useChatFrame();
 
-  const { conversationId } = useParams();
-  const [userData, setUserData] = useState<ConversationUserInfo>();
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!conversationId) return;
-
-      const res = await ConversationsAPI.getConversationById(conversationId);
-      setUserData(res.data.data.user);
-      setMessages(res.data.data.messages || []);
-    };
-
-    fetchMessages();
-  }, [conversationId]);
-
-  useEffect(() => {
-    const handleOnlineUsers = (userIds: string[]) => {
-      if (!userData?.userId) return;
-
-      const isUserOnline = userIds.includes(userData.userId);
-
-      setUserData((prev) => {
-        if (!prev) return prev;
-
-        return {
-          ...prev,
-          isOnline: isUserOnline ? 'online' : 'offline',
-        };
-      });
-    };
-
-    const handlePresenceChanged = (payload: {
-      userId: string;
-      isOnline: boolean;
-      lastSeenAt?: string | null;
-    }) => {
-      setUserData((prev) => {
-        if (!prev || prev.userId !== payload.userId) return prev;
-
-        return {
-          ...prev,
-          isOnline: payload.isOnline ? 'online' : 'offline',
-          lastSeenAt: payload.lastSeenAt ?? prev.lastSeenAt,
-        };
-      });
-    };
-
-    bindOnlineUsers(handleOnlineUsers);
-    bindUserPresenceChanged(handlePresenceChanged);
-
-    return () => {
-      unbindOnlineUsers(handleOnlineUsers);
-      unbindUserPresenceChanged(handlePresenceChanged);
-    };
-  }, [userData?.userId]);
-
-
-  const handleSend = () => {
-    const text = input.trim();
-    if (!text) return;
-
-    const newMessage: Message = {
-      id: Date.now(),
-      type: "file",
-      sender: "right",
-      name: "Patricia Smith",
-      avatar: 'rightAvatar',
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      fileName: text,
-      fileSize: "New message demo",
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setInput("");
-  };
-
-
-
-  if (!conversationId) {
+  if (!data.conversationId) {
     return (
       <Paper
         elevation={0}
         sx={{
           width: "100%",
           height: "100%",
-          borderRadius: 4,
-          bgcolor: COLORS.pageBg,
-          border: "1px solid #e7e7ee",
-          boxShadow: "0 10px 30px rgba(20, 20, 43, 0.08)",
+          borderRadius: 5,
+          bgcolor: "#f8fafc",
+          border: "1px solid rgba(148, 163, 184, 0.22)",
+          boxShadow: "0 18px 45px rgba(15, 23, 42, 0.12)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           minHeight: 0,
+          backgroundImage:
+            "radial-gradient(circle at 20% 20%, rgba(79,70,229,0.1), transparent 40%), radial-gradient(circle at 80% 80%, rgba(14,165,233,0.12), transparent 38%)",
         }}
       >
         <Box sx={{ textAlign: "center" }}>
@@ -139,38 +58,71 @@ export default function ChatFrame() {
       sx={{
         width: "100%",
         height: "100%",
-        borderRadius: 4,
+        borderRadius: 5,
         overflow: "hidden",
-        bgcolor: COLORS.pageBg,
-        border: "1px solid #e7e7ee",
-        boxShadow: "0 10px 30px rgba(20, 20, 43, 0.08)",
+        bgcolor: "#eef3fb",
+        border: "1px solid rgba(148, 163, 184, 0.24)",
+        boxShadow: "0 20px 48px rgba(15, 23, 42, 0.14)",
         display: "flex",
         flexDirection: "column",
         minHeight: 0,
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background:
+            "radial-gradient(circle at 15% 12%, rgba(99,102,241,0.16), transparent 34%), radial-gradient(circle at 88% 92%, rgba(56,189,248,0.14), transparent 35%)",
+        },
+        "& > *": {
+          position: "relative",
+          zIndex: 1,
+        },
       }}
     >
-      <Header userData={userData} />
-      <Divider sx={{ borderColor: COLORS.border }} />
+      <Header userData={data.userData} />
+      <ContactRelationBar
+        status={data.relationStatus}
+        displayName={data.userData?.nickname || data.userData?.fullname}
+        addContactModalOpen={ui.openAddContactModal}
+        addContactMessage={ui.invitationMessage}
+        addContactSubmitting={ui.addContactSubmitting}
+        onAddContact={handler.onAddContact}
+        onCloseAddContactModal={handler.onCloseAddContactModal}
+        onChangeAddContactMessage={handler.onChangeAddContactMessage}
+        onSubmitAddContact={handler.onSubmitAddContact}
+        onAccept={handler.onAcceptInvitation}
+        onDecline={handler.onDeclineInvitation}
+        onCancel={handler.onCancelInvitation}
+        loadingAction={ui.loadingAction}
+      />
 
       <Box
         sx={{
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
-          px: 4,
-          py: 4,
+          px: { xs: 2, sm: 3, md: 3.5 },
+          py: 3,
           ...customScrollbarSx,
         }}
       >
-        <Stack spacing={4}>
-          {messages?.map((msg) => (
-            <MessageItem key={msg.id} msg={msg} />
+        <Stack spacing={3}>
+          {ui.normalizedMessages.map(({ msg, isLeft, displayName, avatar }) => (
+            <MessageItem
+              key={msg.id}
+              msg={msg}
+              isLeft={isLeft}
+              displayName={displayName}
+              avatar={avatar}
+            />
           ))}
+          <Box ref={messagesEndRef} />
         </Stack>
       </Box>
 
-      <Divider sx={{ borderColor: COLORS.border }} />
-      <InputBar value={input} onChange={setInput} onSend={handleSend} />
+      <InputBar value={data.inputText} onChange={handler.setInputText} onSend={handler.handleSend} />
     </Paper>
   );
 }

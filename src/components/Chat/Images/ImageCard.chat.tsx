@@ -33,11 +33,12 @@ export function ImageCard({
     <Box
       sx={{
         position: 'relative',
-        width: { xs: 150, sm: 188 },
-        height: { xs: 110, sm: 126 },
+        width: { xs: 146, sm: 182 },
+        height: { xs: 110, sm: 122 },
         overflow: 'hidden',
-        borderRadius: 1.5,
+        borderRadius: 2,
         flexShrink: 0,
+        border: "1px solid rgba(148, 163, 184, 0.2)",
       }}
     >
       <Box
@@ -49,6 +50,10 @@ export function ImageCard({
           height: '100%',
           objectFit: 'cover',
           display: 'block',
+          transition: "transform 0.22s ease",
+          "&:hover": {
+            transform: "scale(1.03)",
+          },
         }}
       />
 
@@ -67,8 +72,8 @@ export function ImageCard({
             onClick={onDownload}
             sx={{
               color: '#fff',
-              bgcolor: 'rgba(0,0,0,0.24)',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.38)' },
+              bgcolor: 'rgba(15,23,42,0.38)',
+              '&:hover': { bgcolor: 'rgba(15,23,42,0.58)' },
             }}
           >
             <DownloadOutlinedIcon fontSize="small" />
@@ -81,8 +86,8 @@ export function ImageCard({
             onClick={openMenu}
             sx={{
               color: '#fff',
-              bgcolor: 'rgba(0,0,0,0.24)',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.38)' },
+              bgcolor: 'rgba(15,23,42,0.38)',
+              '&:hover': { bgcolor: 'rgba(15,23,42,0.58)' },
             }}
           >
             <MoreHorizOutlinedIcon fontSize="small" />

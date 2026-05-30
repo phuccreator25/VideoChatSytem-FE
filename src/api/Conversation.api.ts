@@ -6,6 +6,10 @@ const ConversationsAPI = {
 
   getConversationById: (conversationId: string) =>
     axiosInterceptor.get(`/conversations/${conversationId}`),
+
+  getListConversations : () => 
+    axiosInterceptor.get('/conversations')
+  
 };
 
 export default ConversationsAPI;

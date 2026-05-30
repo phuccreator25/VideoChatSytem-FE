@@ -14,6 +14,8 @@ import { userReducer } from './auth.redux'
 import createWebStorage from 'redux-persist/es/storage/createWebStorage'
 import { invitationReducer } from './invitation.redux'
 import { contactReducer } from './contact.redux'
+import { conversationReducer } from './conversation.redux'
+import { chatReducer } from './chat.redux'
 const storage = createWebStorage('local')
 
 const persistConfig = {
@@ -25,7 +27,9 @@ const persistConfig = {
 const rootReducer = combineReducers({
   user: userReducer,
   invitation: invitationReducer,
-  contact: contactReducer
+  contact: contactReducer,
+  conversation: conversationReducer,
+  chat: chatReducer
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

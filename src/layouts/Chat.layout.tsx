@@ -1,13 +1,8 @@
 import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import LeftRail from '../components/LeftRail';
 import type { RailKey } from '../types/data.type';
-import { useEffect, type ReactNode } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch } from '../redux/store';
-import { SelectcurrentUser } from '../redux/auth.redux';
-import { onGetCountReceivedInvitation } from '../redux/invitation.redux';
-import { connectSocket } from '../socket/socket';
-import { bindInvitationCancel, bindInvitationCreated, unbindInvitationCancel, unbindInvitationCreated } from '../socket/invitationSocket.socket';
+import type { ReactNode } from 'react';
+import useChatLayout from '../hooks/ChatLayout/chatlayout.hook';
 
 const theme = createTheme({});
 type ChatLayoutProps = {
@@ -18,33 +13,8 @@ type ChatLayoutProps = {
 };
 
 export default function ChatLayout({ middlePanel, activeRail, onRailChange, content }: ChatLayoutProps) {
-  const dispatch = useDispatch<AppDispatch>();
+  useChatLayout(activeRail);
 
-  const currentUser = useSelector(SelectcurrentUser);
-
-  useEffect(() => {
-    if (!currentUser) return;
-
-    connectSocket();
-    
-    dispatch(onGetCountReceivedInvitation());
-
-    const handleInvitationCreated = async () => { //Nhận kết bạn
-      await dispatch(onGetCountReceivedInvitation());
-    };
-
-    const handleInvitationCancel = async () => {
-      await dispatch(onGetCountReceivedInvitation());
-    };
-
-    bindInvitationCreated(handleInvitationCreated);
-    bindInvitationCancel(handleInvitationCancel);
-
-    return () => {
-      unbindInvitationCreated(handleInvitationCreated);
-      unbindInvitationCancel(handleInvitationCancel);
-    };
-  }, [dispatch, currentUser]);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

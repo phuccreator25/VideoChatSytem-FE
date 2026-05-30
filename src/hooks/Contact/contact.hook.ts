@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { contacts, ContactSection } from "../../types/contact.type";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../../redux/store";
 import { onGetDataContact } from "../../redux/contact.redux";
 import ContactApi from "../../api/Contact.api";
-import ConversationsAPI from "../../api/conversation.api";
-import { useNavigate } from "react-router-dom";
+import {
+  updateNickNameUser,
+} from "../../redux/chat.redux";
+import useOpenConversation from "../../helpers/openConversation.helper";
 
 export function useContact() {
   const contacts = useSelector((state: RootState) => state.contact.contacts);
@@ -19,7 +21,8 @@ export function useContact() {
   const [openModalRemove, setOpenModalRemove] = useState<boolean>(false);
   const [selectedContact, setSelectedContact] = useState<contacts | null>(null);
 
-  const navigate = useNavigate();
+  const { handleOpenConversation } = useOpenConversation();
+
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
@@ -45,22 +48,6 @@ export function useContact() {
       return displayName.includes(keyword);
     });
   }, [contacts, searchValue]);
-
-  const handleOpenConversation = useCallback(
-    async (userId: string) => {
-      try {
-        const res = await ConversationsAPI.getOrCreateConversation(userId);
-
-        if (res.status === 200) {
-          const conversationId = res.data.data._id;
-          navigate(`/chat/${conversationId}`);
-        }
-      } catch (error) {
-        console.error("Get or create conversation failed:", error);
-      }
-    },
-    [navigate],
-  );
 
   const contactsAfterFilter = useMemo<ContactSection[]>(() => {
     const grouped: Record<string, contacts[]> = {};
@@ -112,6 +99,13 @@ export function useContact() {
         };
       });
 
+      dispatch(
+        updateNickNameUser({
+          userId: data.userId,
+          nickname: data.nickname,
+        }),
+      );
+
       return res.status === 201;
     } catch (error) {
       console.log(error);
@@ -124,6 +118,8 @@ export function useContact() {
       if (!selectedContact) return false;
 
       const res = await ContactApi.onRemoveContact(selectedContact.userId);
+      setOpenModalRemove(false);
+
       return res.status === 201;
     } catch (error) {
       console.log(error);

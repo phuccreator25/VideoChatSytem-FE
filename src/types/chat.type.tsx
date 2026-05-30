@@ -14,6 +14,14 @@ export type MessageDelivery = {
   userId: string;
   deliveredAt?: string | null;
   readAt?: string | null;
+  conversationId?: string | null;
+  createdAt?: string;
+  updatedAt?: string
+};
+
+export type MessageReceivedPayload = {
+  conversationId: string;
+  deliveredAt?: string | null;
 };
 
 export type MessageType = {
@@ -26,12 +34,23 @@ export type MessageType = {
   fileName?: string | null;
   fileSize?: string | null;
   replyToMessageId?: string | null;
-  isEdited: boolean;
+  isEdited?: boolean;
   editedAt?: string | null;
-  isDeleted: boolean;
+  isDeleted?: boolean;
   deletedAt?: string | null;
   createdAt?: string;
+  updatedAt?: string;
   deliveries?: MessageDelivery[];
+  status?:string
+};
+
+export type ConversationReadSuccess = {
+    conversationId: string,
+    readerUserId: string,
+    readtAt: string,
+    updatedCount: number,
+    messageIds: [],
+    senderId: string
 };
 
 export type ConversationUserInfo = {
@@ -42,6 +61,17 @@ export type ConversationUserInfo = {
   isOnline: string;
   lastSeenAt?: string | null;
   isBlocked?: boolean;
+  invitationId?: string | null;
+  relationStatus?: "none" | "add" | "received" | "sent";
+};
+
+export type ConversationReadPayload = {
+  conversationId: string;
+  readerUserId?: string;
+  readAt?: string | null;
+  messageIds?: string[];
+  messageId?: string;
+  senderId: string;
 };
 
 export type ChatHeaderUser = ConversationUserInfo & {
@@ -68,3 +98,28 @@ export type UserData = {
   isOnline?: boolean;
   lastSeenAt?: string | null;
 };
+
+export type SendMessagePayload =
+  | {
+      conversationId: string;
+      type: "text";
+      content: string;
+    }
+  | {
+      conversationId: string;
+      type: "file";
+      file: File;
+      content?: string;
+    }
+  | {
+      conversationId: string;
+      type: "image";
+      file: File;
+      content?: string;
+    }
+  | {
+      conversationId: string;
+      type: "gallery";
+      files: File[];
+      content?: string;
+    };

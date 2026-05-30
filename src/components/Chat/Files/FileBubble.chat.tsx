@@ -19,11 +19,13 @@ import { ChatTime } from "../ChatTime/ChatTime.chat";
 export function FileBubble({
   fileName,
   fileSize,
-  time,
+  createdAt,
+  isLeft = true,
 }: {
   fileName: string;
-  fileSize: string;
-  time: string;
+  fileSize: string | number;
+  createdAt?: string;
+  isLeft?: boolean;
 }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -34,15 +36,20 @@ export function FileBubble({
     console.log('download file:', fileName);
   };
 
+  const normalizedFileSize =
+    typeof fileSize === "number"
+      ? `${(fileSize / (1024 * 1024)).toFixed(2)} MB`
+      : fileSize;
+
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+    <Box sx={{ display: "flex", justifyContent: isLeft ? "flex-start" : "flex-end", width: "100%" }}>
       <Box sx={{ position: 'relative', maxWidth: 380 }}>
         <IconButton
           size="small"
           onClick={openMenu}
           sx={{
             position: 'absolute',
-            left: -22,
+            [isLeft ? "right" : "left"]: -22,
             top: 2,
             color: COLORS.icon,
           }}
@@ -65,20 +72,24 @@ export function FileBubble({
 
         <Box
           sx={{
-            bgcolor: COLORS.rightBubble,
-            borderRadius: 2.5,
+            bgcolor: isLeft ? "#ffffff" : COLORS.rightBubble,
+            border: "1px solid rgba(148, 163, 184, 0.2)",
+            borderRadius: 3,
             p: 2.5,
             minWidth: { xs: 280, sm: 365 },
             position: 'relative',
+            boxShadow: "0 10px 26px rgba(15, 23, 42, 0.08)",
             '&::after': {
               content: '""',
               position: 'absolute',
-              right: 0,
+              [isLeft ? "left" : "right"]: 0,
               bottom: -10,
               width: 20,
               height: 20,
-              bgcolor: COLORS.rightBubble,
-              clipPath: 'polygon(100% 0, 0 0, 100% 100%)',
+              bgcolor: isLeft ? "#ffffff" : COLORS.rightBubble,
+              clipPath: isLeft
+                ? "polygon(0 0, 100% 0, 0 100%)"
+                : "polygon(100% 0, 0 0, 100% 100%)",
             },
           }}
         >
@@ -87,7 +98,7 @@ export function FileBubble({
               fontSize: 16,
               fontWeight: 500,
               color: COLORS.textMain,
-              textAlign: 'right',
+              textAlign: isLeft ? "left" : "right",
               mb: 1,
             }}
           >
@@ -126,7 +137,7 @@ export function FileBubble({
                   {fileName}
                 </Typography>
                 <Typography sx={{ fontSize: 13, color: COLORS.textSoft }}>
-                  {fileSize}
+                  {normalizedFileSize}
                 </Typography>
               </Box>
 
@@ -145,7 +156,7 @@ export function FileBubble({
           </Paper>
 
           <Box sx={{ mt: 1.5 }}>
-            <ChatTime time={time} color={COLORS.textSoft} />
+            <ChatTime createdAt={createdAt} color={COLORS.textSoft} dense />
           </Box>
         </Box>
       </Box>

@@ -4,6 +4,7 @@ import type { Dispatch, ReactNode, SetStateAction } from "react";
 export type EditableFieldKey = 'fullname' | 'username';
 
 export type ProfileData = {
+    _id: string;
     fullname: string;
     username: string;
     avatar: string;
@@ -56,23 +57,31 @@ export type QuickUser = {
 };
 
 export type Conversation = {
-    id: number;
+    id: string;
     name: string;
     avatar?: string;
     initials?: string;
-    status?: 'online' | 'away' | 'none';
+    status?: 'online' | 'offline';
     preview: string;
     time: string;
     type?: 'text' | 'image' | 'typing';
     unread?: number;
     active?: boolean;
+    userId?: string
 };
-
-
 
 export type Message =
   | {
-      id: number;
+      id: string;
+      type: 'text';
+      sender: 'left' | 'right';
+      name: string;
+      avatar: string;
+      time: string;
+      content: string;
+    }
+  | {
+      id: string;
       type: 'gallery';
       sender: 'left' | 'right';
       name: string;
@@ -81,7 +90,7 @@ export type Message =
       images: string[];
     }
   | {
-      id: number;
+      id: string;
       type: 'file';
       sender: 'left' | 'right';
       name: string;
@@ -91,7 +100,7 @@ export type Message =
       fileSize: string;
     }
   | {
-      id: number;
+      id: string;
       type: 'typing';
       sender: 'left' | 'right';
       name: string;

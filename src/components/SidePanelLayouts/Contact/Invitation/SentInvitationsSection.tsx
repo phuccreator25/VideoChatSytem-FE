@@ -13,7 +13,7 @@ type SentInvitationsSectionProps = {
 export function SentInvitationsSection({
   sentInvitationsSection,
 }: SentInvitationsSectionProps) {
-  const { data, handlers, helpers } = sentInvitationsSection;
+  const { data, helpers } = sentInvitationsSection;
 
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const dispatch = useDispatch<AppDispatch>();
@@ -37,10 +37,6 @@ export function SentInvitationsSection({
             status: "cancelled",
           })
         );
-
-        setTimeout(() => {
-          handlers.handleRemoveSentInvitation(id);
-        }, 700);
       }
     } finally {
       setLoadingId(null);

@@ -8,11 +8,7 @@ import {
 } from "@mui/material";
 import { FriendRequestsSection } from "./FriendRequestSection";
 import { SentInvitationsSection } from "./SentInvitationsSection";
-import type { InvitationPopoverGroup } from "../../../../types/Invitation";
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../../../redux/store";
-import { bindInvitationAccept, bindInvitationCancel, bindInvitationCreated, bindInvitationDecline, unbindInvitationAccept, unbindInvitationCancel, unbindInvitationCreated, unbindInvitationDecline } from "../../../../socket/invitationSocket.socket";
+import type {InvitationPopoverGroup } from "../../../../types/Invitation";
 
 type InvitationPopoverProps = {
     invitationPopover: InvitationPopoverGroup;
@@ -30,8 +26,6 @@ export function InvitationPopover({
         },
         handlers: {
             handleRemoveReceivedInvitation: handlers.handleRemoveReceivedInvitation,
-            setReceivedInvitations: handlers.setReceivedInvitations,
-            refreshPopoverReceivedInvitations: handlers.refreshPopoverReceivedInvitations
         },
         helpers: {
             getTimeAgo: helpers.getTimeAgo,
@@ -42,60 +36,10 @@ export function InvitationPopover({
         data: {
             sentInvitations: data.sentInvitations,
         },
-        handlers: {
-            handleRemoveSentInvitation: handlers.handleRemoveSentInvitation,
-            setSentInvitations: handlers.setSentInvitations,
-            refreshPopoverSentInvitations: handlers.refreshPopoverSentInvitations
-        },
         helpers: {
             getTimeAgo: helpers.getTimeAgo,
         },
     };
-
-    const dispatch = useDispatch<AppDispatch>();
-
-    useEffect(() => {
-        const handleInvitationAccept = async () => {
-            if (ui.openPopover === true) {
-                await handlers.refreshPopoverSentInvitations()
-            }
-        };
-
-        const handleInvitationDecline = async () => {
-            if (ui.openPopover === true) {
-                await handlers.refreshPopoverSentInvitations();
-            }
-        };
-
-        const handleInvitationCreated = async () => {
-            if (ui.openPopover === true) {
-                await handlers.refreshPopoverReceivedInvitations();
-            }
-        }
-
-        const handleInvitationCancel = async () => {
-            if (ui.openPopover === true) {
-                await handlers.refreshPopoverReceivedInvitations();
-            }
-        };
-
-        bindInvitationAccept(handleInvitationAccept);
-        bindInvitationDecline(handleInvitationDecline);
-
-        bindInvitationCreated(handleInvitationCreated);
-        bindInvitationCancel(handleInvitationCancel)
-
-        return () => {
-            unbindInvitationAccept(handleInvitationAccept);
-            unbindInvitationDecline(handleInvitationDecline);
-
-            unbindInvitationCreated(handleInvitationCreated);
-            unbindInvitationCancel(handleInvitationCancel)
-        };
-    }, [
-        dispatch,
-        ui.openPopover
-    ]);
 
     return (
         <Popover

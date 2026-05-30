@@ -6,6 +6,7 @@ export type InvitationItem = {
   message: string;
   avatar?: string;
   receiveAt: string;
+  senderId: string;
 };
 
 export type SentInvitationItem = {
@@ -14,6 +15,7 @@ export type SentInvitationItem = {
   message: string;
   sentAt: string;
   avatar?: string
+  receiverId: string;
 };
 
 export type InvitationPopoverGroup = {
@@ -31,10 +33,6 @@ export type InvitationPopoverGroup = {
     handleViewAllRequests: () => void;
     handleRemoveSentInvitation: (id: string) => void;
     handleRemoveReceivedInvitation: (id: string) => void;
-    setReceivedInvitations: React.Dispatch<React.SetStateAction<InvitationItem[]>>;
-    setSentInvitations: React.Dispatch<React.SetStateAction<SentInvitationItem[]>>;
-    refreshPopoverReceivedInvitations: () => Promise<void>;
-    refreshPopoverSentInvitations: () => Promise<void>;
   };
   helpers: {
     getTimeAgo: (dateString: string) => string;
@@ -53,10 +51,6 @@ export type FriendRequestsSectionGroup = {
   };
   handlers: {
     handleRemoveReceivedInvitation: (id: string) => void;
-    setReceivedInvitations: React.Dispatch<
-      React.SetStateAction<InvitationItem[]>
-    >;
-    refreshPopoverReceivedInvitations: () => Promise<void>;
   };
   helpers: {
     getTimeAgo: (dateString: string) => string;
@@ -68,13 +62,6 @@ export type FriendRequestsSectionGroup = {
 export type SentInvitationsSectionGroup = {
   data: {
     sentInvitations: SentInvitationItem[];
-  };
-  handlers: {
-    handleRemoveSentInvitation: (id: string) => void;
-    setSentInvitations: React.Dispatch<
-      React.SetStateAction<SentInvitationItem[]>
-    >;
-    refreshPopoverSentInvitations: () => Promise<void>;
   };
   helpers: {
     getTimeAgo: (dateString: string) => string;
@@ -161,3 +148,28 @@ export type HandleQuickActionParams = {
     nextStatus: RelationStatus
   ) => void;
 };
+
+export type invitationSeachResult = {
+  _id: string;
+  fullname: string;
+  email: string;
+  avatar?: string;
+  relationStatus: RelationStatus;
+  invitationId: string;
+};
+
+//socket
+export type InvitationReceived = {
+  invitationId: string;
+  senderId: string;
+  receiverId: string;
+  message: string;
+  status: "pending";
+};
+
+export type InvitationActionSocket = {
+  invitationId: string;
+  senderId?: string;
+  receiverId?: string;
+  status: "cancelled" | "accepted" | "declined" | "pending";
+}

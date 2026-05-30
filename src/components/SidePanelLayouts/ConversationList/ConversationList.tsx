@@ -12,82 +12,35 @@ import type { Conversation, QuickUser } from "../../../types/data.type";
 import { COLORS } from "../../../utils/Colors";
 import { ActiveList } from "./ActiveList/ActiveList.conversation";
 import { ConversationItem } from "./ConversationItem/ConversaationItem.conversation";
+import { useConversation } from "../../../hooks/Conversation/ConversationList.hook";
+import { useParams } from "react-router-dom";
 
 const quickUsers: QuickUser[] = [
-    {
-        id: 1,
-        name: 'Patrick',
-        avatar:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80&auto=format&fit=crop',
-        online: true,
-    },
-    {
-        id: 2,
-        name: 'Doris',
-        avatar:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop',
-        online: true,
-    },
-];
-
-const conversations: Conversation[] = [
-    {
-        id: 1,
-        name: 'Patrick Hendricks',
-        avatar:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80&auto=format&fit=crop',
-        status: 'online',
-        preview: "hey! there I'm available",
-        time: '02:50 PM',
-        type: 'text',
-    },
-    {
-        id: 2,
-        name: 'Doris Brown',
-        avatar:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop',
-        status: 'online',
-        preview: 'typing . . .',
-        time: '10:05 PM',
-        type: 'typing',
-        active: true,
-    },
-    {
-        id: 3,
-        name: 'Doris Brown',
-        avatar:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop',
-        status: 'online',
-        preview: 'typing . . .',
-        time: '10:05 PM',
-        type: 'typing',
-        active: true,
-    },
-    {
-        id: 4,
-        name: 'Doris Brown',
-        avatar:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop',
-        status: 'online',
-        preview: 'typing . . .',
-        time: '10:05 PM',
-        type: 'typing',
-        active: true,
-    },
-    {
-        id: 5,
-        name: 'Doris Brown',
-        avatar:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop',
-        status: 'online',
-        preview: 'typing . . .',
-        time: '10:05 PM',
-        type: 'typing',
-        active: true,
-    },
+  {
+    id: 1,
+    name: 'Patrick',
+    avatar:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80&auto=format&fit=crop',
+    online: true,
+  },
+  {
+    id: 2,
+    name: 'Doris',
+    avatar:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop',
+    online: true,
+  },
 ];
 
 export default function ConversationList() {
+  const { data } = useConversation()
+  const { conversationId } = useParams()
+  const conversations = Array.isArray(data.conversations) ? data.conversations : []
+  const conversationsWithActive = conversations.map((item: Conversation) => ({
+    ...item,
+    active: String(item.id) === String(conversationId),
+  }))
+
   return (
     <SidePanelLayout
       header={
@@ -147,7 +100,7 @@ export default function ConversationList() {
           ...customScrollbarSx,
         }}
       >
-        {conversations.map((item) => (
+        {conversationsWithActive.map((item: Conversation) => (
           <ConversationItem key={item.id} item={item} />
         ))}
       </Stack>

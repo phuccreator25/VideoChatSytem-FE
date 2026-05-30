@@ -83,21 +83,21 @@ function useAuth() {
 
   const handleLogOut = async () => {
     try {
-      const res = await authApi.onLogOut();
+      await authApi.onLogOut();
 
-      if (res.status === 200) {
-        disconnectSocket();
-        enqueueSnackbar("Đăng xuất thành công", {
-          variant: "success",
-        });
-        dispatch(clearCurrentUser());
-        navigate("/login");
-      }
-    } catch (error: any) {
-      console.error("Logout failed:", error.response?.data?.message);
-      enqueueSnackbar(error?.response?.data?.message || "Đăng xuất thất bại", {
-        variant: "error",
+      enqueueSnackbar("Đăng xuất thành công", {
+        variant: "success",
       });
+    } catch (error: any) {
+      console.error("Logout API failed:", error?.response?.data?.message);
+
+      enqueueSnackbar("Đã đăng xuất khỏi thiết bị này", {
+        variant: "success",
+      });
+    } finally {
+      disconnectSocket();
+      dispatch(clearCurrentUser());
+      navigate("/login", { replace: true });
     }
   };
 

@@ -4,32 +4,23 @@ import Typography from "@mui/material/Typography";
 
 import { COLORS } from "../../../utils/Colors";
 
-export function TypingIndicator() {
+export function TypingIndicator({ isLeft = true }: { isLeft?: boolean }) {
   return (
     <Box
       sx={{
-        bgcolor: COLORS.primarySoft,
-        color: '#fff',
-        borderRadius: 2.5,
-        px: 3,
-        py: 1.8,
+        bgcolor: isLeft ? "#ffffff" : "#eef2ff",
+        border: "1px solid rgba(148, 163, 184, 0.22)",
+        color: COLORS.textSoft,
+        borderRadius: 3,
+        px: 2.2,
+        py: 1.2,
         display: 'inline-flex',
         alignItems: 'center',
         gap: 0.8,
-        position: 'relative',
-        '&::after': {
-          content: '""',
-          position: 'absolute',
-          left: 0,
-          bottom: -10,
-          width: 20,
-          height: 20,
-          bgcolor: COLORS.primarySoft,
-          clipPath: 'polygon(0 0, 100% 0, 0 100%)',
-        },
+        boxShadow: "0 8px 22px rgba(15, 23, 42, 0.07)",
       }}
     >
-      <Typography sx={{ fontSize: 16, fontWeight: 600 }}>typing</Typography>
+      <Typography sx={{ fontSize: 14, fontWeight: 600 }}>Typing</Typography>
       <Stack direction="row" spacing={0.5}>
         {[0, 1, 2].map((dot) => (
           <Box
@@ -38,7 +29,7 @@ export function TypingIndicator() {
               width: 5,
               height: 5,
               borderRadius: '50%',
-              bgcolor: 'rgba(255,255,255,0.75)',
+              bgcolor: "rgba(99, 102, 241, 0.8)",
               mt: '2px',
             }}
           />

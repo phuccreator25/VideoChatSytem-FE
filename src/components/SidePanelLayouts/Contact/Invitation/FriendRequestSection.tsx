@@ -17,7 +17,7 @@ import {
   setInvitationActionStatus,
 } from "../../../../redux/invitation.redux";
 import type { FriendRequestsSectionGroup } from "../../../../types/Invitation";
-import { onGetDataContact } from "../../../../redux/contact.redux";
+import { useSnackbar } from "notistack";
 
 type FriendRequestsSectionProps = {
   friendRequestsSection: FriendRequestsSectionGroup;
@@ -41,45 +41,55 @@ export function FriendRequestsSection({
     (state: RootState) => state.invitation.countReceived
   );
 
-  const onAccept = async (id: string) => {
-    setSubmitingId(id);
-    
-    const result = await dispatch(onAcceptInvitation(id)).unwrap();
-    
-    setSubmitingId(null);
+  const { enqueueSnackbar } = useSnackbar();
 
-    if (result) {
-      await dispatch(
-        setInvitationActionStatus({
-          id,
-          status: "accepted",
-        })
-      );
-      await dispatch(onGetDataContact());
-      setTimeout(() => {
-        handlers.handleRemoveReceivedInvitation(id);
-      }, 700);
+  const onAccept = async (id: string) => {
+    try {
+      setSubmitingId(id);
+
+      const result = await dispatch(onAcceptInvitation(id)).unwrap();
+
+      if (result) {
+        await dispatch(
+          setInvitationActionStatus({
+            id,
+            status: "accepted",
+          })
+        );
+      }
+    } catch (error: any) {
+      console.error("Accept invitation failed:", error);
+      enqueueSnackbar(error?.response?.data?.message || "Accept invitation failed", {
+        variant: "error",
+      });
+    } finally {
+      setSubmitingId(null);
     }
   };
 
   const onDecline = async (id: string) => {
-    setSubmitingId(id);
-    
-    const result = await dispatch(onDeclineInvitation(id)).unwrap();
-    
-    setSubmitingId(null);
+    try {
+      setSubmitingId(id);
 
-    if (result) {
-      await dispatch(
-        setInvitationActionStatus({
-          id,
-          status: "declined",
-        })
-      );
+      const result = await dispatch(onDeclineInvitation(id)).unwrap();
 
-      setTimeout(() => {
-        handlers.handleRemoveReceivedInvitation(id);
-      }, 700);
+      setSubmitingId(null);
+
+      if (result) {
+        await dispatch(
+          setInvitationActionStatus({
+            id,
+            status: "declined",
+          })
+        );
+      }
+    } catch (error: any) {
+      console.error("Decline invitation failed:", error);
+      enqueueSnackbar(error?.response?.data?.message || "Decline invitation failed", {
+        variant: "error",
+      });
+    } finally {
+      setSubmitingId(null);
     }
   };
 

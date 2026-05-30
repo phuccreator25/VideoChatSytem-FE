@@ -14,17 +14,15 @@ import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 
 import { Controller, useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
-import type { AppDispatch, RootState } from "../../../../redux/store";
+import type { RootState } from "../../../../redux/store";
 import type {
   AddContactData,
   UserOption,
   RelationStatus,
   AddContactModalGroup,
 } from "../../../../types/Invitation.tsx";
-import { onGetCountSentInvitation } from "../../../../redux/invitation.redux.ts";
-import { useLocation } from "react-router-dom";
 import UserSearchOptions from "./UserSearchOptions.contact.tsx";
 
 type AddContactModalProps = {
@@ -57,9 +55,6 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
 
   const selectedUser = watch("selectedUser");
   const selectedStatus = selectedUser?.statusInvitation || "none";
-
-  const dispatch = useDispatch<AppDispatch>();
-  const location = useLocation()
 
   useEffect(() => {
     if (!ui.open) return;
@@ -155,8 +150,6 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
       invitationMessage: data.invitationMessage,
     });
 
-
-    if (location.pathname === '/invitation') { await dispatch(onGetCountSentInvitation()) };
     handleClose();
   };
 

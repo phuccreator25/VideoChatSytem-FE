@@ -33,3 +33,4 @@ export const disconnectSocket = () => {
   socketInstance.disconnect();
   socketInstance = null;
 };
+

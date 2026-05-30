@@ -69,8 +69,7 @@ axiosInterceptor.interceptors.response.use(
 
     isRefreshing = true
 
-    try {
-      
+    try {    
       await authApi.onRefreshToken()     
       connectSocket() // Kết nối lại socket sau khi refresh token thành công
       processQueue()  

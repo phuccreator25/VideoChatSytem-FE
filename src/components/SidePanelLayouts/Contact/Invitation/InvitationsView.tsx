@@ -12,7 +12,6 @@ import { SentInvitationCard } from "./SentInvitationCard";
 import useInvitation from "../../../../hooks/Invitation/Invitation.hook";
 import useInvitationAll from "../../../../hooks/Invitation/InvitationAll.hook";
 
-
 function InvitationSectionTitle({
   title,
   count,
@@ -21,20 +20,50 @@ function InvitationSectionTitle({
   count: number;
 }) {
   return (
-    <Typography
+    <Stack
+      direction="row"
+      alignItems="center"
+      justifyContent="space-between"
       sx={{
-        fontSize: 20,
-        fontWeight: 700,
-        color: "#1f2937",
+        p: { xs: 1.5, sm: 2 },
+        borderRadius: 3,
+        bgcolor: "#ffffff",
+        border: "1px solid #e7ebf3",
       }}
     >
-      {title} ({count})
-    </Typography>
+      <Typography
+        sx={{
+          fontSize: { xs: 17, sm: 20 },
+          fontWeight: 750,
+          color: "#172033",
+          lineHeight: 1.2,
+        }}
+      >
+        {title}
+      </Typography>
+
+      <Box
+        sx={{
+          minWidth: 34,
+          height: 30,
+          px: 1.25,
+          borderRadius: 999,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          bgcolor: "rgba(47, 108, 255, 0.1)",
+          color: "#204ecf",
+          fontSize: 14,
+          fontWeight: 800,
+        }}
+      >
+        {count}
+      </Box>
+    </Stack>
   );
 }
 
 export default function InvitationsFrame() {
-
   const { helpers } = useInvitation();
 
   const {
@@ -47,7 +76,7 @@ export default function InvitationsFrame() {
     handleLoadMoreReceived,
     handleLoadMoreSent,
     countReceived,
-    countSent
+    countSent,
   } = useInvitationAll({ pageSize: 3 });
 
   return (
@@ -56,11 +85,11 @@ export default function InvitationsFrame() {
       sx={{
         width: "100%",
         height: "100%",
-        borderRadius: 4,
+        borderRadius: { xs: 0, sm: 4 },
         overflow: "hidden",
-        bgcolor: "#ffffff",
-        border: "1px solid #e7e7ee",
-        boxShadow: "0 10px 30px rgba(20, 20, 43, 0.08)",
+        bgcolor: "#f6f8fd",
+        border: { xs: "none", sm: "1px solid #dfe5f1" },
+        boxShadow: { xs: "none", sm: "0 12px 36px rgba(26, 40, 74, 0.08)" },
         display: "flex",
         flexDirection: "column",
         minHeight: 0,
@@ -68,20 +97,35 @@ export default function InvitationsFrame() {
     >
       <Box
         sx={{
-          px: 4,
-          py: 2.5,
-          bgcolor: "#fff",
+          px: { xs: 2, sm: 4 },
+          py: { xs: 2.25, sm: 3 },
+          bgcolor: "#ffffff",
+          backgroundImage:
+            "linear-gradient(130deg, rgba(43,108,255,0.14), rgba(54,179,126,0.08) 68%, rgba(255,255,255,0.92))",
         }}
       >
-        <Typography
-          sx={{
-            fontSize: 24,
-            fontWeight: 750,
-            color: "#111827",
-          }}
-        >
-          Danh sách lời mời
-        </Typography>
+        <Stack spacing={0.75}>
+          <Typography
+            sx={{
+              fontSize: { xs: 22, sm: 26 },
+              fontWeight: 800,
+              color: "#13213f",
+              letterSpacing: "-0.01em",
+              lineHeight: 1.15,
+            }}
+          >
+            Connection Invitations
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: { xs: 13, sm: 14 },
+              color: "#4c5d84",
+              fontWeight: 500,
+            }}
+          >
+            Review and manage incoming and outgoing invitations in real time.
+          </Typography>
+        </Stack>
       </Box>
 
       <Divider sx={{ borderColor: COLORS.border }} />
@@ -91,29 +135,26 @@ export default function InvitationsFrame() {
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
-          px: 4,
-          py: 4,
-          bgcolor: "#f9fafb",
+          px: { xs: 2, sm: 4 },
+          py: { xs: 2.5, sm: 4 },
+          bgcolor: "#f6f8fd",
           ...customScrollbarSx,
         }}
       >
-        <Stack spacing={4}>
+        <Stack spacing={{ xs: 3, sm: 4 }}>
           <Box>
-            <InvitationSectionTitle
-              title="Lời mời đã nhận"
-              count={countReceived}
-            />
+            <InvitationSectionTitle title="Received Invitations" count={countReceived} />
 
             <Box
               sx={{
-                mt: 2,
+                mt: 2.25,
                 display: "grid",
                 gridTemplateColumns: {
                   xs: "1fr",
                   sm: "repeat(2, minmax(0, 1fr))",
                   lg: "repeat(3, minmax(0, 1fr))",
                 },
-                gap: 2,
+                gap: { xs: 1.5, sm: 2 },
                 alignItems: "stretch",
               }}
             >
@@ -139,48 +180,46 @@ export default function InvitationsFrame() {
                   onClick={handleLoadMoreReceived}
                   disabled={loadingReceived}
                   sx={{
-                    minWidth: 180,
-                    height: 42,
+                    minWidth: 200,
+                    height: 44,
                     borderRadius: 999,
                     textTransform: "none",
-                    fontWeight: 700,
+                    fontWeight: 750,
                     fontSize: 15,
-                    borderColor: "#cbd5e1",
-                    color: "#334155",
-                    bgcolor: "#fff",
+                    borderColor: "#aac0ef",
+                    color: "#2f5dcc",
+                    bgcolor: "#ffffff",
+                    px: 2.5,
                     "&:hover": {
-                      borderColor: "#94a3b8",
-                      bgcolor: "#f8fafc",
+                      borderColor: "#6f93e6",
+                      bgcolor: "#f2f6ff",
                     },
                     "&.Mui-disabled": {
-                      bgcolor: "#f8fafc",
-                      color: "#94a3b8",
+                      bgcolor: "#f7f9fe",
+                      color: "#8da4d5",
                       borderColor: "#e2e8f0",
                     },
                   }}
                 >
-                  {loadingReceived ? "Đang tải..." : "Xem thêm lời mời nhận"}
+                  {loadingReceived ? "Loading..." : "Load More Received"}
                 </Button>
               </Box>
             )}
           </Box>
 
           <Box>
-            <InvitationSectionTitle
-              title="Lời mời đã gửi"
-              count={countSent}
-            />
+            <InvitationSectionTitle title="Sent Invitations" count={countSent} />
 
             <Box
               sx={{
-                mt: 2,
+                mt: 2.25,
                 display: "grid",
                 gridTemplateColumns: {
                   xs: "1fr",
                   sm: "repeat(2, minmax(0, 1fr))",
                   lg: "repeat(3, minmax(0, 1fr))",
                 },
-                gap: 2,
+                gap: { xs: 1.5, sm: 2 },
                 alignItems: "stretch",
               }}
             >
@@ -206,27 +245,28 @@ export default function InvitationsFrame() {
                   onClick={handleLoadMoreSent}
                   disabled={loadingSent}
                   sx={{
-                    minWidth: 180,
-                    height: 42,
+                    minWidth: 200,
+                    height: 44,
                     borderRadius: 999,
                     textTransform: "none",
-                    fontWeight: 700,
+                    fontWeight: 750,
                     fontSize: 15,
-                    borderColor: "#cbd5e1",
-                    color: "#334155",
-                    bgcolor: "#fff",
+                    borderColor: "#aac0ef",
+                    color: "#2f5dcc",
+                    bgcolor: "#ffffff",
+                    px: 2.5,
                     "&:hover": {
-                      borderColor: "#94a3b8",
-                      bgcolor: "#f8fafc",
+                      borderColor: "#6f93e6",
+                      bgcolor: "#f2f6ff",
                     },
                     "&.Mui-disabled": {
-                      bgcolor: "#f8fafc",
-                      color: "#94a3b8",
+                      bgcolor: "#f7f9fe",
+                      color: "#8da4d5",
                       borderColor: "#e2e8f0",
                     },
                   }}
                 >
-                  {loadingSent ? "Đang tải..." : "Xem thêm lời mời gửi"}
+                  {loadingSent ? "Loading..." : "Load More Sent"}
                 </Button>
               </Box>
             )}

@@ -1,30 +1,32 @@
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
-import InvitationsAPI from "../../api/Invitation.api";
 import type {
   AddContactDataHook,
   HandleQuickActionParams,
-  InvitationItem,
   InvitationQuickAction,
-  SentInvitationItem,
+  invitationSeachResult,
   UserOption,
 } from "../../types/Invitation";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../redux/store";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../../redux/store";
 import {
   clearInvitationActionStatus,
   onAcceptInvitation,
+  onAddContact,
   onCancelSentInvitation,
   onDeclineInvitation,
-  onGetCountReceivedInvitation,
   onGetCountSentInvitation,
   onGetListFriendRequests,
   onGetListSentInvitation,
   setInvitationActionStatus,
+  setIsPopoverInvitationOpen,
 } from "../../redux/invitation.redux";
 import userApi from "../../api/User.api";
-import { onGetDataContact } from "../../redux/contact.redux";
+import {
+  updateContactRelation,
+  updateInvitationId,
+} from "../../redux/chat.redux";
 
 function useInvitation() {
   const [openModal, setOpenModal] = useState<boolean>(false);
@@ -32,17 +34,72 @@ function useInvitation() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const location = useLocation();
 
-  const [receivedInvitations, setReceivedInvitations] = useState<
-    InvitationItem[]
-  >([]);
+  const receivedInvitations = useSelector(
+    (state: RootState) => state.invitation.receivedAllInvitations,
+  ).slice(0, 3);
 
-  const [sentInvitations, setSentInvitations] = useState<SentInvitationItem[]>(
-    [],
-  );
+  const sentInvitations = useSelector(
+    (state: RootState) => state.invitation.sentInvitations,
+  ).slice(0, 3);
 
   const openPopover = Boolean(anchorEl);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const [searchParams] = useSearchParams();
+
+  const invitationTab = searchParams.get("invitationTab");
+
+  //Load more received
+  const limitParam = Number(searchParams.get("resolvedLimit"));
+  const skipParam = Number(searchParams.get("receivedSkip"));
+  const resolvedLimit =
+    Number.isFinite(limitParam) && limitParam > 0 ? limitParam : 3;
+  const resolvedSkip =
+    Number.isFinite(skipParam) && skipParam >= 0 ? skipParam : 0;
+
+  //Load more sent
+  const limitSentParam = Number(searchParams.get("resolvedLimitSent"));
+  const skipSentParam = Number(searchParams.get("resolvedSkipSent"));
+  const resolvedLimitSent =
+    Number.isFinite(limitSentParam) && limitSentParam > 0 ? limitSentParam : 3;
+  const resolvedSkipSent =
+    Number.isFinite(skipSentParam) && skipSentParam >= 0 ? skipSentParam : 0;
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (
+        !openPopover ||
+        (receivedInvitations.length > 0 && sentInvitations.length > 0)
+      )
+        return;
+
+      await Promise.all([
+        dispatch(onGetCountSentInvitation()),
+        dispatch(
+          onGetListFriendRequests({
+            pageSize: invitationTab === "received" ? resolvedLimit : 3, // lấy từ URL để tránh ảnh hưởng khi mở cùng lúc với InvitationAll
+            skip: invitationTab === "received" ? resolvedSkip : 0,
+          }),
+        ),
+        dispatch(
+          onGetListSentInvitation({
+            pageSize: invitationTab === "sent" ? resolvedLimitSent : 3,
+            skip: invitationTab === "sent" ? resolvedSkipSent : 0,
+          }),
+        ),
+      ]);
+    };
+
+    fetchInitialData();
+  }, [
+    dispatch,
+    openPopover,
+    invitationTab,
+    resolvedLimit,
+    resolvedSkip,
+    resolvedLimitSent,
+    resolvedSkipSent,
+  ]);
 
   const handleOpenModal = () => {
     setOpenModal(true);
@@ -56,10 +113,12 @@ function useInvitation() {
     event: React.MouseEvent<HTMLElement>,
   ) => {
     setAnchorEl(event.currentTarget);
+    dispatch(setIsPopoverInvitationOpen(true));
   };
 
   const handleCloseInvitationPopover = () => {
     setAnchorEl(null);
+    dispatch(setIsPopoverInvitationOpen(false));
   };
 
   const handleOpenAddContactModal = () => {
@@ -71,16 +130,22 @@ function useInvitation() {
     try {
       if (!payload?.userId) return false;
 
-      const res = await InvitationsAPI.onAddContacts(payload);
+      const res = await dispatch(onAddContact(payload)).unwrap();
 
-      if (res?.data) {
+      if (res) {
         enqueueSnackbar("Đã gửi lời mời kết bạn thành công", {
           variant: "success",
         });
 
-        if (location.pathname === "/invitation") {
-          await dispatch(onGetListSentInvitation({ pageSize: 3 }));
-        }
+        await dispatch(
+          updateContactRelation({ userId: payload.userId, relation: "sent" }),
+        );
+        await dispatch(
+          updateInvitationId({
+            userId: payload.userId,
+            invitationId: res.invitationId,
+          }),
+        );
         handleCloseModal();
         return true;
       }
@@ -100,61 +165,16 @@ function useInvitation() {
     }
   };
 
-  const refreshPopoverReceivedInvitations = async () => {
-    const friendRes = await InvitationsAPI.onGetFriendRequest({
-      limit: 3,
-      skip: 0,
-    });
-
-    setReceivedInvitations(friendRes.data.data || []);
-  };
-
-  const refreshPopoverSentInvitations = async () => {
-    const sentRes = await InvitationsAPI.onGetSentInvitation({
-      limit: 3,
-      skip: 0,
-    });
-
-    setSentInvitations(sentRes.data.data || []);
-  };
-
-  useEffect(() => {
-    if (!anchorEl) return;
-
-    const fetchInvitationData = async () => {
-      await Promise.all([
-        refreshPopoverReceivedInvitations(),
-        refreshPopoverSentInvitations(),
-      ]);
-    };
-
-    fetchInvitationData();
-  }, [anchorEl]);
-
   const handleViewAllRequests = async () => {
     navigate("/invitation");
     handleCloseInvitationPopover();
   };
 
   const handleRemoveReceivedInvitation = async (id: string) => {
-    if (location.pathname === "/invitation") {
-      await dispatch(onGetListFriendRequests({}));
-    }
-    if (openPopover) {
-      await refreshPopoverReceivedInvitations();
-    }
-    await dispatch(onGetCountReceivedInvitation());
     dispatch(clearInvitationActionStatus(id));
   };
 
   const handleRemoveSentInvitation = async (id: string) => {
-    if (location.pathname === "/invitation") {
-      await dispatch(onGetListSentInvitation({}));
-    }
-    if (openPopover) {
-      await refreshPopoverSentInvitations();
-    }
-    await dispatch(onGetCountSentInvitation());
     dispatch(clearInvitationActionStatus(id));
   };
 
@@ -177,9 +197,10 @@ function useInvitation() {
 
   const handleSearchUser = async (searchValue: string) => {
     const res = await userApi.onSearchUser(searchValue);
+    console.log("res?.data?.data: ", res?.data?.data);
 
     const mappedOptions: UserOption[] = (res?.data?.data || []).map(
-      (item: any) => ({
+      (item: invitationSeachResult) => ({
         id: item._id,
         fullname: item.fullname,
         email: item.email,
@@ -221,14 +242,15 @@ function useInvitation() {
               }),
             );
 
-            await dispatch(onGetDataContact());
-
             setTimeout(() => {
               handleRemoveReceivedInvitation(option.invitationId);
             }, 700);
           }
 
           onUpdateOptionStatus?.(option.invitationId, "accepted");
+          await dispatch(
+            updateContactRelation({ userId: option.id, relation: "none" }),
+          );
 
           enqueueSnackbar("Đã chấp nhận lời mời thành công", {
             variant: "success",
@@ -258,6 +280,9 @@ function useInvitation() {
           }
 
           onUpdateOptionStatus?.(option.invitationId, "none");
+          await dispatch(
+            updateContactRelation({ userId: option.id, relation: "add" }),
+          );
 
           enqueueSnackbar("Đã từ chối lời mời thành công", {
             variant: "success",
@@ -287,6 +312,9 @@ function useInvitation() {
           }
 
           onUpdateOptionStatus?.(option.invitationId, "none");
+          await dispatch(
+            updateContactRelation({ userId: option.id, relation: "add" }),
+          );
 
           enqueueSnackbar("Đã thu hồi lời mời thành công", {
             variant: "success",
@@ -315,8 +343,6 @@ function useInvitation() {
       getTimeAgo,
     },
     handlers: {
-      setSentInvitations,
-      setReceivedInvitations,
       setActionLoadingId,
 
       handleOpenModal,
@@ -332,9 +358,6 @@ function useInvitation() {
 
       handleRemoveReceivedInvitation,
       handleRemoveSentInvitation,
-
-      refreshPopoverReceivedInvitations,
-      refreshPopoverSentInvitations,
 
       handleSearchUser,
       handleQuickAction,

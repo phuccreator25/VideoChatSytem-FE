@@ -4,9 +4,9 @@ export const COLORS = {
   border: '#e9e9ef',
   shadow: '0 10px 30px rgba(20, 20, 43, 0.08)',
 
-  title: '#1f2937',
+  title: '#090909',
   text: '#25324a',
-  textSoft: '#7b8190',
+  textSoft: '#0e0a0a',
   textMuted: '#8c93a8',
   textMain: '#1f2937',
 
@@ -29,6 +29,6 @@ export const COLORS = {
   activeSoft: '#eceafd',
 
   online: '#18c29c',
-  away: '#f4c24f',
+  offline: '#f4c24f',
   badgePink: '#ff7da7',
 };

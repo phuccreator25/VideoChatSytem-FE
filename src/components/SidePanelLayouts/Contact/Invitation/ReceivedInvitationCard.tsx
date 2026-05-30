@@ -5,10 +5,12 @@ import {
   Avatar,
   Box,
   Button,
+  IconButton,
   Paper,
   Stack,
   Typography,
 } from "@mui/material";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import { useDispatch, useSelector } from "react-redux";
 
 import type {
@@ -20,11 +22,9 @@ import {
   clearInvitationActionStatus,
   onAcceptInvitation,
   onDeclineInvitation,
-  onGetCountReceivedInvitation,
-  onGetListFriendRequests,
   setInvitationActionStatus,
 } from "../../../../redux/invitation.redux";
-import { onGetDataContact } from "../../../../redux/contact.redux";
+import useOpenConversation from "../../../../helpers/openConversation.helper";
 
 export function ReceivedInvitationCard({
   item,
@@ -34,6 +34,8 @@ export function ReceivedInvitationCard({
   getTimeAgo: (dateString: string) => string;
 }) {
   const dispatch = useDispatch<AppDispatch>();
+  const { handleOpenConversation, isSubmitting } = useOpenConversation();
+
   const [loadingAction, setLoadingAction] = useState<
     "accept" | "decline" | null
   >(null);
@@ -41,19 +43,11 @@ export function ReceivedInvitationCard({
   const actionStatus = useSelector(
     (state: RootState) =>
       state.invitation.actionStatusById?.[item.id] as
-        | InvitationActionStatus
-        | undefined
+      | InvitationActionStatus
+      | undefined,
   );
 
-  const isResolved =
-    actionStatus === "accepted" || actionStatus === "declined";
-
-  const refreshViewAllReceived = async () => {
-    await Promise.all([
-      dispatch(onGetCountReceivedInvitation()),
-      dispatch(onGetListFriendRequests({})),
-    ]);
-  };
+  const isResolved = actionStatus === "accepted" || actionStatus === "declined";
 
   const handleAccept = async () => {
     if (loadingAction || isResolved) return;
@@ -68,11 +62,8 @@ export function ReceivedInvitationCard({
           setInvitationActionStatus({
             id: item.id,
             status: "accepted",
-          })
+          }),
         );
-
-        await dispatch(onGetDataContact())
-        await refreshViewAllReceived();
 
         setTimeout(() => {
           dispatch(clearInvitationActionStatus(item.id));
@@ -98,10 +89,8 @@ export function ReceivedInvitationCard({
           setInvitationActionStatus({
             id: item.id,
             status: "declined",
-          })
+          }),
         );
-
-        await refreshViewAllReceived();
 
         setTimeout(() => {
           dispatch(clearInvitationActionStatus(item.id));
@@ -118,23 +107,29 @@ export function ReceivedInvitationCard({
     <Paper
       elevation={0}
       sx={{
-        p: 2,
+        p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
-        border: "1px solid #e5e7eb",
-        bgcolor: "#fff",
-        boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)",
+        border: "1px solid #dfe6f3",
+        bgcolor: "#ffffff",
+        boxShadow: "0 8px 24px rgba(17, 32, 69, 0.06)",
         height: "100%",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: "0 14px 28px rgba(17, 32, 69, 0.1)",
+        },
       }}
     >
-      <Stack spacing={2}>
+      <Stack spacing={1.75}>
         <Stack direction="row" spacing={1.5} alignItems="flex-start">
           <Avatar
             src={item.avatar}
             sx={{
-              width: 52,
-              height: 52,
+              width: { xs: 44, sm: 52 },
+              height: { xs: 44, sm: 52 },
               flexShrink: 0,
               bgcolor: "#e5e7eb",
+              border: "2px solid #f2f5fb",
             }}
           />
 
@@ -142,7 +137,7 @@ export function ReceivedInvitationCard({
             <Box
               sx={{
                 display: "flex",
-                alignItems: "flex-start",
+                alignItems: "center",
                 justifyContent: "space-between",
                 gap: 1,
               }}
@@ -150,9 +145,9 @@ export function ReceivedInvitationCard({
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
                   sx={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: "#111827",
+                    fontSize: { xs: 15.5, sm: 17.5 },
+                    fontWeight: 750,
+                    color: "#111b2f",
                     lineHeight: 1.2,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -165,8 +160,8 @@ export function ReceivedInvitationCard({
                 <Typography
                   sx={{
                     mt: 0.5,
-                    fontSize: 13,
-                    color: "#6b7280",
+                    fontSize: 12.5,
+                    color: "#63708e",
                     lineHeight: 1.3,
                   }}
                 >
@@ -174,34 +169,44 @@ export function ReceivedInvitationCard({
                 </Typography>
               </Box>
 
-              <Box
+              <IconButton
+                onClick={() => handleOpenConversation(item.senderId)}
+                disabled={isSubmitting}
                 sx={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: "50%",
-                  border: "1px solid #e5e7eb",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#94a3b8",
-                  fontSize: 16,
-                  flexShrink: 0,
-                  bgcolor: "#f8fafc",
+                  width: 30,
+                  height: 30,
+                  border: "1px solid #e1e8f5",
+                  bgcolor: "#f5f8ff",
+                  color: "#6a7aa2",
+                  transition: "all 0.2s ease",
+
+                  "&:hover": {
+                    bgcolor: "#e8f0ff",
+                    color: "#2563eb",
+                    borderColor: "#bcd0ff",
+                    transform: "scale(1.06)",
+                  },
+
+                  "&.Mui-disabled": {
+                    bgcolor: "#f1f3f6",
+                    color: "#b0b7c3",
+                    borderColor: "#e5e7eb",
+                  },
                 }}
               >
-                💬
-              </Box>
+                <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 16 }} />
+              </IconButton>
             </Box>
           </Box>
         </Stack>
 
         <Box
           sx={{
-            px: 2,
+            px: 1.75,
             py: 1.5,
-            borderRadius: 2,
-            border: "1px solid #dbe2ea",
-            bgcolor: "#ffffff",
+            borderRadius: 2.25,
+            border: "1px solid #dce5f4",
+            bgcolor: "#f9fbff",
             minHeight: 76,
             display: "flex",
             alignItems: "center",
@@ -210,8 +215,8 @@ export function ReceivedInvitationCard({
         >
           <Typography
             sx={{
-              fontSize: 15,
-              color: "#374151",
+              fontSize: 14.5,
+              color: "#32415f",
               lineHeight: 1.5,
               textAlign: "center",
               display: "-webkit-box",
@@ -225,47 +230,35 @@ export function ReceivedInvitationCard({
         </Box>
 
         {actionStatus === "accepted" && (
-          <Alert
-            severity="success"
-            sx={{
-              borderRadius: 2,
-              alignItems: "center",
-            }}
-          >
+          <Alert severity="success" sx={{ borderRadius: 2, alignItems: "center" }}>
             Invitation accepted successfully.
           </Alert>
         )}
 
         {actionStatus === "declined" && (
-          <Alert
-            severity="info"
-            sx={{
-              borderRadius: 2,
-              alignItems: "center",
-            }}
-          >
+          <Alert severity="info" sx={{ borderRadius: 2, alignItems: "center" }}>
             Invitation declined successfully.
           </Alert>
         )}
 
         {!isResolved && (
-          <Stack direction="row" spacing={1.5}>
+          <Stack direction="row" spacing={1.25}>
             <Button
               fullWidth
               variant="contained"
               onClick={handleDecline}
               disabled={!!loadingAction}
               sx={{
-                height: 44,
+                height: 42,
                 borderRadius: 2,
                 textTransform: "none",
                 fontWeight: 700,
-                fontSize: 16,
-                bgcolor: "#eef2f7",
-                color: "#374151",
+                fontSize: 15,
+                bgcolor: "#ecf2fc",
+                color: "#3a4a68",
                 boxShadow: "none",
                 "&:hover": {
-                  bgcolor: "#e5eaf1",
+                  bgcolor: "#e3ebf9",
                   boxShadow: "none",
                 },
               }}
@@ -279,17 +272,17 @@ export function ReceivedInvitationCard({
               onClick={handleAccept}
               disabled={!!loadingAction}
               sx={{
-                height: 44,
+                height: 42,
                 borderRadius: 2,
                 textTransform: "none",
                 fontWeight: 700,
-                fontSize: 16,
-                bgcolor: "#2563eb",
+                fontSize: 15,
+                bgcolor: "#2b6cff",
                 color: "#fff",
-                boxShadow: "none",
+                boxShadow: "0 8px 18px rgba(43, 108, 255, 0.22)",
                 "&:hover": {
-                  bgcolor: "#1d4ed8",
-                  boxShadow: "none",
+                  bgcolor: "#2058d7",
+                  boxShadow: "0 10px 20px rgba(43, 108, 255, 0.28)",
                 },
               }}
             >

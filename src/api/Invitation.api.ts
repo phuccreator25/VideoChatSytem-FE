@@ -23,7 +23,7 @@ const InvitationsAPI = {
     axiosInterceptor.post("/invitations/decline", payload),
 
   onCancelSentInvitation: (payload: object) => 
-    axiosInterceptor.post("invitations/cancel-sent", payload)
+    axiosInterceptor.post("/invitations/cancel-sent", payload)
 };
 
 export default InvitationsAPI;
