@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import ChatLayout from '../../layouts/Chat.layout';
-import type { RailKey } from '../../components/LeftRail';
+import type { RailKey } from '../../types/layout/layout.navigation.type';
 import { ContactsView } from '../../components/SidePanelLayouts/Contact/Contact';
 import InvitationsFrame from '../../components/SidePanelLayouts/Contact/Invitation/InvitationsView';
 import { MyProfile } from '../../components/SidePanelLayouts/Profile/Profile';

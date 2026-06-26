@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import AttachmentOutlinedIcon from "@mui/icons-material/AttachmentOutlined";
 
-import type { FileItem } from "../../../../types/data.type";
+import type { FileItem } from "../../../../types/profile/profile.model.type";
 import { AttachedFileRow } from "./AttachedFileRow.profile";
 
 type AttachedFilesSectionProps = {

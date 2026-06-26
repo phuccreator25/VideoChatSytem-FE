@@ -3,6 +3,8 @@ import { CONFIG } from "../config/appConfig";
 
 const BASE_URL =
   CONFIG.MODE === "development" ? "http://localhost:3000" : "";
+// const BASE_URL =
+//   CONFIG.MODE === "development" ? "http://127.0.0.1:30001" : "";
 
 let socketInstance: Socket | null = null;
 

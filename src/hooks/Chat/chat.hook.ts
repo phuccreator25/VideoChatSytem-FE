@@ -1,51 +1,63 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   ChatItemTypes,
-  type ConversationReadPayload,
-  type MessageReceivedPayload,
   type MessageType,
-  type SendMessagePayload,
-} from "../../types/chat.type";
+  type SelectedGif,
+} from "../../types/chat/chat.model.type";
+import type {
+  ConversationReadPayload,
+  MessageReceivedPayload,
+  SendMessagePayload,
+} from "../../types/chat/chat.payload.type";
 import { type AppDispatch, type RootState } from "../../redux/store";
 import ConversationsAPI from "../../api/Conversation.api";
 import {
   bindConversationReadSuccess,
+  bindDeleteMessage,
+  bindDeletePinMessage,
   bindMessageNew,
+  bindPinMessage,
+  bindReactEmotionMessage,
   bindReceivedMessages,
+  bindRevokeMessage,
+  bindUnReactEmotionMessage,
   emitConversationRead,
+  emitTypingMesssage,
   unbindConversationReadSuccess,
+  unbindDeleteMessage,
+  unbindDeletePinMessage,
   unbindMessageNew,
+  unbindPinMessage,
+  unbindReactEmotionMessage,
   unbindReceivedMessages,
+  unbindRevokeMessage,
+  unbindUnReactEmotionMessage,
 } from "../../socket/message.socket";
 import ChatAPI from "../../api/Chat.api";
 import { connectSocket } from "../../socket/socket";
 import { setUserData, updateContactRelation } from "../../redux/chat.redux";
+import useMergeAttachment from "../../helpers/mergeAttachment.helper";
+import useInvitationAction from "../../helpers/InvitationAction.helper";
+import type { IGif } from "@giphy/js-types";
 import {
-  onAcceptInvitation,
-  onAddContact,
-  onCancelSentInvitation,
-  onDeclineInvitation,
-} from "../../redux/invitation.redux";
-import useApplyRelationState from "../../helpers/relationState.helper";
+  deletePinnedMessage,
+  onDeletePinMessageConversation,
+  setAllPinnedMessagesByConversation,
+  setPinnedMessage,
+} from "../../redux/conversation.redux";
+import type { pinMessages } from "../../types/chat/chat.conversation.type";
+import type {
+  deletePinMessageSocket,
+  reactEmotionMessageSocket,
+} from "../../types/chat/chat.socket.type";
+import { useVoiceChat } from "../Voice/voiceChat.hook";
+import { enqueueSnackbar } from "notistack";
 
 type ContactAction = "add" | "accept" | "decline" | "cancel";
 
 export function useChatFrame() {
-  const [messages, setMessages] = useState<MessageType[]>([]);
-  const [inputText, setInputText] = useState<string>("");
-  const [openAddContactModal, setOpenAddContactModal] = useState(false);
-  const [invitationMessage, setInvitationMessage] = useState("");
-  const [addContactSubmitting, setAddContactSubmitting] = useState(false);
-  const [loadingAction, setLoadingAction] = useState<ContactAction | null>(
-    null,
-  );
-  const relationStatus = useSelector(
-    (state: RootState) => state.chat.contactRelation,
-  );
-  const { applyRelationState } = useApplyRelationState();
-
   const { conversationId } = useParams();
   const currentUser = useSelector((state: RootState) => state.user.currentUser);
   const userData = useSelector((state: RootState) => state.chat.userData);
@@ -55,11 +67,57 @@ export function useChatFrame() {
   const currentUserAvatar = currentUser?.avatar || "";
   const currentUserId = currentUser?._id || "";
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [messages, setMessages] = useState<MessageType[]>([]);
 
+  const [inputText, setInputText] = useState<string>("");
+  const [files, setFiles] = useState<File[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const lastMessage = useRef<MessageType | null>(null);
   const currentTimeOut = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectTimeOut = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [messageReplyed, setMessageReplyed] = useState<MessageType | null>(
+    null,
+  );
+
+  const [openAddContactModal, setOpenAddContactModal] = useState(false);
+  const [invitationMessage, setInvitationMessage] = useState("");
+  const [addContactSubmitting, setAddContactSubmitting] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<ContactAction | null>(
+    null,
+  );
+
+  const pinMessages = useSelector((state: RootState) => {
+    if (!conversationId) return [];
+
+    return (
+      state.conversation.pinnedMessageIdsByConversation[conversationId] || []
+    );
+  });
+  const [selectedGif, setSelectedGif] = useState<SelectedGif | null>(null);
+
+  const relationStatus = useSelector(
+    (state: RootState) => state.chat.contactRelation,
+  );
+
+  const { mergeAttachments } = useMergeAttachment();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const {
+    onHandleAcceptInvitation,
+    onHandleDeclineInvitation,
+    onHandleCancelInvitation,
+    onHandleAddInvitation,
+  } = useInvitationAction();
+
+  //VOICE
+  const { voiceData, voiceHandler, voiceUi } = useVoiceChat({
+    onError: (error) => {
+      enqueueSnackbar("Voice no supported. Please try again", {
+        variant: "error",
+      });
+      console.log(error);
+    },
+  });
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({
@@ -68,22 +126,32 @@ export function useChatFrame() {
     });
   };
 
-  const dispatch = useDispatch<AppDispatch>();
-
   // FETCH DANH SÁCH MESSAGE
   useEffect(() => {
     const fetchMessages = async () => {
       if (!conversationId) return;
 
-      const res = await ConversationsAPI.getConversationById(conversationId);
-      dispatch(setUserData(res.data.data.user));
-      dispatch(
+      const conversationRes =
+        await ConversationsAPI.getConversationById(conversationId);
+
+      const pinMessages = conversationRes.data.data.conversation.pinMessages || [];
+      await dispatch(
+        setAllPinnedMessagesByConversation({
+          conversationId,
+          pinMessages,
+        })
+      );
+
+      await dispatch(setUserData(conversationRes.data.data.user));
+
+      await dispatch(
         updateContactRelation({
-          userId: res.data.data.user?.userId,
-          relation: res.data.data.user?.relationStatus,
+          userId: conversationRes.data.data.user?.userId,
+          relation: conversationRes.data.data.user?.relationStatus,
         }),
       );
-      setMessages(res.data.data.messages);
+
+      setMessages(conversationRes.data.data.messages);
 
       await emitConversationRead(conversationId);
 
@@ -94,6 +162,58 @@ export function useChatFrame() {
 
     fetchMessages();
   }, [conversationId, dispatch]);
+
+  //Handle Typing Messages
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingRef = useRef(false);
+
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const hasText = inputText.trim().length > 0;
+
+    // Input bị xóa hết
+    if (!hasText) {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+
+      if (isTypingRef.current) {
+        emitTypingMesssage(conversationId, false);
+
+        isTypingRef.current = false;
+      }
+
+      return;
+    }
+
+    // Bắt đầu nhập: chỉ emit true một lần
+    if (!isTypingRef.current) {
+      emitTypingMesssage(conversationId, true);
+
+      isTypingRef.current = true;
+    }
+
+    // Mỗi lần gõ tiếp thì reset timer
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Ngừng gõ 1 giây thì emit false
+    typingTimeoutRef.current = setTimeout(() => {
+      emitTypingMesssage(conversationId, false);
+
+      isTypingRef.current = false;
+      typingTimeoutRef.current = null;
+    }, 1000);
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [inputText, conversationId]);
 
   useEffect(() => {
     if (!messages.length) return;
@@ -112,25 +232,29 @@ export function useChatFrame() {
       setMessages((prev) => {
         const currentMessages = prev || [];
 
-        if (currentMessages.some((msg) => msg.id === payload.id)) {
-          return currentMessages;
-        }
+        const existingIndex = currentMessages.findIndex(
+          (msg) =>
+            msg.id === payload.id ||
+            msg.tempMessageId === payload.tempMessageId ||
+            msg.id === payload.tempMessageId,
+        );
 
-        if (payload.senderId === currentUserId) {
-          const tempIndex = currentMessages.findIndex(
-            (msg) =>
-              msg.status === "sending" &&
-              msg.senderId === currentUserId &&
-              msg.conversationId === payload.conversationId &&
-              msg.type === payload.type &&
-              msg.content === payload.content,
-          ); // Tìm message tạm để thay thế message chính thức từ DB
+        if (existingIndex >= 0) {
+          const nextMessages = [...currentMessages];
+          const currentMessage = nextMessages[existingIndex];
 
-          if (tempIndex >= 0) {
-            const nextMessages = [...currentMessages];
-            nextMessages[tempIndex] = payload;
-            return nextMessages;
-          }
+          nextMessages[existingIndex] = {
+            ...currentMessage,
+            ...payload,
+            attachments: payload.attachments?.length
+              ? mergeAttachments(
+                  currentMessage.attachments,
+                  payload.attachments,
+                )
+              : currentMessage.attachments,
+          };
+
+          return nextMessages;
         }
 
         return [...currentMessages, payload];
@@ -201,7 +325,7 @@ export function useChatFrame() {
         const nextMessages = prev.map((msg) => {
           if (msg.conversationId !== payload.conversationId) return msg;
           if (msg.senderId !== currentUserId) return msg;
-          if (msg.deletedAt) return msg;
+          if (msg.isRevoked) return msg;
           if (msg.status !== "sent") return msg;
 
           hasChanged = true;
@@ -227,14 +351,107 @@ export function useChatFrame() {
       });
     };
 
+    // Xử lý Pin message
+    const handlePinnedMessage = (payload: pinMessages) => {
+      if (!conversationId) return;
+      dispatch(setPinnedMessage(payload));
+    };
+
+    // Xử lý delete pin message
+    const handleDeletePinMessage = (payload: deletePinMessageSocket) => {
+      if (!conversationId) return;
+      dispatch(deletePinnedMessage(payload));
+    };
+
+    //Xử lý emotion
+    const handleReactEmotion = (payload: reactEmotionMessageSocket) => {
+      if (!conversationId) return;
+      console.log(payload);
+      
+      setMessages((prev) => {
+        const currentMessages = prev || [];
+
+        const existingIndex = currentMessages.findIndex(
+          (msg) => msg.id === payload.messageId,
+        );
+
+        if (existingIndex >= 0) {
+          const nextMessages = [...currentMessages];
+          const currentMessage = nextMessages[existingIndex];
+
+          nextMessages[existingIndex] = {
+            ...currentMessage,
+            reactions: payload.reactions,
+          };
+
+          return nextMessages;
+        }
+        return currentMessages;
+      });
+    };
+
+    const handleUnReactEmotion = (payload: reactEmotionMessageSocket) => {
+      if (!conversationId) return;
+      
+      setMessages((prev) => {
+        const currentMessages = prev || [];
+
+        const existingIndex = currentMessages.findIndex(
+          (msg) => msg.id === payload.messageId,
+        );
+
+        if (existingIndex >= 0) {
+          const nextMessages = [...currentMessages];
+
+          nextMessages[existingIndex] = {
+            ...currentMessages[existingIndex],
+            reactions: payload.reactions,
+          };
+
+          return nextMessages;
+        }
+        return currentMessages;
+      });
+    };
+
+    const handleDeleteMessage = (payload: MessageType) => {
+      if (!conversationId) return;
+
+      setMessages((prev) =>
+        (prev || []).filter((msg) => msg.id !== payload.id),
+      );
+    };
+
+    const handleRevokeMessage = (payload: MessageType) => {
+      if (!conversationId) return;
+
+      setMessages((prev) =>
+        (prev || []).map((msg) =>
+          msg.id === payload.id ? { ...msg, isRevoked: true } : msg,
+        ),
+      );
+    };
+
     bindMessageNew(handleNewMessage);
     bindConversationReadSuccess(handleReadMessage);
     bindReceivedMessages(handleUpdateStatusMessage);
+    bindPinMessage(handlePinnedMessage);
+    bindDeletePinMessage(handleDeletePinMessage);
+    bindReactEmotionMessage(handleReactEmotion);
+    bindUnReactEmotionMessage(handleUnReactEmotion);
+    bindDeleteMessage(handleDeleteMessage);
+    bindRevokeMessage(handleRevokeMessage);
 
     return () => {
       unbindMessageNew(handleNewMessage);
       unbindConversationReadSuccess(handleReadMessage);
       unbindReceivedMessages(handleUpdateStatusMessage);
+      unbindPinMessage(handlePinnedMessage);
+      unbindDeletePinMessage(handleDeletePinMessage);
+      unbindReactEmotionMessage(handleReactEmotion);
+      unbindUnReactEmotionMessage(handleUnReactEmotion);
+      unbindDeleteMessage(handleDeleteMessage);
+      unbindRevokeMessage(handleRevokeMessage);
     };
   }, [conversationId, userData?.userId]);
 
@@ -261,6 +478,15 @@ export function useChatFrame() {
               relation: res.data.data.user?.relationStatus || "none",
             }),
           );
+
+          const pinMessages = res.data.data.conversation.pinMessages || [];
+          dispatch(
+            setAllPinnedMessagesByConversation({
+              conversationId,
+              pinMessages,
+            })
+          );
+
           setMessages(res.data.data.messages);
 
           await emitConversationRead(conversationId);
@@ -284,50 +510,164 @@ export function useChatFrame() {
     };
   }, [conversationId]);
 
+  //Xử lý gửi tin nhắn
   const handleSend = async () => {
-    if (!conversationId || !inputText.trim()) return;
+    if (
+      !conversationId ||
+      (!inputText.trim() &&
+        files.length < 1 &&
+        selectedGif === null &&
+        !voiceData.recordedFile)
+    ) {
+      return;
+    }
+
     if (!currentUserId) return;
 
     const content = inputText.trim();
-    const tempId = `temp-${Date.now()}`;
+    const voiceSnapshot = voiceData.recordedFile;
+    const filesSnapshot = [...files, ...(voiceSnapshot ? [voiceSnapshot] : [])];
+    const gifSnapshot = selectedGif;
+    const replyMessageSnapshot = messageReplyed;
 
-    const tempMessages = {
-      id: tempId,
+    const tempMessageId = `temp-${Date.now()}`;
+
+    const hasFiles = filesSnapshot.length > 0;
+    const hasGif = Boolean(gifSnapshot);
+
+    const previewFiles = filesSnapshot.map((file) => {
+      const isImage = file.type.startsWith("image/");
+      const isAudio = file.type.startsWith("audio/");
+      const isVideo = file.type.startsWith("video/");
+
+      return {
+        tempAttachmentId: `att-temp-${crypto.randomUUID()}`,
+        file,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+
+        resourceType: isImage
+          ? "image"
+          : isAudio
+            ? "audio"
+            : isVideo
+              ? "video"
+              : "raw",
+
+        previewUrl:
+          isImage || isVideo
+            ? URL.createObjectURL(file)
+            : isAudio
+              ? voiceUi.previewUrl
+              : null,
+
+        recordDuration: isAudio ? voiceUi.recordingDuration : null,
+      };
+    });
+
+    const tempMessage = {
+      id: tempMessageId,
+      tempMessageId,
       conversationId,
       senderId: currentUserId,
-      type: ChatItemTypes.TEXT,
-      content: content || "",
+      type: hasFiles
+        ? ChatItemTypes.FILE
+        : hasGif
+          ? ChatItemTypes.GIF
+          : ChatItemTypes.TEXT,
+      content,
+      gifUrl: gifSnapshot?.url || null,
+      attachments: previewFiles,
       status: "sending",
+      replyToMessageId: replyMessageSnapshot?.id ?? null,
+      replyMessage: replyMessageSnapshot ?? null,
     };
 
-    setMessages((prev) => [...(prev || []), tempMessages]);
+    setMessages((prev) => [...(prev || []), tempMessage]);
+
     setInputText("");
+    setFiles([]);
+    setSelectedGif(null);
+    setMessageReplyed(null);
+    voiceHandler.clearRecording();
 
     try {
-      const message: SendMessagePayload = {
-        conversationId,
-        type: ChatItemTypes.TEXT,
-        content: content,
-      };
+      let payload: SendMessagePayload | FormData;
 
-      const res = await ChatAPI.onSendMessage(message, conversationId);
+      if (hasFiles) {
+        const formData = new FormData();
+
+        formData.append("tempMessageId", tempMessageId);
+        formData.append("conversationId", conversationId);
+        formData.append("type", ChatItemTypes.FILE);
+        formData.append("content", content);
+
+        previewFiles.forEach((item) => {
+          formData.append("files", item.file);
+          formData.append(
+            "recordDuration",
+            String(voiceUi?.recordingDuration ?? 0),
+          );
+          formData.append("tempAttachmentIds", item.tempAttachmentId);
+        });
+
+        payload = formData;
+      } else if (hasGif) {
+        payload = {
+          tempMessageId,
+          conversationId,
+          type: ChatItemTypes.GIF,
+          gifUrl: gifSnapshot?.url || null,
+        };
+      } else {
+        payload = {
+          tempMessageId,
+          conversationId,
+          type: ChatItemTypes.TEXT,
+          content: inputText.trim() || "",
+          replyToMessageId: replyMessageSnapshot?.id ?? null,
+        };
+      }
+
+      const res = await ChatAPI.onSendMessage(payload, conversationId);
+
       const savedMessage = res.data.data;
-      setInputText("");
+
       setMessages((prev) => {
         const currentMessages = prev || [];
-        const withoutTemp = currentMessages.filter((msg) => msg.id !== tempId);
 
-        if (withoutTemp.some((msg) => msg.id === savedMessage.id)) {
+        const currentTempMessage = currentMessages.find(
+          (msg) => msg.id === tempMessageId,
+        );
+
+        const mergedSavedMessage = {
+          ...savedMessage,
+          attachments: savedMessage.attachments?.length
+            ? mergeAttachments(
+                currentTempMessage?.attachments,
+                savedMessage.attachments,
+              )
+            : currentTempMessage?.attachments,
+        };
+
+        const withoutTemp = currentMessages.filter(
+          (msg) => msg.id !== tempMessageId && msg.tempMessageId !== tempMessageId
+        );
+
+
+        if (withoutTemp.some((msg) => msg.id === mergedSavedMessage.id)) {
           return withoutTemp;
         }
 
-        return [...withoutTemp, savedMessage];
+        return [...withoutTemp, mergedSavedMessage];
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
+
       setMessages((prev) =>
         (prev || []).map((msg) =>
-          msg.id === tempId
+          msg.id === tempMessageId
             ? {
                 ...msg,
                 status: "failed",
@@ -338,6 +678,133 @@ export function useChatFrame() {
     }
   };
 
+  //Gửi lại tin nhắn lỗi
+  const handleResend = async (messageFailed: MessageType) => {
+    if (!conversationId || !currentUserId) return;
+    
+    const tempMessageId = messageFailed.tempMessageId || messageFailed.id;
+    const content = messageFailed.content || "";
+    const type = messageFailed.type;
+    const gifUrl = messageFailed.gifUrl;
+    const replyToMessageId = messageFailed.replyToMessageId;
+
+    setMessages((prev) =>
+      (prev || []).map((msg) =>
+        msg.id === messageFailed.id || msg.tempMessageId === tempMessageId
+          ? {
+              ...msg,
+              status: "sending", // Đưa về lại sending
+            }
+          : msg,
+      ),
+    );
+
+    try {
+      let payload: SendMessagePayload | FormData;
+
+      if (type === ChatItemTypes.FILE) {
+        const formData = new FormData();
+       
+        formData.append("tempMessageId", tempMessageId);
+        formData.append("conversationId", conversationId);
+        formData.append("type", ChatItemTypes.FILE);
+        formData.append("content", content);
+       
+        messageFailed.attachments?.forEach((item) => {
+          if (item.file) {
+            formData.append("files", item.file);
+            formData.append(
+              "recordDuration",
+              String(item.recordDuration ?? 0)
+            );
+            formData.append("tempAttachmentIds", item.tempAttachmentId || "");
+          }
+        });
+        
+        payload = formData;
+      } else if (type === ChatItemTypes.GIF) {
+        payload = {
+          tempMessageId,
+          conversationId,
+          type: ChatItemTypes.GIF,
+          gifUrl: gifUrl || null,
+        };
+      } else {
+        payload = {
+          tempMessageId,
+          conversationId,
+          type: ChatItemTypes.TEXT,
+          content: content,
+          replyToMessageId: replyToMessageId ?? null,
+        };
+      }
+
+      const res = await ChatAPI.onSendMessage(payload, conversationId);
+      
+      const savedMessage = res.data.data;
+     
+      setMessages((prev) => {
+        const currentMessages = prev || [];
+        const currentTempMessage = currentMessages.find(
+          (msg) => msg.id === tempMessageId || msg.id === messageFailed.id
+        );
+        
+        const mergedSavedMessage = {
+          ...savedMessage,
+          attachments: savedMessage.attachments?.length
+            ? mergeAttachments(
+                currentTempMessage?.attachments,
+                savedMessage.attachments,
+              )
+            : currentTempMessage?.attachments,
+        };
+        
+        const withoutTemp = currentMessages.filter(
+          (msg) => msg.id !== tempMessageId && msg.id !== messageFailed.id
+        );
+        
+        if (withoutTemp.some((msg) => msg.id === mergedSavedMessage.id)) { // Kiểm tra trùng lặp
+          return withoutTemp;
+        }
+        
+        return [...withoutTemp, mergedSavedMessage];
+      });
+    } catch (error) {
+      console.error("Resend error:", error);
+      setMessages((prev) =>
+        (prev || []).map((msg) =>
+          msg.id === messageFailed.id || msg.tempMessageId === tempMessageId
+            ? {
+                ...msg,
+                status: "failed",
+              }
+            : msg,
+        ),
+      );
+    }
+  };
+  // Xóa tin nhắn lỗi cục bộ khỏi giao diện
+  const handleDeleteFailedMessage = (msgId: string) => {
+    setMessages((prev) =>
+      (prev || []).filter((msg) => msg.id !== msgId && msg.tempMessageId !== msgId)
+    );
+  };
+
+  //Xử lý upload file
+  const handleUploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+
+    if (!files.length || !conversationId) return;
+
+    setFiles(files);
+  };
+
+  //Xử lý xóa file
+  const handleRemoveFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  //Xử lý normalize messages
   const normalizedMessages = useMemo(() => {
     return messages.map((msg) => {
       const isLeft = msg.senderId === userData?.userId;
@@ -353,23 +820,14 @@ export function useChatFrame() {
     });
   }, [messages, userData, currentUserAvatar, currentUserDisplayName]);
 
+  //Invitation
   const handleCancelInvitation = async () => {
     try {
       if (!userData?.invitationId) return;
-      
+
       setLoadingAction("cancel");
-      
-      const res = await dispatch(
-        onCancelSentInvitation(userData.invitationId),
-      ).unwrap();
-      
-      if (res) {
-        await applyRelationState({
-          userId: userData?.userId,
-          relation: "add",
-          invitationId: null,
-        });
-      }
+
+      await onHandleCancelInvitation(userData.invitationId, userData?.userId);
     } catch (error) {
       console.log("Error occurred while canceling invitation:", error);
     } finally {
@@ -380,20 +838,10 @@ export function useChatFrame() {
   const handleDeclineInvitation = async () => {
     try {
       if (!userData?.invitationId) return;
-      
+
       setLoadingAction("decline");
-      
-      const res = await dispatch(
-        onDeclineInvitation(userData.invitationId),
-      ).unwrap();
-      
-      if (res) {
-        await applyRelationState({
-          userId: userData?.userId,
-          relation: "add",
-          invitationId: null,
-        });
-      }
+
+      await onHandleDeclineInvitation(userData.invitationId, userData.userId);
     } catch (error) {
       console.log("Error occurred while declining invitation:", error);
     } finally {
@@ -403,21 +851,11 @@ export function useChatFrame() {
 
   const handleAcceptInvitation = async () => {
     try {
-      if (!userData?.invitationId) return;
-      
+      if (!userData?.invitationId || !userData?.userId) return;
+
       setLoadingAction("accept");
-      
-      const res = await dispatch(
-        onAcceptInvitation(userData.invitationId),
-      ).unwrap();
-      
-      if (res) {
-        await applyRelationState({
-          userId: userData?.userId,
-          relation: "none",
-          invitationId: null,
-        });
-      }
+
+      await onHandleAcceptInvitation(userData.invitationId, userData.userId);
     } catch (error) {
       console.log("Error occurred while accepting invitation:", error);
     } finally {
@@ -427,9 +865,9 @@ export function useChatFrame() {
 
   const handleOpenAddContactModal = () => {
     if (!userData?.userId) return;
-    
+
     const defaultMessage = `Xin chào, tôi là ${currentUser?.fullname ?? ""}`;
-    
+
     setInvitationMessage(defaultMessage);
     setOpenAddContactModal(true);
   };
@@ -444,25 +882,95 @@ export function useChatFrame() {
 
     try {
       setAddContactSubmitting(true);
-      const payloadMessage = invitationMessage.trim();
-      
-      const res = await dispatch(
-        onAddContact({
-          userId: userData.userId,
-          invitationMessage: payloadMessage,
-        }),
-      ).unwrap();
 
-      if (res) {
-        await applyRelationState({
-          userId: userData.userId,
-          relation: "sent",
-          invitationId: res.invitationId || null,
-        });
-        handleCloseAddContactModal();
-      }
+      const res = await onHandleAddInvitation(
+        userData.userId,
+        invitationMessage.trim(),
+      );
+
+      if (res) handleCloseAddContactModal();
     } finally {
       setAddContactSubmitting(false);
+    }
+  };
+
+  // GIF
+  const handleSelectGif = (gif: IGif) => {
+    const gifData: SelectedGif = {
+      provider: "giphy",
+      providerId: String(gif.id),
+      title: gif.title ?? "",
+      url: gif.images.original.url,
+      previewUrl:
+        gif.images.fixed_width?.url ||
+        gif.images.fixed_height?.url ||
+        gif.images.original.url,
+      width: Number(gif.images.original.width),
+      height: Number(gif.images.original.height),
+    };
+
+    setSelectedGif(gifData);
+  };
+
+  const onRemoveGif = () => {
+    setSelectedGif(null);
+  };
+
+  //PIN
+  const onUnPin = async (messageId: string, attachmentId: string | null) => {
+    if (!conversationId || !messageId) return;
+
+    try {
+      await dispatch(
+        onDeletePinMessageConversation({
+          conversationId,
+          messageId,
+          attachmentId,
+        }),
+      ).unwrap();
+    } catch (error) {
+      console.error("UNPIN MESSAGE ERROR:", error);
+    }
+  };
+
+  //Emoji
+  const applyEmoji = (emoji: string) => {
+    setInputText((prev) => prev + emoji);
+  };
+
+  //Emotion
+  const handleEmotion = async (messageId: string, emotion: string) => {
+    try {
+      if (!conversationId || !messageId || !emotion) return;
+
+      const payload = {
+        emotion,
+      };
+
+      await ChatAPI.onReactionMessage(payload, conversationId, messageId);
+    } catch (error) {
+      console.log("ERROE EMOTION: ", error);
+    }
+  };
+
+  const handleUnReactEmotionMessage = async (messageId: string) => {
+    try {
+      if (!conversationId || !messageId) return;
+
+      await ChatAPI.onUnReactEmotion(conversationId, messageId);
+    } catch (error) {
+      console.log("ERROE EMOTION: ", error);
+    }
+  };
+
+  //Share Message
+  const onHandleShare = async (targetConversationIds: string[], messageId: string) => {
+    try {
+      if (!targetConversationIds.length || !messageId) return;
+      
+      await ChatAPI.onForwardMessage(messageId, targetConversationIds);
+    } catch (error) {
+      console.log("ERROE SHARE: ", error);
     }
   };
 
@@ -473,6 +981,8 @@ export function useChatFrame() {
       invitationMessage,
       addContactSubmitting,
       loadingAction,
+      files,
+      voiceUi,
     },
 
     data: {
@@ -480,10 +990,15 @@ export function useChatFrame() {
       userData,
       inputText,
       relationStatus,
+      selectedGif,
+      messageReplyed,
+      pinMessages,
+      voiceData,
     },
 
     handler: {
       setInputText,
+      setMessageReplyed,
       handleSend,
       onAddContact: handleOpenAddContactModal,
       onCloseAddContactModal: handleCloseAddContactModal,
@@ -492,6 +1007,18 @@ export function useChatFrame() {
       onAcceptInvitation: handleAcceptInvitation,
       onDeclineInvitation: handleDeclineInvitation,
       onCancelInvitation: handleCancelInvitation,
+      onChangeFile: handleUploadFile,
+      onRemoveFile: handleRemoveFile,
+      onApplyEmoji: applyEmoji,
+      onSelectGif: handleSelectGif,
+      onRemoveGif: onRemoveGif,
+      onUnPin,
+      voiceHandler,
+      handleEmotion,
+      handleUnReactEmotionMessage,
+      onHandleShare,
+      handleResend,
+      handleDeleteFailedMessage,
     },
 
     ref: {

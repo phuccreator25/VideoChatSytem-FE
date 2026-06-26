@@ -1,6 +1,6 @@
 import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import LeftRail from '../components/LeftRail';
-import type { RailKey } from '../types/data.type';
+import type { RailKey } from '../types/layout/layout.navigation.type';
 import type { ReactNode } from 'react';
 import useChatLayout from '../hooks/ChatLayout/chatlayout.hook';
 

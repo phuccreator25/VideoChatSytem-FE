@@ -11,7 +11,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import Groups2OutlinedIcon from "@mui/icons-material/Groups2Outlined";
 
 import { customScrollbarSx } from "../../../utils/CustomScroll";
-import type { GroupItem } from "../../../types/data.type";
+import type { GroupItem } from "../../../types/group/group.type";
 import { GroupRow } from "./GroupRow/GroupRow.group";
 
 const groupItems: GroupItem[] = [

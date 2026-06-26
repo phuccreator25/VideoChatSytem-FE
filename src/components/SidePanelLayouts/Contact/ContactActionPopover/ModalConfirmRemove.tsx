@@ -6,7 +6,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Typography from "@mui/material/Typography";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import type { ConfirmRemoveFriendModalProps } from "../../../../types/contact.type";
+import type { ConfirmRemoveFriendModalProps } from "../../../../types/contact/contact.ui.type";
 import Zoom from "@mui/material/Zoom";
 import { useState } from "react";
 import { enqueueSnackbar } from "notistack";

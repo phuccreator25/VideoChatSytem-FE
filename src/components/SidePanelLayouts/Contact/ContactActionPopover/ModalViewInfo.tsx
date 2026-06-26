@@ -16,7 +16,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { IconButton } from "@mui/material";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import Zoom from "@mui/material/Zoom";
-import type { ViewUserInfoModalProps } from "../../../../types/contact.type";
+import type { ViewUserInfoModalProps } from "../../../../types/contact/contact.ui.type";
 
 const scrollSx = {
     "&::-webkit-scrollbar": {

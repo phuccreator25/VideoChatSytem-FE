@@ -11,20 +11,15 @@ import {
   Typography,
 } from "@mui/material";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 import type {
   InvitationItem,
   InvitationActionStatus,
-} from "../../../../types/Invitation";
-import type { AppDispatch, RootState } from "../../../../redux/store";
-import {
-  clearInvitationActionStatus,
-  onAcceptInvitation,
-  onDeclineInvitation,
-  setInvitationActionStatus,
-} from "../../../../redux/invitation.redux";
+} from "../../../../types/invitation/invitation.model.type";
+import type { RootState } from "../../../../redux/store";
 import useOpenConversation from "../../../../helpers/openConversation.helper";
+import useInvitationAction from "../../../../helpers/InvitationAction.helper";
 
 export function ReceivedInvitationCard({
   item,
@@ -33,8 +28,8 @@ export function ReceivedInvitationCard({
   item: InvitationItem;
   getTimeAgo: (dateString: string) => string;
 }) {
-  const dispatch = useDispatch<AppDispatch>();
   const { handleOpenConversation, isSubmitting } = useOpenConversation();
+  const { onHandleAcceptInvitation, onHandleDeclineInvitation } = useInvitationAction();
 
   const [loadingAction, setLoadingAction] = useState<
     "accept" | "decline" | null
@@ -55,20 +50,10 @@ export function ReceivedInvitationCard({
     try {
       setLoadingAction("accept");
 
-      const success = await dispatch(onAcceptInvitation(item.id)).unwrap();
+      await onHandleAcceptInvitation(item.id, item.senderId, {
+        TimeClear: 700,
+      });
 
-      if (success) {
-        dispatch(
-          setInvitationActionStatus({
-            id: item.id,
-            status: "accepted",
-          }),
-        );
-
-        setTimeout(() => {
-          dispatch(clearInvitationActionStatus(item.id));
-        }, 700);
-      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -82,20 +67,9 @@ export function ReceivedInvitationCard({
     try {
       setLoadingAction("decline");
 
-      const success = await dispatch(onDeclineInvitation(item.id)).unwrap();
-
-      if (success) {
-        dispatch(
-          setInvitationActionStatus({
-            id: item.id,
-            status: "declined",
-          }),
-        );
-
-        setTimeout(() => {
-          dispatch(clearInvitationActionStatus(item.id));
-        }, 700);
-      }
+      await onHandleDeclineInvitation(item.id, item.senderId, {
+        TimeClear: 700
+      })
     } catch (error) {
       console.log(error);
     } finally {

@@ -2,7 +2,7 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
 import type { Dispatch, SetStateAction } from "react";
-import type { ToastType } from "../types/data.type";
+import type { ToastType } from "../types/layout/layout.toast.type";
 type CustomToastProps = {
     toast: ToastType;
     setToast: Dispatch<SetStateAction<ToastType>>;

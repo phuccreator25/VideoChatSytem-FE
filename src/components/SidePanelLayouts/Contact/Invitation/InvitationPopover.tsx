@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { FriendRequestsSection } from "./FriendRequestSection";
 import { SentInvitationsSection } from "./SentInvitationsSection";
-import type {InvitationPopoverGroup } from "../../../../types/Invitation";
+import type { InvitationPopoverGroup } from "../../../../types/invitation/invitation.ui.type";
 
 type InvitationPopoverProps = {
     invitationPopover: InvitationPopoverGroup;

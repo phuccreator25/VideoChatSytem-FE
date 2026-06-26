@@ -8,7 +8,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import type {SetNicknameModalProps } from "../../../../types/contact.type";
+import type { SetNicknameModalProps } from "../../../../types/contact/contact.ui.type";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../../../../redux/store";
 import { onGetDataContact } from "../../../../redux/contact.redux";

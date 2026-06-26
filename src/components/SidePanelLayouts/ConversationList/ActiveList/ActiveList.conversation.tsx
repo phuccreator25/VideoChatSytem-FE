@@ -3,7 +3,7 @@ import Badge from "@mui/material/Badge";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 
-import type { QuickUser } from "../../../../types/data.type";
+import type { QuickUser } from "../../../../types/conversation/conversation.preview.type";
 import { StatusActive } from "../DotStatusActive/StatusActiveDot.conversaation";
 import { COLORS } from "../../../../utils/Colors";
 

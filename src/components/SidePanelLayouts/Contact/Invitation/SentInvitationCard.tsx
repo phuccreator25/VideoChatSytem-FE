@@ -10,15 +10,14 @@ import {
   Typography,
 } from "@mui/material";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
-import type { InvitationActionStatus, SentInvitationItem } from "../../../../types/Invitation";
-import { useDispatch, useSelector } from "react-redux";
-import { type AppDispatch, type RootState } from "../../../../redux/store";
-import {
-  clearInvitationActionStatus,
-  onCancelSentInvitation,
-  setInvitationActionStatus,
-} from "../../../../redux/invitation.redux";
+import type {
+  InvitationActionStatus,
+  SentInvitationItem,
+} from "../../../../types/invitation/invitation.model.type";
+import { useSelector } from "react-redux";
+import { type RootState } from "../../../../redux/store";
 import useOpenConversation from "../../../../helpers/openConversation.helper";
+import useInvitationAction from "../../../../helpers/InvitationAction.helper";
 
 export function SentInvitationCard({
   item,
@@ -32,32 +31,23 @@ export function SentInvitationCard({
   const isCancelled = useSelector(
     (state: RootState) =>
       state.invitation.actionStatusById?.[item.id] as
-        | InvitationActionStatus
-        | undefined,
+      | InvitationActionStatus
+      | undefined,
   );
-  const dispatch = useDispatch<AppDispatch>();
 
   const { handleOpenConversation, isSubmitting } = useOpenConversation();
+
+  const { onHandleCancelInvitation } = useInvitationAction()
 
   const onCancel = async (id: string) => {
     if (isCancelling || isCancelled) return;
 
     try {
       setIsCancelling(true);
-      const res = await dispatch(onCancelSentInvitation(id)).unwrap();
 
-      if (res) {
-        await dispatch(
-          setInvitationActionStatus({
-            id: item.id,
-            status: "cancelled",
-          }),
-        );
-
-        setTimeout(() => {
-          dispatch(clearInvitationActionStatus(item.id));
-        }, 700);
-      }
+      await onHandleCancelInvitation(id, undefined, {
+        TimeClear: 700
+      })
     } finally {
       setIsCancelling(false);
     }

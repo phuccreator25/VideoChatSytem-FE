@@ -1,22 +1,27 @@
 import { useDispatch, useSelector } from "react-redux";
-import type { RailKey } from "../../types/data.type";
+import type { RailKey } from "../../types/layout/layout.navigation.type";
 import type { AppDispatch, RootState } from "../../redux/store";
 import useApplyRelationState from "../../helpers/relationState.helper";
 import { SelectcurrentUser } from "../../redux/auth.redux";
 import { useLocation, useParams, useSearchParams } from "react-router-dom";
-import type { InvitationActionSocket, InvitationReceived } from "../../types/Invitation";
+import type {
+  InvitationActionSocket,
+  InvitationReceived,
+} from "../../types/invitation/invitation.socket.type";
 import { useEffect } from "react";
 import { connectSocket } from "../../socket/socket";
 import { onGetCountReceivedInvitation, onGetCountSentInvitation, onGetListFriendRequests, onGetListSentInvitation, setIsPopoverInvitationOpen } from "../../redux/invitation.redux";
-import type { ConversationReadPayload, MessageType } from "../../types/chat.type";
-import { resetUnread, updateConversationByMessage, updateStatusUsers } from "../../redux/conversation.redux";
+import type { MessageType } from "../../types/chat/chat.model.type";
+import type { ConversationReadPayload } from "../../types/chat/chat.payload.type";
+import { onGetConversations, resetUnread, updateConversationByMessage, updateStatusUsers } from "../../redux/conversation.redux";
 import { onGetDataContact } from "../../redux/contact.redux";
-import type { ContactRemoveSocket } from "../../types/contact.type";
+import type { ContactRemoveSocket } from "../../types/contact/contact.socket.type";
 import { bindInvitationAccept, bindInvitationCancel, bindInvitationCreated, bindInvitationDecline, bindInvitationSent, unbindInvitationAccept, unbindInvitationCancel, unbindInvitationCreated, unbindInvitationDecline, unbindInvitationSent } from "../../socket/invitationSocket.socket";
-import { bindConversationReadSuccess, bindMessageNew, unbindConversationReadSuccess, unbindMessageNew } from "../../socket/message.socket";
+import { bindConversationReadSuccess, bindMessageNew, bindTypingMessageSuccess, unbindConversationReadSuccess, unbindMessageNew, unbindTypingMessageSuccess, bindDeleteMessage, unbindDeleteMessage, bindRevokeMessage, unbindRevokeMessage } from "../../socket/message.socket";
 import { bindContactRemove, unbindContactRemove } from "../../socket/contactSocket.socket";
-import { updateStatusUser } from "../../redux/chat.redux";
+import { setIsTyping, updateStatusUser } from "../../redux/chat.redux";
 import { bindOnlineUsers, bindUserPresenceChanged, unbindOnlineUsers, unbindUserPresenceChanged } from "../../socket/authSocket.socket";
+import type { TypingSocket } from "../../types/chat/chat.socket.type";
 
 export default function useChatLayout(activeRail: RailKey) {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,6 +29,7 @@ export default function useChatLayout(activeRail: RailKey) {
   const { applyRelationState } = useApplyRelationState();
   
   const isPopoverInvitation = useSelector((state: RootState) => state.invitation.isPopoverInvitationOpen);
+  const conversations = useSelector((state: RootState) => state.conversation.conversations);
 
   const currentUser = useSelector(SelectcurrentUser);
   const currentUserId = currentUser?._id || "";
@@ -49,12 +55,15 @@ export default function useChatLayout(activeRail: RailKey) {
   const isReceiver = (payload: InvitationActionSocket) =>
     payload.receiverId === currentUserId;
 
+  // Connect socket and fetch initial invitation count once on user load
   useEffect(() => {
     if (!currentUser) return;
-
     connectSocket();
-
     dispatch(onGetCountReceivedInvitation());
+  }, [currentUser, dispatch]);
+
+  useEffect(() => {
+    if (!currentUser) return;
 
     const handleUpdateConversation = async (
       payload: ConversationReadPayload,
@@ -67,13 +76,21 @@ export default function useChatLayout(activeRail: RailKey) {
     };
 
     const handleNewMessage = (payload: MessageType) => {
-      dispatch(
-        updateConversationByMessage({
-          currentUserId,
-          message: payload,
-          openingConversationId: conversationId,
-        }),
+      const exitsConversation = conversations.some(
+        (c) => String(c.id) === String(payload.conversationId)
       );
+
+      if (!exitsConversation) {
+        dispatch(onGetConversations());
+      } else {
+        dispatch(
+          updateConversationByMessage({
+            currentUserId,
+            message: payload,
+            openingConversationId: conversationId,
+          }),
+        );
+      }
     };
 
     const getTargetUserId = (payload: InvitationActionSocket) => {
@@ -86,7 +103,10 @@ export default function useChatLayout(activeRail: RailKey) {
 
     const refreshInvitationCount = async (payload: InvitationActionSocket) => {
       if (isSender(payload)) {
-        await dispatch(onGetCountSentInvitation());
+        const isViewingInvitations = activeRail === "contact" || isPopoverInvitation === true || location.pathname === "/invitation";
+        if (isViewingInvitations) {
+          await dispatch(onGetCountSentInvitation());
+        }
         return;
       }
 
@@ -94,7 +114,12 @@ export default function useChatLayout(activeRail: RailKey) {
     };
 
     const handleInvitationSentEvent = (payload: InvitationActionSocket) => {
-      if (isSender(payload)) dispatch(onGetCountSentInvitation());
+      if (isSender(payload)) {
+        const isViewingInvitations = activeRail === "contact" || isPopoverInvitation === true || location.pathname === "/invitation";
+        if (isViewingInvitations) {
+          dispatch(onGetCountSentInvitation());
+        }
+      }
 
       if (!conversationId) return;
 
@@ -194,15 +219,32 @@ export default function useChatLayout(activeRail: RailKey) {
       });
     };
 
+    const handleTypingEvent = async(payload: TypingSocket) => {
+      if(payload.targetUserId !== currentUserId) return
+    
+      dispatch(setIsTyping(payload))
+    }
+
+    const handleDeleteMessage = (payload: MessageType) => {
+      dispatch(onGetConversations());
+    };
+
+    const handleRevokeMessage = (payload: MessageType) => {
+      dispatch(onGetConversations());
+    };
+
     bindInvitationCreated(handleInvitationCreatedEvent);
     bindInvitationCancel(handleInvitationCancelEvent);
     bindInvitationAccept(handleInvitationAcceptEvent);
     bindInvitationDecline(handleInvitationDeclineEvent);
     bindInvitationSent(handleInvitationSentEvent);
+    bindTypingMessageSuccess(handleTypingEvent);
 
     bindConversationReadSuccess(handleUpdateConversation);
     bindMessageNew(handleNewMessage);
     bindContactRemove(handleContactRemoveEvent);
+    bindDeleteMessage(handleDeleteMessage);
+    bindRevokeMessage(handleRevokeMessage);
 
     return () => {
       unbindInvitationCreated(handleInvitationCreatedEvent);
@@ -210,10 +252,13 @@ export default function useChatLayout(activeRail: RailKey) {
       unbindInvitationAccept(handleInvitationAcceptEvent);
       unbindInvitationDecline(handleInvitationDeclineEvent);
       unbindInvitationSent(handleInvitationSentEvent);
+      unbindTypingMessageSuccess(handleTypingEvent);
 
       unbindConversationReadSuccess(handleUpdateConversation);
       unbindMessageNew(handleNewMessage);
       unbindContactRemove(handleContactRemoveEvent);
+      unbindDeleteMessage(handleDeleteMessage);
+      unbindRevokeMessage(handleRevokeMessage);
 
       dispatch(setIsPopoverInvitationOpen(false)); // Tránh việc mở Popo sau đó đóng tab
     };

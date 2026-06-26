@@ -1,126 +1,188 @@
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
-
-import { useState, type MouseEvent } from "react";
+import { useState } from "react";
 
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
-import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
+import OpenInFullRoundedIcon from "@mui/icons-material/OpenInFullRounded";
+import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
+import { MessageStatus } from "../Status/messageStatus.chat";
 
 export function ImageCard({
   src,
+  status,
+  isPreview = false,
+  isPinned = false,
+  onOpen,
   onDownload,
-  onView,
-  onDelete,
+  onPin,
 }: {
   src: string;
+  status?: string;
+  isPreview?: boolean;
+  isPinned?: boolean;
+  onOpen: () => void;
   onDownload: () => void;
-  onView: () => void;
-  onDelete: () => void;
+  onPin?: () => void;
 }) {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  const openMenu = (event: MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const closeMenu = () => setAnchorEl(null);
+  const [isPortrait, setIsPortrait] = useState(false);
+  const isLoading = status === "pending" || status === "uploading";
+  const isFailed = status === "failed";
+  const canDownload = !isPreview && !isLoading && !isFailed;
 
   return (
     <Box
+      onClick={onOpen}
       sx={{
-        position: 'relative',
-        width: { xs: 146, sm: 182 },
-        height: { xs: 110, sm: 122 },
-        overflow: 'hidden',
+        position: "relative",
+        width: "100%",
+        aspectRatio: "16 / 9",
+        overflow: "hidden",
         borderRadius: 2,
-        flexShrink: 0,
+        flexShrink: 1,
         border: "1px solid rgba(148, 163, 184, 0.2)",
+        cursor: "zoom-in",
+        bgcolor: "#0f172a",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 8px 20px rgba(15, 23, 42, 0.12)",
+        opacity: isLoading ? 0.8 : 1,
+        "&:hover .image-card-img": {
+          transform: "scale(1.04)",
+        },
+        "&:hover .image-card-actions": {
+          opacity: 1,
+        },
       }}
     >
       <Box
         component="img"
         src={src}
         alt="gallery"
+        onLoad={(event) => {
+          const target = event.currentTarget;
+          const ratio = (target.naturalWidth || 1) / (target.naturalHeight || 1);
+          setIsPortrait(ratio < 1);
+        }}
+        className="image-card-img"
         sx={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          display: 'block',
+          width: isPortrait ? "auto" : "100%",
+          height: isPortrait ? "100%" : "auto",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          objectFit: "contain",
+          display: "block",
           transition: "transform 0.22s ease",
-          "&:hover": {
-            transform: "scale(1.03)",
-          },
+          mx: "auto",
+          my: "auto",
         }}
       />
 
-      <Stack
-        direction="row"
-        spacing={0.5}
+      {/* View — bottom left */}
+      <Box
+        className="image-card-actions"
         sx={{
-          position: 'absolute',
+          position: "absolute",
+          left: 8,
+          top: 8,
+          opacity: { xs: 1, sm: 0 },
+          transition: "opacity 0.18s ease",
+        }}
+      >
+        <Tooltip title="View">
+          <IconButton
+            size="small"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpen();
+            }}
+            sx={{
+              color: "#fff",
+              bgcolor: "rgba(15,23,42,0.46)",
+              "&:hover": { bgcolor: "rgba(15,23,42,0.64)" },
+            }}
+          >
+            <OpenInFullRoundedIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      {/* Download + Pin — top right, stacked vertically */}
+      <Box
+        sx={{
+          position: "absolute",
           right: 8,
-          bottom: 8,
+          top: 8,
+          display: "flex",
+          flexDirection: "column",
+          gap: 0.5,
         }}
       >
         <Tooltip title="Download">
           <IconButton
             size="small"
-            onClick={onDownload}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!canDownload) return;
+              onDownload();
+            }}
+            disabled={!canDownload}
             sx={{
-              color: '#fff',
-              bgcolor: 'rgba(15,23,42,0.38)',
-              '&:hover': { bgcolor: 'rgba(15,23,42,0.58)' },
+              color: "#fff",
+              bgcolor: "rgba(15,23,42,0.46)",
+              "&:hover": { bgcolor: "rgba(15,23,42,0.64)" },
             }}
           >
             <DownloadOutlinedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
 
-        <Tooltip title="More">
-          <IconButton
-            size="small"
-            onClick={openMenu}
-            sx={{
-              color: '#fff',
-              bgcolor: 'rgba(15,23,42,0.38)',
-              '&:hover': { bgcolor: 'rgba(15,23,42,0.58)' },
-            }}
-          >
-            <MoreHorizOutlinedIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+        {onPin && (
+          <Tooltip title={isPinned ? "UnPin" : "Pin Image"}>
+            <IconButton
+              size="small"
+              onClick={(event) => {
+                event.stopPropagation();
+                onPin();
+              }}
+              sx={{
+                color: isPinned ? "#fbbf24" : "#fff",
+                bgcolor: isPinned ? "rgba(251,191,36,0.18)" : "rgba(15,23,42,0.46)",
+                "&:hover": {
+                  bgcolor: isPinned ? "rgba(251,191,36,0.32)" : "rgba(15,23,42,0.64)",
+                },
+                transition: "color 0.15s, background 0.15s",
+              }}
+            >
+              <PushPinOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Box>
 
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
-        <MenuItem
-          onClick={() => {
-            closeMenu();
-            onView();
+      {status && status !== "done" && (
+        <Box
+          sx={{
+            position: "absolute",
+            left: 8,
+            bottom: 8,
+            px: 1.1,
+            py: 0.45,
+            borderRadius: 999,
+            bgcolor:
+              status === "failed"
+                ? "rgba(127, 29, 29, 0.82)"
+                : "rgba(15, 23, 42, 0.72)",
+            backdropFilter: "blur(4px)",
           }}
         >
-          View
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            closeMenu();
-            onDownload();
-          }}
-        >
-          Download
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            closeMenu();
-            onDelete();
-          }}
-        >
-          Delete
-        </MenuItem>
-      </Menu>
+          <MessageStatus
+            type="attachment"
+            status={status}
+          />
+        </Box>
+      )}
     </Box>
   );
 }

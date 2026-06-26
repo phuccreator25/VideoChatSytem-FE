@@ -21,7 +21,7 @@ import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import WidgetsOutlinedIcon from "@mui/icons-material/WidgetsOutlined";
 
-import type { LeftRailProps } from "../types/data.type";
+import type { LeftRailProps } from "../types/layout/layout.navigation.type";
 import { COLORS } from "../utils/Colors";
 import { RailItem } from "./RailItem";
 import useAuth from "../hooks/Auth/auth.hook";

@@ -7,9 +7,15 @@ const ConversationsAPI = {
   getConversationById: (conversationId: string) =>
     axiosInterceptor.get(`/conversations/${conversationId}`),
 
-  getListConversations : () => 
-    axiosInterceptor.get('/conversations')
-  
+  getListConversations: () => axiosInterceptor.get("/conversations"),
+
+  getPinMessageByConversation: (conversationId: string) => axiosInterceptor.get(`/conversations/pin-messages/${conversationId}`),
+
+  pinMessagesConversations: (conversationId: string , messageId: string, attachmentId: string | null) =>
+    axiosInterceptor.post("/conversations/pin-messages", { conversationId, messageId, attachmentId }),
+
+  deletePinMessagesConversations: (conversationId: string , messageId: string, attachmentId: string | null) =>
+    axiosInterceptor.delete(`/conversations/pin-messages/${conversationId}/${messageId}/${attachmentId}`),
 };
 
 export default ConversationsAPI;

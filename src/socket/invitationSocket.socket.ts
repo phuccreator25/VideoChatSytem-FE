@@ -1,4 +1,7 @@
-import type { InvitationActionSocket, InvitationReceived } from "../types/Invitation";
+import type {
+  InvitationActionSocket,
+  InvitationReceived,
+} from "../types/invitation/invitation.socket.type";
 import { getSocket } from "./socket";
 
 export const bindInvitationCreated = (

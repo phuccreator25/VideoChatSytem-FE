@@ -1,6 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import InvitationsAPI from "../api/Invitation.api";
-import type { AddContactDataHook, InvitationActionStatus, InvitationItem, SentInvitationItem } from "../types/Invitation";
+import type { AddContactDataHook } from "../types/invitation/invitation.form.type";
+import type {
+  InvitationActionStatus,
+  InvitationItem,
+  SentInvitationItem,
+} from "../types/invitation/invitation.model.type";
 
 type InvitationState = {
   countReceived: number;
@@ -51,9 +56,6 @@ export const onGetListFriendRequests = createAsyncThunk(
       limit: pageSize,
       skip: skip || 0,
     });
-
-    console.log('ôjojo: ', res.data.data);
-    
 
     return (res.data.data || []) as InvitationItem[];
   },

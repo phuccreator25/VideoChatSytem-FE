@@ -7,7 +7,8 @@ import Typography from "@mui/material/Typography";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 
-import type { contacts, RowActionProps } from "../../../../types/contact.type";
+import type { contacts } from "../../../../types/contact/contact.model.type";
+import type { RowActionProps } from "../../../../types/contact/contact.ui.type";
 import { ContactActionPopover } from "../ContactActionPopover/ContactActionPopover";
 
 type ContactRowType = {

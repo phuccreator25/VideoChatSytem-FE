@@ -1,5 +1,5 @@
 import { IconButton, Tooltip } from "@mui/material";
-import type { RailItemProps } from "../types/data.type";
+import type { RailItemProps } from "../types/layout/layout.navigation.type";
 import { COLORS } from "../utils/Colors";
 
 export function RailItem({ title, icon, active = false, onClick }: RailItemProps) {

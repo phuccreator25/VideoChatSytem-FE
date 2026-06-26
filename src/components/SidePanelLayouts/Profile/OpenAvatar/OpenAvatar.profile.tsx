@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
 
-import type { OpenAvatarProps } from "../../../../types/data.type";
+import type { OpenAvatarProps } from "../../../../types/profile/profile.ui.type";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 export function OpenAvatar({

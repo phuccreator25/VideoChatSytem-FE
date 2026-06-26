@@ -3,7 +3,7 @@ import Chip from "@mui/material/Chip";
 import ListItemButton from "@mui/material/ListItemButton";
 import Typography from "@mui/material/Typography";
 
-import type { GroupItem } from "../../../../types/data.type";
+import type { GroupItem } from "../../../../types/group/group.type";
 
 export function GroupRow({ item }: { item: GroupItem }) {
   return (

@@ -18,7 +18,10 @@ import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
-import type { EditableFieldKey, ProfileData } from "../../../../types/data.type";
+import type {
+  EditableFieldKey,
+  ProfileData,
+} from "../../../../types/profile/profile.model.type";
 import { InfoRow } from "./InfoRow.profile";
 import { useForm } from "react-hook-form";
 

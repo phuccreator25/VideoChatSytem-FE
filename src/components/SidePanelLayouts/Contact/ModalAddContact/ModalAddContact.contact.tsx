@@ -20,9 +20,9 @@ import type { RootState } from "../../../../redux/store";
 import type {
   AddContactData,
   UserOption,
-  RelationStatus,
-  AddContactModalGroup,
-} from "../../../../types/Invitation.tsx";
+} from "../../../../types/invitation/invitation.form.type";
+import type { AddContactModalGroup } from "../../../../types/invitation/invitation.ui.type";
+import type { RelationStatus } from "../../../../types/invitation/invitation.model.type";
 import UserSearchOptions from "./UserSearchOptions.contact.tsx";
 
 type AddContactModalProps = {
@@ -145,12 +145,12 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
       return;
     }
 
-    await handlers.onSubmit({
+    const res = await handlers.onSubmit({
       userId: data.selectedUser.id,
       invitationMessage: data.invitationMessage,
     });
 
-    handleClose();
+    if(res) handleClose();
   };
 
   return (

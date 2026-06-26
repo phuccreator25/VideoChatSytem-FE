@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import type { ProfileData } from '../types/data.type'
+import type { ProfileData } from '../types/profile/profile.model.type'
 import type { RootState } from './store'
 import authApi from '../api/Auth.api'
 import type { typeLogin } from '../types/auth.type'

@@ -8,7 +8,10 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 
 import { customScrollbarSx } from "../../../utils/CustomScroll";
 import SidePanelLayout from "../SidePanelLayout";
-import type { Conversation, QuickUser } from "../../../types/data.type";
+import type {
+  Conversation,
+  QuickUser,
+} from "../../../types/conversation/conversation.preview.type";
 import { COLORS } from "../../../utils/Colors";
 import { ActiveList } from "./ActiveList/ActiveList.conversation";
 import { ConversationItem } from "./ConversationItem/ConversaationItem.conversation";

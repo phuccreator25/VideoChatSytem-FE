@@ -10,7 +10,7 @@ import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../redux/store';
 import { connectSocket } from '../../socket/socket';
 import { onGetConversations } from '../../redux/conversation.redux';
-import type { RailKey } from '../../types/data.type';
+import type { RailKey } from '../../types/layout/layout.navigation.type';
 
 export default function ChatPages() {
   const [activeRail, setActiveRail] = useState<RailKey>('messages');

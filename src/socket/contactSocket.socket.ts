@@ -1,4 +1,4 @@
-import type { ContactRemoveSocket } from "../types/contact.type";
+import type { ContactRemoveSocket } from "../types/contact/contact.socket.type";
 import { getSocket } from "./socket";
 
 export const bindContactRemove = (callback: (payload: ContactRemoveSocket) => void) => {

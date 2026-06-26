@@ -1,5 +1,6 @@
 import { Box, IconButton, Tooltip } from "@mui/material";
-import type { InvitationQuickAction, UserOption } from "../../../../types/Invitation";
+import type { InvitationQuickAction } from "../../../../types/invitation/invitation.model.type";
+import type { UserOption } from "../../../../types/invitation/invitation.form.type";
 
 type QuickActionButtonProps = {
   title: string;

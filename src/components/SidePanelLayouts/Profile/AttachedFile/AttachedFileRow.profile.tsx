@@ -3,7 +3,7 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
-import type { FileItem } from "../../../../types/data.type";
+import type { FileItem } from "../../../../types/profile/profile.model.type";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
 import ImageRoundedIcon from "@mui/icons-material/ImageRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";

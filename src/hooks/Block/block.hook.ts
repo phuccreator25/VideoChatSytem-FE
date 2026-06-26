@@ -1,6 +1,6 @@
 import { useState } from "react";
 import BlockApi from "../../api/Block.api";
-import type { contacts } from "../../types/contact.type";
+import type { contacts } from "../../types/contact/contact.model.type";
 
 export function useBlock() {
   const [openModalBlock, setOpenModalBlock] = useState<boolean>(false);

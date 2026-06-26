@@ -1,5 +1,5 @@
 import axiosInterceptor from "../config/axiosInterceptor";
-import type { contacts } from "../types/contact.type";
+import type { contacts } from "../types/contact/contact.model.type";
 
 const ContactApi = {
     onGetContact : () => axiosInterceptor.get('/contacts'),

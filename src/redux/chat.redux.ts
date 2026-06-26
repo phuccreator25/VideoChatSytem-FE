@@ -1,11 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { ConversationUserInfo } from "../types/chat.type";
+import type { ConversationUserInfo } from "../types/chat/chat.conversation.type";
 
 type ContactRelation = "add" | "received" | "sent" | "none";
 
-const initialState = {
-  userData: null as ConversationUserInfo | null,
-  contactRelation: "none" as ContactRelation,
+type ChatState = {
+  userData: ConversationUserInfo | null;
+  contactRelation: ContactRelation;
+  currentConversationId: string | null;
+  typingByConversation: Record<string, boolean>;
+};
+
+const initialState: ChatState = {
+  userData: null,
+  contactRelation: "none",
+  currentConversationId: null,
+  typingByConversation: {},
 };
 
 const chatSlice = createSlice({
@@ -16,13 +25,25 @@ const chatSlice = createSlice({
       state.userData = action.payload;
     },
 
+    setIsTyping: (state, action) => {
+      
+      const { conversationId, isTyping } = action.payload;
+
+      if (!conversationId) return;
+
+      state.typingByConversation[conversationId] = isTyping;
+
+      console.log(state.typingByConversation);
+      
+    },
+
     updateNickNameUser: (state, action) => {
       const { userId, nickname } = action.payload;
 
       if (state.userData && state.userData.userId === userId) {
         state.userData.nickname = nickname && nickname.trim() !== ""
-            ? nickname
-            : (state.userData.fullname ?? "Unknown user");
+          ? nickname
+          : (state.userData.fullname ?? "Unknown user");
       }
     },
 
@@ -53,6 +74,6 @@ const chatSlice = createSlice({
   },
 });
 
-export const { setUserData, updateNickNameUser, updateStatusUser, updateContactRelation, updateInvitationId } =
+export const { setUserData, updateNickNameUser, updateStatusUser, updateContactRelation, updateInvitationId, setIsTyping } =
   chatSlice.actions;
 export const chatReducer = chatSlice.reducer;

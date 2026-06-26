@@ -5,7 +5,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
-import type { SettingItem } from "../../../../types/data.type";
+import type { SettingItem } from "../../../../types/setting/setting.ui.type";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 
 export function SettingRow({ item }: { item: SettingItem }) {

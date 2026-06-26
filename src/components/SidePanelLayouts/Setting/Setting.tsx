@@ -17,7 +17,7 @@ import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
 import { customScrollbarSx } from "../../../utils/CustomScroll";
-import type { SettingItem } from "../../../types/data.type";
+import type { SettingItem } from "../../../types/setting/setting.ui.type";
 import { SettingRow } from "./SettingRow/SettingRow.setting";
 
 const menuItems: SettingItem[] = [

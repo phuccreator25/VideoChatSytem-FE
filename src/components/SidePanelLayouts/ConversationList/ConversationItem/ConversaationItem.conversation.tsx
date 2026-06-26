@@ -4,12 +4,39 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
-import type { Conversation } from "../../../../types/data.type";
+import type { Conversation } from "../../../../types/conversation/conversation.preview.type";
 import { COLORS } from "../../../../utils/Colors";
 import { StatusActive } from "../DotStatusActive/StatusActiveDot.conversaation";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import { CountMessageUnread } from "../MessageUnread/CountMessageUnread.conversation";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../../redux/store";
+import { keyframes } from "@mui/system";
+
+const typingDot = keyframes`
+  0%, 60%, 100% {
+    transform: translateY(0) scale(0.75);
+    opacity: 0.35;
+  }
+
+  30% {
+    transform: translateY(-4px) scale(1);
+    opacity: 1;
+  }
+`;
+
+const typingFadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 export function ConversationItem({ item }: { item: Conversation }) {
     const truncateText = (text = "", maxLength = 30) => {
@@ -20,9 +47,12 @@ export function ConversationItem({ item }: { item: Conversation }) {
 
     const navigate = useNavigate()
     const isActive = Boolean(item.active);
-    
-    console.log(item);
-    
+
+    const isTyping = useSelector((state: RootState) => {
+        if (!item.id) return false;
+
+        return state.chat.typingByConversation[item.id] ?? false;
+    });
 
     return (
         <Box
@@ -124,32 +154,95 @@ export function ConversationItem({ item }: { item: Conversation }) {
                                 direction="row"
                                 spacing={0.75}
                                 alignItems="center"
-                                sx={{ mt: 0.5 }}
+                                sx={{
+                                    mt: 0.5,
+                                    minHeight: 16,
+                                    minWidth: 0,
+                                }}
                             >
-                                {item.type === 'image' && (
-                                    <ImageOutlinedIcon
-                                        sx={{ fontSize: 16, color: COLORS.textMuted }}
-                                    />
-                                )}
+                                {isTyping ? (
+                                    <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        spacing={0.7}
+                                        sx={{
+                                            minWidth: 0,
+                                            height: 18,
+                                            animation: `${typingFadeIn} 220ms ease-out`,
+                                        }}
+                                    >
+                                        <Typography
+                                            sx={{
+                                                fontSize: 13,
+                                                lineHeight: 1.2,
+                                                fontWeight: 700,
+                                                color: COLORS.primary,
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            Typing
+                                        </Typography>
 
-                                <Typography
-                                    sx={{
-                                        fontSize: 13,
-                                        color:
-                                            item.type === 'typing'
-                                                ? COLORS.primary
-                                                : isActive
-                                                    ? 'rgba(37,50,74,0.92)'
-                                                    : 'rgba(37,50,74,0.78)',
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        lineHeight: 1.2,
-                                        fontWeight: item.unread ? 700 : 500,
-                                    }}
-                                >
-                                    {truncateText(item.preview, 40)}
-                                </Typography>
+                                        <Stack
+                                            direction="row"
+                                            spacing={0.4}
+                                            alignItems="center"
+                                            sx={{
+                                                height: 16,
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            {[0, 1, 2].map((dot) => (
+                                                <Box
+                                                    key={dot}
+                                                    component="span"
+                                                    sx={{
+                                                        display: "block",
+                                                        width: 5,
+                                                        height: 5,
+                                                        borderRadius: "50%",
+                                                        bgcolor: COLORS.primary,
+                                                        animationName: `${typingDot}`,
+                                                        animationDuration: "1.1s",
+                                                        animationTimingFunction: "ease-in-out",
+                                                        animationIterationCount: "infinite",
+                                                        animationDelay: `${dot * 160}ms`,
+                                                        willChange: "transform, opacity",
+                                                    }}
+                                                />
+                                            ))}
+                                        </Stack>
+                                    </Stack>
+                                ) : (
+                                    <>
+                                        {item.type === "image" && (
+                                            <ImageOutlinedIcon
+                                                sx={{
+                                                    fontSize: 16,
+                                                    color: COLORS.textMuted,
+                                                    flexShrink: 0,
+                                                }}
+                                            />
+                                        )}
+
+                                        <Typography
+                                            sx={{
+                                                minWidth: 0,
+                                                fontSize: 13,
+                                                color: isActive
+                                                    ? "rgba(37,50,74,0.92)"
+                                                    : "rgba(37,50,74,0.78)",
+                                                whiteSpace: "nowrap",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                lineHeight: 1.2,
+                                                fontWeight: item.unread ? 700 : 500,
+                                            }}
+                                        >
+                                            {truncateText(item.preview, 30)}
+                                        </Typography>
+                                    </>
+                                )}
                             </Stack>
                         </Box>
 

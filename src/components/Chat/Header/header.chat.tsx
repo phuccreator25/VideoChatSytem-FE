@@ -5,20 +5,26 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
+import InputBase from "@mui/material/InputBase";
+import { useState } from "react";
 
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import CallOutlinedIcon from "@mui/icons-material/CallOutlined";
 import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
-import type { ConversationUserInfo } from "../../../types/chat.type";
+import type { ConversationUserInfo } from "../../../types/chat/chat.conversation.type";
 
 type HeaderProps = {
   userData?: ConversationUserInfo | null;
 };
 
 export function Header({ userData }: HeaderProps) {
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const getLastSeenText = (lastSeenAt?: string | null) => {
     if (!lastSeenAt) return "Offline";
 
@@ -141,22 +147,10 @@ export function Header({ userData }: HeaderProps) {
         </Box>
       </Stack>
 
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Tooltip title="Search">
+      <Stack direction="row-reverse" spacing={1} alignItems="center">
+        <Tooltip title="More">
           <IconButton sx={actionButtonSx}>
-            <SearchOutlinedIcon sx={{ fontSize: 20 }} />
-          </IconButton>
-        </Tooltip>
-
-        <Tooltip title="Voice call">
-          <IconButton sx={actionButtonSx}>
-            <CallOutlinedIcon sx={{ fontSize: 20 }} />
-          </IconButton>
-        </Tooltip>
-
-        <Tooltip title="Video call">
-          <IconButton sx={actionButtonSx}>
-            <VideocamOutlinedIcon sx={{ fontSize: 20 }} />
+            <MoreHorizOutlinedIcon sx={{ fontSize: 20 }} />
           </IconButton>
         </Tooltip>
 
@@ -166,12 +160,96 @@ export function Header({ userData }: HeaderProps) {
           </IconButton>
         </Tooltip>
 
-        <Tooltip title="More">
+        <Tooltip title="Video call">
           <IconButton sx={actionButtonSx}>
-            <MoreHorizOutlinedIcon sx={{ fontSize: 20 }} />
+            <VideocamOutlinedIcon sx={{ fontSize: 20 }} />
           </IconButton>
         </Tooltip>
+
+        <Tooltip title="Voice call">
+          <IconButton sx={actionButtonSx}>
+            <CallOutlinedIcon sx={{ fontSize: 20 }} />
+          </IconButton>
+        </Tooltip>
+
+        {/* Search Bar Container - leftmost since it is last in row-reverse */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: isSearchExpanded ? "flex-start" : "center",
+            height: 42,
+            width: isSearchExpanded ? { xs: 180, sm: 260 } : 42,
+            borderRadius: "21px",
+            backgroundColor: isSearchExpanded ? "rgba(243, 244, 246, 0.8)" : "rgba(255, 255, 255, 0.75)",
+            border: "1px solid",
+            borderColor: isSearchExpanded ? "rgba(99, 102, 241, 0.4)" : "rgba(148, 163, 184, 0.2)",
+            boxShadow: isSearchExpanded ? "0 8px 24px rgba(99, 102, 241, 0.15)" : "none",
+            transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+            overflow: "hidden",
+            pr: isSearchExpanded ? 1.5 : 0,
+            pl: isSearchExpanded ? 1.5 : 0,
+            backdropFilter: "blur(10px)",
+            mr: 0.5,
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={() => setIsSearchExpanded(true)}
+            disabled={isSearchExpanded}
+            sx={{
+              color: isSearchExpanded ? "#4f46e5" : "#4b5563",
+              p: 0,
+              mr: isSearchExpanded ? 1 : 0,
+              minWidth: 0,
+              transition: "color 0.22s ease",
+              "&:hover": { backgroundColor: "transparent" },
+            }}
+          >
+            <SearchOutlinedIcon sx={{ fontSize: 20 }} />
+          </IconButton>
+
+          {isSearchExpanded && (
+            <InputBase
+              autoFocus
+              fullWidth
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              sx={{
+                fontSize: 14,
+                color: "#0f172a",
+                p: 0,
+                "& input::placeholder": {
+                  color: "#94a3b8",
+                  opacity: 1,
+                },
+              }}
+            />
+          )}
+
+          {isSearchExpanded && (
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSearchQuery("");
+                setIsSearchExpanded(false);
+              }}
+              sx={{
+                color: "#94a3b8",
+                p: 0.2,
+                ml: 0.5,
+                "&:hover": { color: "#ef4444" },
+              }}
+            >
+              <CloseRoundedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          )}
+        </Box>
       </Stack>
     </Box>
   );
 }
+
+// TIẾN HÀNH XỬ LÝ LOGIC SEARCH MESSAGE

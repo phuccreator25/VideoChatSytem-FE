@@ -9,7 +9,10 @@ import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import Zoom from "@mui/material/Zoom";
 import { enqueueSnackbar } from "notistack";
 import { useState } from "react";
-import type { ConfirmBlockModalProps } from "../../../../types/contact.type";
+import type { ConfirmBlockModalProps } from "../../../../types/contact/contact.ui.type";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "../../../../redux/store";
+import { updateContactBlockedStatus } from "../../../../redux/contact.redux";
 
 export function ConfirmBlockModal({
     open,
@@ -23,6 +26,8 @@ export function ConfirmBlockModal({
     const displayName =
         selectedContact?.nickname ?? selectedContact?.fullname ?? "";
 
+    const distpatch = useDispatch<AppDispatch>();
+
     const handleConfirm = async () => {
         try {
             if (!selectedContact) return
@@ -33,7 +38,12 @@ export function ConfirmBlockModal({
                 enqueueSnackbar("User blocked successfully", {
                     variant: "success",
                 });
-                selectedContact.isBlocked = true
+
+                await distpatch(updateContactBlockedStatus({
+                    contactId: selectedContact._id,
+                    isBlocked: true
+                }))
+                
                 onClose();
             }
         } catch (error) {
@@ -46,7 +56,6 @@ export function ConfirmBlockModal({
     const handleConfirmUnblock = async () => {
         try {
             if (!selectedContact) return
-            console.log('oko');
             
             setIsSubmitting(true);
             const result = await handleUnblock(selectedContact);
@@ -55,7 +64,12 @@ export function ConfirmBlockModal({
                 enqueueSnackbar("User unblocked successfully", {
                     variant: "success",
                 });
-                selectedContact.isBlocked = false
+
+                await distpatch(updateContactBlockedStatus({
+                    contactId: selectedContact._id,
+                    isBlocked: false
+                }))
+
                 onClose();
             }
         } catch (error) {

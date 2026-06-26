@@ -10,6 +10,11 @@ import { MessageItem } from "./Messages/MessgesItem.chat";
 import { InputBar } from "./InputBar/InputBar.chat";
 import { useChatFrame } from "../../hooks/Chat/chat.hook";
 import { ContactRelationBar } from "./ContactRelationBar/ContactRelationBar.chat";
+import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
+import type { RootState } from "../../redux/store";
+import { TypingIndicator } from "./TypingIndicator/TypingIndicator.chat";
+import { PinnedMessageStrip } from "./PinnedMessageStrip/pinnedMessageStrip.chat";
 
 export default function ChatFrame() {
   const {
@@ -18,6 +23,18 @@ export default function ChatFrame() {
     handler,
     ref: { messagesEndRef },
   } = useChatFrame();
+
+  const { conversationId } = useParams()
+  const isTyping = useSelector(
+    (state: RootState) => {
+      if (!conversationId) return false;
+
+      return (
+        state.chat.typingByConversation[conversationId] ??
+        false
+      );
+    },
+  );
 
   if (!data.conversationId) {
     return (
@@ -82,6 +99,14 @@ export default function ChatFrame() {
       }}
     >
       <Header userData={data.userData} />
+
+      <PinnedMessageStrip
+        pinnedMessages={data.pinMessages}
+        otherUser={data.userData}
+        onUnpin={handler.onUnPin}
+      />
+
+      {/* Invitation nhanh */}
       <ContactRelationBar
         status={data.relationStatus}
         displayName={data.userData?.nickname || data.userData?.fullname}
@@ -109,20 +134,50 @@ export default function ChatFrame() {
         }}
       >
         <Stack spacing={3}>
-          {ui.normalizedMessages.map(({ msg, isLeft, displayName, avatar }) => (
-            <MessageItem
-              key={msg.id}
-              msg={msg}
-              isLeft={isLeft}
-              displayName={displayName}
-              avatar={avatar}
-            />
-          ))}
+          {ui.normalizedMessages.map(
+            ({ msg, isLeft, displayName, avatar }) => (
+              <MessageItem
+                key={msg.id}
+                msg={msg}
+                isLeft={isLeft}
+                displayName={displayName}
+                avatar={avatar}
+                setMessageReplyed={handler.setMessageReplyed}
+                onReact={handler.handleEmotion}
+                onUnReact={handler.handleUnReactEmotionMessage}
+                onHandleShare={handler.onHandleShare}
+                onResend={handler.handleResend}
+                onDeleteFailed={handler.handleDeleteFailedMessage}
+              />
+            ),
+          )}
+
+          {isTyping && <TypingIndicator
+            avatar={data.userData?.avatar}
+            displayName={data.userData?.nickname ?? data.userData?.fullname}
+          />}
+
           <Box ref={messagesEndRef} />
         </Stack>
       </Box>
 
-      <InputBar value={data.inputText} onChange={handler.setInputText} onSend={handler.handleSend} />
+      <InputBar
+        value={data.inputText}
+        onChange={handler.setInputText}
+        onSend={handler.handleSend}
+        onChangeFile={handler.onChangeFile}
+        files={ui.files}
+        onRemoveFile={handler.onRemoveFile}
+        onApplyEmoji={handler.onApplyEmoji}
+        onSelectGif={handler.onSelectGif}
+        selectedGif={data.selectedGif}
+        onRemoveGif={handler.onRemoveGif}
+        messageReplyed={data.messageReplyed}
+        onRemoveReply={() => handler.setMessageReplyed(null)}
+        voiceUi={ui.voiceUi}
+        voiceData={data.voiceData}
+        voiceHandler={handler.voiceHandler}
+      />
     </Paper>
   );
 }

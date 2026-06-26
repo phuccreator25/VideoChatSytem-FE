@@ -3,7 +3,8 @@ import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 
 import { ContactRow } from "../ContactRow/ContactRow.contact";
-import type { ContactSection, RowActionProps } from "../../../../types/contact.type";
+import type { ContactSection } from "../../../../types/contact/contact.model.type";
+import type { RowActionProps } from "../../../../types/contact/contact.ui.type";
 
 type AlphabetType = {
   section: ContactSection;

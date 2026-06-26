@@ -13,7 +13,7 @@ import { SetNicknameModal } from "./ModalSetNickName";
 import { ViewUserInfoModal } from "./ModalViewInfo";
 import { ConfirmRemoveFriendModal } from "./ModalConfirmRemove";
 import { ConfirmBlockModal } from "./ModalConfirmBlock";
-import type { RowActionProps } from "../../../../types/contact.type";
+import type { RowActionProps } from "../../../../types/contact/contact.ui.type";
 
 type ContactActionPopoverProps = {
     rowAction: RowActionProps;

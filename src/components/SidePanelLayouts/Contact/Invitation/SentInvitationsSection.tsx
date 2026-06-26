@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Alert, Box, Button, Stack, Typography } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
-import type { AppDispatch, RootState } from "../../../../redux/store";
-import { onCancelSentInvitation, setInvitationActionStatus } from "../../../../redux/invitation.redux";
-import type { SentInvitationsSectionGroup } from "../../../../types/Invitation";
+import type { RootState } from "../../../../redux/store";
+import type { SentInvitationsSectionGroup } from "../../../../types/invitation/invitation.ui.type";
+import useInvitationAction from "../../../../helpers/InvitationAction.helper";
 
 type SentInvitationsSectionProps = {
   sentInvitationsSection: SentInvitationsSectionGroup;
@@ -16,28 +16,22 @@ export function SentInvitationsSection({
   const { data, helpers } = sentInvitationsSection;
 
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const dispatch = useDispatch<AppDispatch>();
   const totalCountSent = useSelector((state: RootState) => state.invitation.countSent);
 
   const cancelledMap = useSelector(
     (state: RootState) => state.invitation.actionStatusById
   );
 
+  const { onHandleCancelInvitation } = useInvitationAction()
+
   const handleCancel = async (id: string) => {
     if (loadingId === id) return;
 
     try {
       setLoadingId(id);
-      const result = await dispatch(onCancelSentInvitation(id)).unwrap();
 
-      if (result) {
-        await dispatch(
-          setInvitationActionStatus({
-            id,
-            status: "cancelled",
-          })
-        );
-      }
+      await onHandleCancelInvitation(id, undefined)
+
     } finally {
       setLoadingId(null);
     }

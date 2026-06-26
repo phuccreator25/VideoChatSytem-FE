@@ -11,7 +11,7 @@ import { useTheme } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import { customScrollbarSx } from "../../../utils/CustomScroll";
-import type { FileItem } from "../../../types/data.type";
+import type { FileItem } from "../../../types/profile/profile.model.type";
 import { OpenAvatar } from "./OpenAvatar/OpenAvatar.profile";
 import { AboutSection } from "./About/AboutSection.profile";
 import { AttachedFilesSection } from "./AttachedFile/AttachedSection.profile";

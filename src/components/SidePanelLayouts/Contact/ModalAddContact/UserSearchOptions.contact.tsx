@@ -4,7 +4,8 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
-import type { InvitationQuickAction, UserOption } from "../../../../types/Invitation";
+import type { InvitationQuickAction } from "../../../../types/invitation/invitation.model.type";
+import type { UserOption } from "../../../../types/invitation/invitation.form.type";
 import QuickActionButton from "./QuickActionButton.contact";
 type UserSearchOptionProps = {
     option: UserOption;

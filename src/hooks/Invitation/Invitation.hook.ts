@@ -3,30 +3,22 @@ import { useEffect, useState } from "react";
 import type {
   AddContactDataHook,
   HandleQuickActionParams,
-  InvitationQuickAction,
   invitationSeachResult,
   UserOption,
-} from "../../types/Invitation";
+} from "../../types/invitation/invitation.form.type";
+import type { InvitationQuickAction } from "../../types/invitation/invitation.model.type";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../redux/store";
 import {
   clearInvitationActionStatus,
-  onAcceptInvitation,
-  onAddContact,
-  onCancelSentInvitation,
-  onDeclineInvitation,
   onGetCountSentInvitation,
   onGetListFriendRequests,
   onGetListSentInvitation,
-  setInvitationActionStatus,
   setIsPopoverInvitationOpen,
 } from "../../redux/invitation.redux";
 import userApi from "../../api/User.api";
-import {
-  updateContactRelation,
-  updateInvitationId,
-} from "../../redux/chat.redux";
+import useInvitationAction from "../../helpers/InvitationAction.helper";
 
 function useInvitation() {
   const [openModal, setOpenModal] = useState<boolean>(false);
@@ -64,6 +56,13 @@ function useInvitation() {
     Number.isFinite(limitSentParam) && limitSentParam > 0 ? limitSentParam : 3;
   const resolvedSkipSent =
     Number.isFinite(skipSentParam) && skipSentParam >= 0 ? skipSentParam : 0;
+
+  const {
+    onHandleAcceptInvitation,
+    onHandleDeclineInvitation,
+    onHandleCancelInvitation,
+    onHandleAddInvitation,
+  } = useInvitationAction();
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -126,45 +125,6 @@ function useInvitation() {
     handleOpenModal();
   };
 
-  const onHandleAddContact = async (payload: AddContactDataHook) => {
-    try {
-      if (!payload?.userId) return false;
-
-      const res = await dispatch(onAddContact(payload)).unwrap();
-
-      if (res) {
-        enqueueSnackbar("Đã gửi lời mời kết bạn thành công", {
-          variant: "success",
-        });
-
-        await dispatch(
-          updateContactRelation({ userId: payload.userId, relation: "sent" }),
-        );
-        await dispatch(
-          updateInvitationId({
-            userId: payload.userId,
-            invitationId: res.invitationId,
-          }),
-        );
-        handleCloseModal();
-        return true;
-      }
-
-      return false;
-    } catch (error: any) {
-      console.log("ERROR ADD CONTACT:", error?.message);
-
-      enqueueSnackbar(
-        error?.response?.data?.message || "Gửi lời mời kết bạn thất bại",
-        {
-          variant: "error",
-        },
-      );
-
-      return false;
-    }
-  };
-
   const handleViewAllRequests = async () => {
     navigate("/invitation");
     handleCloseInvitationPopover();
@@ -197,7 +157,6 @@ function useInvitation() {
 
   const handleSearchUser = async (searchValue: string) => {
     const res = await userApi.onSearchUser(searchValue);
-    console.log("res?.data?.data: ", res?.data?.data);
 
     const mappedOptions: UserOption[] = (res?.data?.data || []).map(
       (item: invitationSeachResult) => ({
@@ -213,6 +172,7 @@ function useInvitation() {
     return mappedOptions;
   };
 
+  //Thao tác nhanh trong khi search
   const handleQuickAction = async (
     action: InvitationQuickAction,
     { event, option, onUpdateOptionStatus }: HandleQuickActionParams,
@@ -229,102 +189,55 @@ function useInvitation() {
       setActionLoadingId(option.invitationId);
 
       if (action === "accept") {
-        const result = await dispatch(
-          onAcceptInvitation(option.invitationId),
-        ).unwrap();
-
-        if (result) {
-          if (location.pathname === "/invitation") {
-            await dispatch(
-              setInvitationActionStatus({
-                id: option.invitationId,
-                status: "accepted",
-              }),
-            );
-
-            setTimeout(() => {
-              handleRemoveReceivedInvitation(option.invitationId);
-            }, 700);
-          }
-
-          onUpdateOptionStatus?.(option.invitationId, "accepted");
-          await dispatch(
-            updateContactRelation({ userId: option.id, relation: "none" }),
-          );
-
-          enqueueSnackbar("Đã chấp nhận lời mời thành công", {
-            variant: "success",
-          });
-        }
-
-        return;
+        await onHandleAcceptInvitation(option.invitationId, option.id, {
+          TimeClear: location.pathname === "/invitation" ? 700 : null,
+          onUpdateOptionStatus,
+        });
       }
 
       if (action === "decline") {
-        const result = await dispatch(
-          onDeclineInvitation(option.invitationId),
-        ).unwrap();
-
-        if (result) {
-          if (location.pathname === "/invitation") {
-            await dispatch(
-              setInvitationActionStatus({
-                id: option.invitationId,
-                status: "declined",
-              }),
-            );
-
-            setTimeout(() => {
-              handleRemoveReceivedInvitation(option.invitationId);
-            }, 700);
-          }
-
-          onUpdateOptionStatus?.(option.invitationId, "none");
-          await dispatch(
-            updateContactRelation({ userId: option.id, relation: "add" }),
-          );
-
-          enqueueSnackbar("Đã từ chối lời mời thành công", {
-            variant: "success",
-          });
-        }
-
-        return;
+        await onHandleDeclineInvitation(option.invitationId, option.id, {
+          TimeClear: location.pathname === "/invitation" ? 700 : null,
+          onUpdateOptionStatus,
+        });
       }
 
       if (action === "cancel") {
-        const result = await dispatch(
-          onCancelSentInvitation(option.invitationId),
-        ).unwrap();
-
-        if (result) {
-          if (location.pathname === "/invitation") {
-            await dispatch(
-              setInvitationActionStatus({
-                id: option.invitationId,
-                status: "cancelled",
-              }),
-            );
-
-            setTimeout(() => {
-              handleRemoveSentInvitation(option.invitationId);
-            }, 700);
-          }
-
-          onUpdateOptionStatus?.(option.invitationId, "none");
-          await dispatch(
-            updateContactRelation({ userId: option.id, relation: "add" }),
-          );
-
-          enqueueSnackbar("Đã thu hồi lời mời thành công", {
-            variant: "success",
-          });
-        }
+        await onHandleCancelInvitation(option.invitationId, option.id, {
+          TimeClear: location.pathname === "/invitation" ? 700 : null,
+          onUpdateOptionStatus,
+        });
       }
     } catch (error) {
       console.error("Invitation action failed:", error);
     } finally {
       setActionLoadingId(null);
+    }
+  };
+
+  const onHandleAddContact = async (payload: AddContactDataHook) => {
+    try {
+      if (!payload?.userId) return false;
+
+      const res = await onHandleAddInvitation(
+        payload.userId,
+        payload.invitationMessage || "",
+      );
+
+      if (res) handleCloseModal();
+
+      return res;
+    } catch (error: any) {
+      console.log("ERROR ADD CONTACT:", error?.message);
+
+      enqueueSnackbar(
+        error?.response?.data?.message || "Gửi lời mời kết bạn thất bại",
+        {
+          variant: "error",
+        },
+      );
+
+      return false;
     }
   };
 

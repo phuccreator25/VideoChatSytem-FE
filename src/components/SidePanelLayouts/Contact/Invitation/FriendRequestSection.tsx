@@ -8,16 +8,11 @@ import {
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
-import { type AppDispatch, type RootState } from "../../../../redux/store";
-import {
-  onAcceptInvitation,
-  onDeclineInvitation,
-  setInvitationActionStatus,
-} from "../../../../redux/invitation.redux";
-import type { FriendRequestsSectionGroup } from "../../../../types/Invitation";
-import { useSnackbar } from "notistack";
+import { type RootState } from "../../../../redux/store";
+import type { FriendRequestsSectionGroup } from "../../../../types/invitation/invitation.ui.type";
+import useInvitationAction from "../../../../helpers/InvitationAction.helper";
 
 type FriendRequestsSectionProps = {
   friendRequestsSection: FriendRequestsSectionGroup;
@@ -31,8 +26,6 @@ export function FriendRequestsSection({
 
   const [submitingId, setSubmitingId] = useState<string | null>(null);
 
-  const dispatch = useDispatch<AppDispatch>();
-
   const actionStatusById = useSelector(
     (state: RootState) => state.invitation.actionStatusById
   );
@@ -41,28 +34,15 @@ export function FriendRequestsSection({
     (state: RootState) => state.invitation.countReceived
   );
 
-  const { enqueueSnackbar } = useSnackbar();
+  const { onHandleAcceptInvitation, onHandleDeclineInvitation } = useInvitationAction();
 
   const onAccept = async (id: string) => {
     try {
       setSubmitingId(id);
 
-      const result = await dispatch(onAcceptInvitation(id)).unwrap();
-
-      if (result) {
-        await dispatch(
-          setInvitationActionStatus({
-            id,
-            status: "accepted",
-          })
-        );
-      }
-    } catch (error: any) {
-      console.error("Accept invitation failed:", error);
-      enqueueSnackbar(error?.response?.data?.message || "Accept invitation failed", {
-        variant: "error",
-      });
-    } finally {
+      await onHandleAcceptInvitation(id, undefined);
+    
+    }  finally {
       setSubmitingId(null);
     }
   };
@@ -71,23 +51,8 @@ export function FriendRequestsSection({
     try {
       setSubmitingId(id);
 
-      const result = await dispatch(onDeclineInvitation(id)).unwrap();
+      await onHandleDeclineInvitation(id, undefined)
 
-      setSubmitingId(null);
-
-      if (result) {
-        await dispatch(
-          setInvitationActionStatus({
-            id,
-            status: "declined",
-          })
-        );
-      }
-    } catch (error: any) {
-      console.error("Decline invitation failed:", error);
-      enqueueSnackbar(error?.response?.data?.message || "Decline invitation failed", {
-        variant: "error",
-      });
     } finally {
       setSubmitingId(null);
     }

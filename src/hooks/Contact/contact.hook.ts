@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { contacts, ContactSection } from "../../types/contact.type";
+import type { ContactSection, contacts } from "../../types/contact/contact.model.type";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../../redux/store";
 import { onGetDataContact } from "../../redux/contact.redux";
