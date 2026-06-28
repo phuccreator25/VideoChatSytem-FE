@@ -89,23 +89,6 @@ export function useContact() {
 
       const res = await ContactApi.onUpdateContact(data);
 
-      setSelectedContact((prev) => {
-        if (!prev) return prev;
-        if (prev.userId !== data.userId) return prev;
-
-        return {
-          ...prev,
-          nickname: data.nickname,
-        };
-      });
-
-      dispatch(
-        updateNickNameUser({
-          userId: data.userId,
-          nickname: data.nickname,
-        }),
-      );
-
       return res.status === 201;
     } catch (error) {
       console.log(error);

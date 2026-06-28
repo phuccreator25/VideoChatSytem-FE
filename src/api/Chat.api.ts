@@ -8,5 +8,11 @@ const ChatAPI = {
     onForwardMessage : (messageId: string, selectedIds: string[]) => axiosInterceptor.post(`/chats/forward-message/${messageId}`, { selectedIds }),
     onDeleteMessage : (conversationId: string, messageId: string) => axiosInterceptor.delete(`/chats/delete-message/${conversationId}/${messageId}`),
     onRevokeMessage: (conversationId: string, messageId: string) => axiosInterceptor.put(`/chats/revoke-message/${conversationId}/${messageId}`),
+    onSearchMessage: (keyword: string, conversationId: string) => axiosInterceptor.post(`/chats/search-message/${conversationId}`, { keyword }),
+
+    onGetShareMedia: (conversationId: string) => axiosInterceptor.get(`/chats/share-media/${conversationId}`),
+    onGetShareFiles: (conversationId: string) => axiosInterceptor.get(`/chats/share-files/${conversationId}`),
+    onGetShareLinks: (conversationId: string) => axiosInterceptor.get(`/chats/share-links/${conversationId}`),
+    onGetLinkPreview: (url: string) => axiosInterceptor.get(`/chats/link-preview`, { params: { url } }),
 }
 export default ChatAPI

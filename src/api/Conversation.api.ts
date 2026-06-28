@@ -16,6 +16,9 @@ const ConversationsAPI = {
 
   deletePinMessagesConversations: (conversationId: string , messageId: string, attachmentId: string | null) =>
     axiosInterceptor.delete(`/conversations/pin-messages/${conversationId}/${messageId}/${attachmentId}`),
+
+  getMoreMessagesConversations: (conversationId: string, beforeTimestamp: string) =>
+    axiosInterceptor.post("/conversations/more-messages", { conversationId, beforeTimestamp }),
 };
 
 export default ConversationsAPI;

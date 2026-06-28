@@ -13,13 +13,13 @@ import { connectSocket } from "../../socket/socket";
 import { onGetCountReceivedInvitation, onGetCountSentInvitation, onGetListFriendRequests, onGetListSentInvitation, setIsPopoverInvitationOpen } from "../../redux/invitation.redux";
 import type { MessageType } from "../../types/chat/chat.model.type";
 import type { ConversationReadPayload } from "../../types/chat/chat.payload.type";
-import { onGetConversations, resetUnread, updateConversationByMessage, updateStatusUsers } from "../../redux/conversation.redux";
+import { onGetConversations, resetUnread, updateConversationByMessage, updateNickNameConversation, updateStatusUsers } from "../../redux/conversation.redux";
 import { onGetDataContact } from "../../redux/contact.redux";
-import type { ContactRemoveSocket } from "../../types/contact/contact.socket.type";
+import type { ContactRemoveSocket, ContactUpdateNickNameSocket } from "../../types/contact/contact.socket.type";
 import { bindInvitationAccept, bindInvitationCancel, bindInvitationCreated, bindInvitationDecline, bindInvitationSent, unbindInvitationAccept, unbindInvitationCancel, unbindInvitationCreated, unbindInvitationDecline, unbindInvitationSent } from "../../socket/invitationSocket.socket";
 import { bindConversationReadSuccess, bindMessageNew, bindTypingMessageSuccess, unbindConversationReadSuccess, unbindMessageNew, unbindTypingMessageSuccess, bindDeleteMessage, unbindDeleteMessage, bindRevokeMessage, unbindRevokeMessage } from "../../socket/message.socket";
-import { bindContactRemove, unbindContactRemove } from "../../socket/contactSocket.socket";
-import { setIsTyping, updateStatusUser } from "../../redux/chat.redux";
+import { bindContactRemove, bindContactUpdateNickName, unbindContactRemove, unbindContactUpdateNickName } from "../../socket/contactSocket.socket";
+import { setIsTyping, updateNickNameUser, updateStatusUser } from "../../redux/chat.redux";
 import { bindOnlineUsers, bindUserPresenceChanged, unbindOnlineUsers, unbindUserPresenceChanged } from "../../socket/authSocket.socket";
 import type { TypingSocket } from "../../types/chat/chat.socket.type";
 
@@ -233,6 +233,24 @@ export default function useChatLayout(activeRail: RailKey) {
       dispatch(onGetConversations());
     };
 
+    const handleContactUpdateNickNameEvent = (payload: ContactUpdateNickNameSocket) => {
+      dispatch(onGetDataContact());
+      
+      dispatch(
+        updateNickNameUser({
+          userId: payload.userId,
+          nickname: payload.nickname,
+        }),
+      );
+
+      dispatch(
+        updateNickNameConversation({
+          userId: payload.userId,
+          nickname: payload.nickname,
+        }),
+      );
+    };
+
     bindInvitationCreated(handleInvitationCreatedEvent);
     bindInvitationCancel(handleInvitationCancelEvent);
     bindInvitationAccept(handleInvitationAcceptEvent);
@@ -242,9 +260,11 @@ export default function useChatLayout(activeRail: RailKey) {
 
     bindConversationReadSuccess(handleUpdateConversation);
     bindMessageNew(handleNewMessage);
-    bindContactRemove(handleContactRemoveEvent);
     bindDeleteMessage(handleDeleteMessage);
     bindRevokeMessage(handleRevokeMessage);
+
+    bindContactRemove(handleContactRemoveEvent);
+    bindContactUpdateNickName(handleContactUpdateNickNameEvent);
 
     return () => {
       unbindInvitationCreated(handleInvitationCreatedEvent);
@@ -256,9 +276,11 @@ export default function useChatLayout(activeRail: RailKey) {
 
       unbindConversationReadSuccess(handleUpdateConversation);
       unbindMessageNew(handleNewMessage);
-      unbindContactRemove(handleContactRemoveEvent);
       unbindDeleteMessage(handleDeleteMessage);
       unbindRevokeMessage(handleRevokeMessage);
+
+      unbindContactRemove(handleContactRemoveEvent);
+      unbindContactUpdateNickName(handleContactUpdateNickNameEvent);
 
       dispatch(setIsPopoverInvitationOpen(false)); // Tránh việc mở Popo sau đó đóng tab
     };
@@ -285,6 +307,7 @@ export default function useChatLayout(activeRail: RailKey) {
         }),
       );
 
+      //Update conversation user online
       dispatch(
         updateStatusUsers({
           userId: userData.userId,

@@ -11,6 +11,7 @@ import { FileGroupBubble } from "../Files/FileBubble.chat";
 import { ChatTime } from "../ChatTime/ChatTime.chat";
 import { COLORS } from "../../../utils/Colors";
 import { MessageActions } from "./MessageActions.chat";
+import { LinkPreview } from "./LinkPreview.chat";
 import { AudioBubble } from "../Audio/audioBubble.chat";
 import { MessageStatus } from "../Status/messageStatus.chat";
 import { VideoBubble } from "../Video/videoBubble.chat";
@@ -328,7 +329,7 @@ export function MessageItem({
 
   const actionHandlers = {
     onReply: (m: MessageType) => setMessageReplyed(m),
-    onShare: (m: MessageType) => {
+    onShare: () => {
       setShareDialogOpen(true);
     },
     onMore: (m: MessageType, anchor: HTMLElement) => console.log("more", m, anchor),
@@ -345,7 +346,10 @@ export function MessageItem({
 
   useEffect(() => {
     if (anchorEl && (msg.reactions?.length ?? 0) === 0) {
-      handleCloseDetail();
+      const timer = setTimeout(() => {
+        handleCloseDetail();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [msg.reactions?.length, anchorEl]);
 
@@ -453,6 +457,11 @@ export function MessageItem({
               }}>
                 {msg.content || ""}
               </Typography>
+
+              {(() => {
+                const url = msg.content?.match(/https?:\/\/[^\s]+/)?.[0];
+                return url ? <LinkPreview url={url} isLeft={isLeft} /> : null;
+              })()}
 
               <Box sx={{
                 display: "flex",

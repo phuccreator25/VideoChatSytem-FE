@@ -68,6 +68,14 @@ export function useChatFrame() {
   const currentUserId = currentUser?._id || "";
 
   const [messages, setMessages] = useState<MessageType[]>([]);
+  const [messagesSearch, setMessagesSearch] = useState<MessageType[]>([]);
+  const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
+  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(-1);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const [isHasMoreMessages, setIsHasMoreMessages] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [inputText, setInputText] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
@@ -783,6 +791,7 @@ export function useChatFrame() {
       );
     }
   };
+
   // Xóa tin nhắn lỗi cục bộ khỏi giao diện
   const handleDeleteFailedMessage = (msgId: string) => {
     setMessages((prev) =>
@@ -974,6 +983,223 @@ export function useChatFrame() {
     }
   };
 
+  //Search Messages
+  const navigateToSearchResult = async (index: number) => {
+    if (index < 0 || index >= messagesSearch.length) return;
+   
+    const targetMsg = messagesSearch[index];
+    
+    setCurrentSearchIndex(index);
+    const element = document.getElementById(`msg-${targetMsg.id}`);
+    
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      
+      setHighlightedMessageId(targetMsg.id);
+     
+      setTimeout(() => {
+        setHighlightedMessageId((prev) => prev === targetMsg.id ? null : prev);
+      }, 2000);
+    } else {
+      await autoFetchUntilFound(targetMsg);
+    }
+  };
+
+  //Tải tin nhắn tự động khi không tìm thấy
+  const autoFetchUntilFound = async (targetMsg: MessageType) => {
+    if (!conversationId) return;
+
+    // Lấy mốc thời gian tin nhắn cũ nhất hiện tại trong giao diện
+    let currentOldestCreatedAt = messages[0]?.createdAt || new Date().toISOString();
+    let accumulatedMessages: MessageType[] = [];
+    let found = false;
+    let hasMore = true;
+
+    // Hiển thị trạng thái đang tải (Loading) để người dùng biết
+    setIsLoadingMore(true);
+
+    // Vòng lặp tải liên tục dưới nền
+    while (!found && hasMore) {
+      try {
+        const res = await ConversationsAPI.getMoreMessagesConversations(
+          conversationId,
+          currentOldestCreatedAt
+        );
+        const fetched = res.data.data.messages;
+
+        // Nếu không còn tin nhắn nào trên server
+        if (fetched.length === 0) {
+          hasMore = false;
+          break;
+        }
+
+        // Tích lũy tin nhắn mới tải vào mảng tạm
+        accumulatedMessages = [...fetched, ...accumulatedMessages];
+
+        // Kiểm tra xem tin nhắn đích có trong nhóm vừa tải về không
+        const isExist = fetched.some((m: MessageType) => m.id === targetMsg.id);
+        if (isExist) {
+          found = true;
+          break; // Tìm thấy -> thoát vòng lặp
+        }
+
+        // Cập nhật mốc thời gian cũ nhất để lấy tiếp đợt sau
+        currentOldestCreatedAt = fetched[0].createdAt;
+
+        // Nếu số lượng tải về nhỏ hơn giới hạn phân trang (ví dụ 30) tức là đã hết tin nhắn trong DB
+        if (fetched.length < 20) {
+          hasMore = false;
+        }
+      } catch (error) {
+        console.error("Lỗi tự động tải tin nhắn: ", error);
+        hasMore = false;
+      }
+    }
+
+    // Cập nhật React state duy nhất 1 lần sau khi lấy đủ tin nhắn
+    if (accumulatedMessages.length > 0) {
+      setMessages((prev) => [...accumulatedMessages, ...prev]);
+    }
+
+    setIsLoadingMore(false);
+
+    // Cuộn tới phần tử vừa render thành công
+    if (found) {
+      setTimeout(() => {
+        const element = document.getElementById(`msg-${targetMsg.id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          setHighlightedMessageId(targetMsg.id);
+          setTimeout(() => {
+            setHighlightedMessageId((prev) => prev === targetMsg.id ? null : prev);
+          }, 2000);
+        }
+      }, 150);
+    }
+  };
+
+  const goToNextSearch = () => {
+    if (messagesSearch.length === 0) return;
+    const nextIndex = currentSearchIndex === -1 ? messagesSearch.length - 1 : (currentSearchIndex + 1) % messagesSearch.length;
+    navigateToSearchResult(nextIndex);
+  };
+
+  const goToPrevSearch = () => {
+    if (messagesSearch.length === 0) return;
+    const prevIndex = currentSearchIndex === -1 ? messagesSearch.length - 1 : (currentSearchIndex - 1 + messagesSearch.length) % messagesSearch.length;
+    navigateToSearchResult(prevIndex);
+  };
+
+  const closeSearchDrawer = () => {
+    setIsSearchDrawerOpen(false);
+    setMessagesSearch([]);
+    setSearchKeyword("");
+    setCurrentSearchIndex(-1);
+    setHighlightedMessageId(null);
+  };
+
+  const openProfileDrawer = () => {
+    setIsProfileDrawerOpen(true);
+    setIsSearchDrawerOpen(false);
+  };
+
+  const closeProfileDrawer = () => {
+    setIsProfileDrawerOpen(false);
+  };
+
+  //Search
+  const handleSearchMessage = async (keyword: string) => {
+    try {
+      if (!keyword || !conversationId) return;
+      
+      setSearchKeyword(keyword);
+      const res = await ChatAPI.onSearchMessage(keyword, conversationId);
+      const messages = res.data.data;
+      
+      setMessagesSearch(messages);
+      setIsSearchDrawerOpen(true);
+      setIsProfileDrawerOpen(false);
+      
+      if (messages && messages.length > 0) {
+        const lastIndex = messages.length - 1;
+        
+        setCurrentSearchIndex(lastIndex);
+        
+        setTimeout(() => {
+          const targetMsg = messages[lastIndex];
+          const element = document.getElementById(`msg-${targetMsg.id}`);
+         
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            setHighlightedMessageId(targetMsg.id);
+            setTimeout(() => {
+              setHighlightedMessageId((prev) => prev === targetMsg.id ? null : prev);
+            }, 2000);
+          }
+        }, 150);
+      } else {
+        setCurrentSearchIndex(-1);
+      }
+    } catch (error) {
+      console.log("ERROE SEARCH: ", error);
+    }
+  };
+
+  // Reset search when switching conversations
+  useEffect(() => {
+    closeSearchDrawer();
+    closeProfileDrawer();
+    setIsHasMoreMessages(true);
+    setIsLoadingMore(false);
+  }, [conversationId]);
+
+  //Scroll Load More Messages
+  const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
+    if(!conversationId) return;
+    const target = e.currentTarget;
+    
+    if (target.scrollTop === 0 && isHasMoreMessages && !isLoadingMore) {
+      setIsLoadingMore(true);
+      // Lưu lại chiều cao hiện tại của scroll để sau khi render xong không bị giật màn hình
+      const previousScrollHeight = target.scrollHeight;
+
+      // Lấy tin nhắn cũ nhất hiện có
+      const oldestMsg = messages[0];
+      
+      if (!oldestMsg) {
+        setIsLoadingMore(false);
+        return;
+      };
+
+      await handleLoadMoreMessages(oldestMsg.createdAt ?? "");
+
+      // Giữ nguyên vị trí scroll sau khi danh sách được cập nhật
+      setTimeout(() => {
+        target.scrollTop = target.scrollHeight - previousScrollHeight;
+        setIsLoadingMore(false);
+      }, 50);
+    }
+  };
+
+  const handleLoadMoreMessages = async (beforeTimestamp: string) => {
+    if(!conversationId) return;
+    
+    try {
+      const res = await ConversationsAPI.getMoreMessagesConversations(conversationId, beforeTimestamp);
+      const newMessages = res.data.data.messages;
+      
+      setMessages((prev) => [...newMessages, ...prev]);
+
+      if(newMessages.length < 20) {
+        setIsHasMoreMessages(false);
+      }
+
+      setIsLoadingMore(false);
+    } catch (error) {
+      console.log("ERROE LOAD MORE: ", error);
+    }
+  };
+
   return {
     ui: {
       normalizedMessages,
@@ -983,6 +1209,8 @@ export function useChatFrame() {
       loadingAction,
       files,
       voiceUi,
+      isSearchDrawerOpen,
+      isProfileDrawerOpen,
     },
 
     data: {
@@ -994,6 +1222,11 @@ export function useChatFrame() {
       messageReplyed,
       pinMessages,
       voiceData,
+      messagesSearch,
+      searchKeyword,
+      currentSearchIndex,
+      highlightedMessageId,
+      currentUserId,
     },
 
     handler: {
@@ -1019,6 +1252,14 @@ export function useChatFrame() {
       onHandleShare,
       handleResend,
       handleDeleteFailedMessage,
+      handleSearchMessage,
+      closeSearchDrawer,
+      navigateToSearchResult,
+      goToNextSearch,
+      goToPrevSearch,
+      handleScroll,
+      openProfileDrawer,
+      closeProfileDrawer,
     },
 
     ref: {

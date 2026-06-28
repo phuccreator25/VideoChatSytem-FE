@@ -16,33 +16,19 @@ import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 import type { ConversationUserInfo } from "../../../types/chat/chat.conversation.type";
+import { getLastSeenText } from "../../../helpers/formatLastSeenAt.helper";
 
 type HeaderProps = {
   userData?: ConversationUserInfo | null;
+  onSearchMessage: (keyword: string) => void;
+  onOpenProfileDrawer?: () => void;
 };
 
-export function Header({ userData }: HeaderProps) {
+export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: HeaderProps) {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const getLastSeenText = (lastSeenAt?: string | null) => {
-    if (!lastSeenAt) return "Offline";
 
-    const now = Date.now();
-    const lastSeen = new Date(lastSeenAt).getTime();
-    const diffMs = now - lastSeen;
-
-    const minutes = Math.floor(diffMs / 60000);
-    const hours = Math.floor(diffMs / 3600000);
-    const days = Math.floor(diffMs / 86400000);
-
-    if (minutes < 1) return "Active just now";
-    if (minutes < 60) return `Active ${minutes}m ago`;
-    if (hours < 24) return `Active ${hours}h ago`;
-    if (days < 7) return `Active ${days}d ago`;
-
-    return `Last active ${new Date(lastSeenAt).toLocaleDateString("vi-VN")}`;
-  };
 
   const displayName = userData?.nickname ?? userData?.fullname ?? "Unknown user";
 
@@ -155,7 +141,7 @@ export function Header({ userData }: HeaderProps) {
         </Tooltip>
 
         <Tooltip title="Profile">
-          <IconButton sx={actionButtonSx}>
+          <IconButton sx={actionButtonSx} onClick={onOpenProfileDrawer}>
             <PersonOutlineOutlinedIcon sx={{ fontSize: 20 }} />
           </IconButton>
         </Tooltip>
@@ -215,7 +201,13 @@ export function Header({ userData }: HeaderProps) {
               fullWidth
               placeholder="Search messages..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchQuery(value);
+                if (value.trim()) {
+                  onSearchMessage(value);
+                }
+              }}
               sx={{
                 fontSize: 14,
                 color: "#0f172a",
@@ -251,5 +243,3 @@ export function Header({ userData }: HeaderProps) {
     </Box>
   );
 }
-
-// TIẾN HÀNH XỬ LÝ LOGIC SEARCH MESSAGE

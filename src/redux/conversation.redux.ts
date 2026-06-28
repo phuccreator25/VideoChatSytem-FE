@@ -256,7 +256,20 @@ const conversationSlice = createSlice({
     setAllPinnedMessagesByConversation(state, action) {
       const { conversationId, pinMessages } = action.payload;
       state.pinnedMessageIdsByConversation[conversationId] = pinMessages;
-    }
+    },
+
+    updateNickNameConversation(state, action) {
+      const { userId, nickname } = action.payload;
+
+      state.conversations = state.conversations.map((conversation) => {
+        if (conversation.userId !== userId) return conversation;
+
+        return {
+          ...conversation,
+          name: nickname,
+        };
+      });
+    },
   },
 
   extraReducers: (builder) => {
@@ -278,6 +291,7 @@ export const {
   setPinnedMessage,
   deletePinnedMessage,
   setAllPinnedMessagesByConversation,
+  updateNickNameConversation
 } = conversationSlice.actions;
 
 export const conversationReducer = conversationSlice.reducer;
