@@ -16,13 +16,23 @@ export type ConversationReadPayload = {
   senderId: string;
 };
 
+export type LinkPreviewData = {
+  url?: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+  domain?: string;
+};
+
 export type SendMessagePayload =
   | {
       tempMessageId: string;
       conversationId: string;
       type: "text";
       content: string;
-      replyToMessageId: string | null
+      preview: LinkPreviewData | null;
+      replyToMessageId: string | null;
     }
   | {
       tempMessageId: string;
@@ -32,12 +42,12 @@ export type SendMessagePayload =
       content?: string;
     }
   | {
-    tempMessageId: string;
+      tempMessageId: string;
       conversationId: string;
       type: "gif";
       gifUrl: string | null;
-  }
+    };
 
 export type emotionPayload = {
   emotion: "LIKE" | "HAHA" | "SAD" | "WOW" | "LOVE" | "ANGRY" | string;
-}
+};

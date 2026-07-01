@@ -7,6 +7,7 @@ import type { pinMessages } from "../types/chat/chat.conversation.type";
 type ConversationState = {
   conversations: Conversation[];
   pinnedMessageIdsByConversation: Record<string, pinMessages[]>;
+  isLoading: boolean;
 };
 
 type PinMessagePayload = {
@@ -18,6 +19,7 @@ type PinMessagePayload = {
 const initialState: ConversationState = {
   conversations: [],
   pinnedMessageIdsByConversation: {},
+  isLoading: false,
 };
 
 const getPreviewByMessage = (message: MessageType) => {
@@ -273,8 +275,15 @@ const conversationSlice = createSlice({
   },
 
   extraReducers: (builder) => {
+    builder.addCase(onGetConversations.pending, (state) => {
+      state.isLoading = true;
+    });
     builder.addCase(onGetConversations.fulfilled, (state, action) => {
       state.conversations = action.payload;
+      state.isLoading = false;
+    });
+    builder.addCase(onGetConversations.rejected, (state) => {
+      state.isLoading = false;
     });
 
     builder.addCase(onGetPinMessageConversation.fulfilled, (state, action) => {

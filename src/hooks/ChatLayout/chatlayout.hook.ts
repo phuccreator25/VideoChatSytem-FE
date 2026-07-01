@@ -10,26 +10,81 @@ import type {
 } from "../../types/invitation/invitation.socket.type";
 import { useEffect } from "react";
 import { connectSocket } from "../../socket/socket";
-import { onGetCountReceivedInvitation, onGetCountSentInvitation, onGetListFriendRequests, onGetListSentInvitation, setIsPopoverInvitationOpen } from "../../redux/invitation.redux";
+import {
+  onGetCountReceivedInvitation,
+  onGetCountSentInvitation,
+  onGetListFriendRequests,
+  onGetListSentInvitation,
+  setIsPopoverInvitationOpen,
+} from "../../redux/invitation.redux";
 import type { MessageType } from "../../types/chat/chat.model.type";
 import type { ConversationReadPayload } from "../../types/chat/chat.payload.type";
-import { onGetConversations, resetUnread, updateConversationByMessage, updateNickNameConversation, updateStatusUsers } from "../../redux/conversation.redux";
+import {
+  onGetConversations,
+  resetUnread,
+  updateConversationByMessage,
+  updateNickNameConversation,
+  updateStatusUsers,
+} from "../../redux/conversation.redux";
 import { onGetDataContact } from "../../redux/contact.redux";
-import type { ContactRemoveSocket, ContactUpdateNickNameSocket } from "../../types/contact/contact.socket.type";
-import { bindInvitationAccept, bindInvitationCancel, bindInvitationCreated, bindInvitationDecline, bindInvitationSent, unbindInvitationAccept, unbindInvitationCancel, unbindInvitationCreated, unbindInvitationDecline, unbindInvitationSent } from "../../socket/invitationSocket.socket";
-import { bindConversationReadSuccess, bindMessageNew, bindTypingMessageSuccess, unbindConversationReadSuccess, unbindMessageNew, unbindTypingMessageSuccess, bindDeleteMessage, unbindDeleteMessage, bindRevokeMessage, unbindRevokeMessage } from "../../socket/message.socket";
-import { bindContactRemove, bindContactUpdateNickName, unbindContactRemove, unbindContactUpdateNickName } from "../../socket/contactSocket.socket";
-import { setIsTyping, updateNickNameUser, updateStatusUser } from "../../redux/chat.redux";
-import { bindOnlineUsers, bindUserPresenceChanged, unbindOnlineUsers, unbindUserPresenceChanged } from "../../socket/authSocket.socket";
+import type {
+  ContactRemoveSocket,
+  ContactUpdateNickNameSocket,
+} from "../../types/contact/contact.socket.type";
+import {
+  bindInvitationAccept,
+  bindInvitationCancel,
+  bindInvitationCreated,
+  bindInvitationDecline,
+  bindInvitationSent,
+  unbindInvitationAccept,
+  unbindInvitationCancel,
+  unbindInvitationCreated,
+  unbindInvitationDecline,
+  unbindInvitationSent,
+} from "../../socket/invitationSocket.socket";
+import {
+  bindConversationReadSuccess,
+  bindMessageNew,
+  bindTypingMessageSuccess,
+  unbindConversationReadSuccess,
+  unbindMessageNew,
+  unbindTypingMessageSuccess,
+  bindDeleteMessage,
+  unbindDeleteMessage,
+  bindRevokeMessage,
+  unbindRevokeMessage,
+} from "../../socket/message.socket";
+import {
+  bindContactRemove,
+  bindContactUpdateNickName,
+  unbindContactRemove,
+  unbindContactUpdateNickName,
+} from "../../socket/contactSocket.socket";
+import {
+  setIsTyping,
+  updateNickNameUser,
+  updateStatusUser,
+} from "../../redux/chat.redux";
+import {
+  bindOnlineUsers,
+  bindUserPresenceChanged,
+  unbindOnlineUsers,
+  unbindUserPresenceChanged,
+} from "../../socket/authSocket.socket";
 import type { TypingSocket } from "../../types/chat/chat.socket.type";
 
 export default function useChatLayout(activeRail: RailKey) {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const { applyRelationState } = useApplyRelationState();
-  
-  const isPopoverInvitation = useSelector((state: RootState) => state.invitation.isPopoverInvitationOpen);
-  const conversations = useSelector((state: RootState) => state.conversation.conversations);
+
+  const isPopoverInvitation = useSelector(
+    (state: RootState) => state.invitation.isPopoverInvitationOpen,
+  );
+  const conversations = useSelector(
+    (state: RootState) => state.conversation.conversations,
+  );
 
   const currentUser = useSelector(SelectcurrentUser);
   const currentUserId = currentUser?._id || "";
@@ -77,7 +132,7 @@ export default function useChatLayout(activeRail: RailKey) {
 
     const handleNewMessage = (payload: MessageType) => {
       const exitsConversation = conversations.some(
-        (c) => String(c.id) === String(payload.conversationId)
+        (c) => c.id === payload.conversationId,
       );
 
       if (!exitsConversation) {
@@ -103,7 +158,10 @@ export default function useChatLayout(activeRail: RailKey) {
 
     const refreshInvitationCount = async (payload: InvitationActionSocket) => {
       if (isSender(payload)) {
-        const isViewingInvitations = activeRail === "contact" || isPopoverInvitation === true || location.pathname === "/invitation";
+        const isViewingInvitations =
+          activeRail === "contact" ||
+          isPopoverInvitation === true ||
+          location.pathname === "/invitation";
         if (isViewingInvitations) {
           await dispatch(onGetCountSentInvitation());
         }
@@ -115,7 +173,10 @@ export default function useChatLayout(activeRail: RailKey) {
 
     const handleInvitationSentEvent = (payload: InvitationActionSocket) => {
       if (isSender(payload)) {
-        const isViewingInvitations = activeRail === "contact" || isPopoverInvitation === true || location.pathname === "/invitation";
+        const isViewingInvitations =
+          activeRail === "contact" ||
+          isPopoverInvitation === true ||
+          location.pathname === "/invitation";
         if (isViewingInvitations) {
           dispatch(onGetCountSentInvitation());
         }
@@ -219,23 +280,25 @@ export default function useChatLayout(activeRail: RailKey) {
       });
     };
 
-    const handleTypingEvent = async(payload: TypingSocket) => {
-      if(payload.targetUserId !== currentUserId) return
-    
-      dispatch(setIsTyping(payload))
-    }
+    const handleTypingEvent = async (payload: TypingSocket) => {
+      if (payload.targetUserId !== currentUserId) return;
 
-    const handleDeleteMessage = (payload: MessageType) => {
+      dispatch(setIsTyping(payload));
+    };
+
+    const handleDeleteMessage = () => {
       dispatch(onGetConversations());
     };
 
-    const handleRevokeMessage = (payload: MessageType) => {
+    const handleRevokeMessage = () => {
       dispatch(onGetConversations());
     };
 
-    const handleContactUpdateNickNameEvent = (payload: ContactUpdateNickNameSocket) => {
+    const handleContactUpdateNickNameEvent = (
+      payload: ContactUpdateNickNameSocket,
+    ) => {
       dispatch(onGetDataContact());
-      
+
       dispatch(
         updateNickNameUser({
           userId: payload.userId,
@@ -290,6 +353,7 @@ export default function useChatLayout(activeRail: RailKey) {
     conversationId,
     applyRelationState,
     currentUser,
+    conversations,
   ]);
 
   useEffect(() => {
@@ -348,7 +412,11 @@ export default function useChatLayout(activeRail: RailKey) {
 
   useEffect(() => {
     const fetchSentInvitation = async () => {
-      if (activeRail !== "contact" || (location.pathname !== "/invitation" && isPopoverInvitation === false)) return;
+      if (
+        activeRail !== "contact" ||
+        (location.pathname !== "/invitation" && isPopoverInvitation === false)
+      )
+        return;
 
       await dispatch(
         onGetListSentInvitation({
@@ -359,7 +427,11 @@ export default function useChatLayout(activeRail: RailKey) {
     };
 
     const fetchReceivedInvitation = async () => {
-      if (activeRail !== "contact" || (location.pathname !== "/invitation" && isPopoverInvitation === false)) return;
+      if (
+        activeRail !== "contact" ||
+        (location.pathname !== "/invitation" && isPopoverInvitation === false)
+      )
+        return;
 
       await dispatch(
         onGetListFriendRequests({
@@ -398,5 +470,13 @@ export default function useChatLayout(activeRail: RailKey) {
       unbindInvitationCancel(onUpdateCancelAndUpdateAndDecline);
       unbindInvitationSent(onSent);
     };
-  }, [activeRail, resolvedLimit, resolvedLimitSent, dispatch, currentUserId, isPopoverInvitation, location.pathname]);
+  }, [
+    activeRail,
+    resolvedLimit,
+    resolvedLimitSent,
+    dispatch,
+    currentUserId,
+    isPopoverInvitation,
+    location.pathname,
+  ]);
 }

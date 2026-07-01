@@ -17,6 +17,7 @@ import { TypingIndicator } from "./TypingIndicator/TypingIndicator.chat";
 import { PinnedMessageStrip } from "./PinnedMessageStrip/pinnedMessageStrip.chat";
 import { SearchDrawer } from "./SearchDrawer/SearchDrawer.chat";
 import { ProfileDrawer } from "./ProfileDrawer/ProfileDrawer.chat";
+import { MessageItemSkeleton } from "./Messages/SkeletonLoading.chat";
 
 export default function ChatFrame() {
   const {
@@ -158,50 +159,59 @@ export default function ChatFrame() {
             }}
           >
             <Stack spacing={3}>
-              {ui.normalizedMessages.map(
-                ({ msg, isLeft, displayName, avatar }) => (
-                  <Box
-                    key={msg.id}
-                    id={`msg-${msg.id}`}
-                    sx={{
-                      width: "100%",
-                      borderRadius: 3.5,
-                      p: 0.5,
-                      transition: "all 0.3s ease",
-                      "@keyframes search-highlight-flash": {
-                        "0%": {
-                          backgroundColor: "rgba(79, 70, 229, 0.25)",
-                          boxShadow: "0 0 16px rgba(79, 70, 229, 0.28)",
-                        },
-                        "30%": {
-                          backgroundColor: "rgba(79, 70, 229, 0.18)",
-                          boxShadow: "0 0 10px rgba(79, 70, 229, 0.15)",
-                        },
-                        "100%": {
-                          backgroundColor: "transparent",
-                          boxShadow: "none",
-                        },
-                      },
-                      animation:
-                        data.highlightedMessageId === msg.id
-                          ? "search-highlight-flash 2.2s cubic-bezier(0.25, 1, 0.5, 1)"
-                          : "none",
-                    }}
-                  >
-                    <MessageItem
-                      msg={msg}
-                      isLeft={isLeft}
-                      displayName={displayName}
-                      avatar={avatar}
-                      setMessageReplyed={handler.setMessageReplyed}
-                      onReact={handler.handleEmotion}
-                      onUnReact={handler.handleUnReactEmotionMessage}
-                      onHandleShare={handler.onHandleShare}
-                      onResend={handler.handleResend}
-                      onDeleteFailed={handler.handleDeleteFailedMessage}
-                    />
+              {ui.isMessagesLoading ? (
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <Box key={`sk-${idx}`} sx={{ width: "100%", p: 0.5 }}>
+                    <MessageItemSkeleton isLeft={idx % 2 === 0} />
                   </Box>
-                ),
+                ))
+              ) : (
+                ui.normalizedMessages.map(
+                  ({ msg, isLeft, displayName, avatar }) => (
+                    <Box
+                      key={msg.id}
+                      id={`msg-${msg.id}`}
+                      sx={{
+                        width: "100%",
+                        borderRadius: 3.5,
+                        p: 0.5,
+                        transition: "all 0.3s ease",
+                        "@keyframes search-highlight-flash": {
+                          "0%": {
+                            backgroundColor: "rgba(79, 70, 229, 0.25)",
+                            boxShadow: "0 0 16px rgba(79, 70, 229, 0.28)",
+                          },
+                          "30%": {
+                            backgroundColor: "rgba(79, 70, 229, 0.18)",
+                            boxShadow: "0 0 10px rgba(79, 70, 229, 0.15)",
+                          },
+                          "100%": {
+                            backgroundColor: "transparent",
+                            boxShadow: "none",
+                          },
+                        },
+                        animation:
+                          data.highlightedMessageId === msg.id
+                            ? "search-highlight-flash 2.2s cubic-bezier(0.25, 1, 0.5, 1)"
+                            : "none",
+                      }}
+                    >
+                      <MessageItem
+                        msg={msg}
+                        isLeft={isLeft}
+                        displayName={displayName}
+                        avatar={avatar}
+                        setMessageReplyed={handler.setMessageReplyed}
+                        onReact={handler.handleEmotion}
+                        onUnReact={handler.handleUnReactEmotionMessage}
+                        onHandleShare={handler.onHandleShare}
+                        onResend={handler.handleResend}
+                        onDeleteFailed={handler.handleDeleteFailedMessage}
+                        onGoToMessage={handler.navigateToMessage}
+                      />
+                    </Box>
+                  ),
+                )
               )}
 
               {isTyping && <TypingIndicator
@@ -229,6 +239,11 @@ export default function ChatFrame() {
             voiceUi={ui.voiceUi}
             voiceData={data.voiceData}
             voiceHandler={handler.voiceHandler}
+            linkPreview={ui.linkPreview}
+            isLoadingLinkPreview={ui.isLoadingLinkPreview}
+            onRemoveLinkPreview={() => {
+              handler.setLinkPreview(null);
+            }}
           />
         </Box>
 

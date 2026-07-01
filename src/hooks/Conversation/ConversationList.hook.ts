@@ -11,6 +11,10 @@ export function useConversation() {
     (state: RootState) => state.conversation.conversations
   );
 
+  const isLoading = useSelector(
+    (state: RootState) => state.conversation.isLoading
+  );
+
   useEffect(() => {
     dispatch(onGetConversations());
   }, [dispatch]);
@@ -18,6 +22,7 @@ export function useConversation() {
   return {
     data: {
       conversations,
+      isLoading,
     },
   };
 }

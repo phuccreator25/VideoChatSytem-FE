@@ -16,10 +16,11 @@ import { AlphabetIndex } from "./Alphabet/AlphabetIndex.contact";
 import ModalAddContactModal from "./ModalAddContact/ModalAddContact.contact";
 import useInvitation from "../../../hooks/Invitation/Invitation.hook";
 import { InvitationPopover } from "./Invitation/InvitationPopover";
-import {  useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import type { RootState } from "../../../redux/store";
 import { useContact } from "../../../hooks/Contact/contact.hook";
 import { useBlock } from "../../../hooks/Block/block.hook";
+import { ContactRowSkeleton } from "./Skeleton/skeleton.contact";
 
 export function ContactsView() {
   const theme = useTheme();
@@ -230,30 +231,38 @@ export function ContactsView() {
             ...customScrollbarSx,
           }}
         >
-          {contactData.contactsAfterFilter.map((section) => (
-            <AlphabetIndex
-              key={section.key}
-              section={section}
-              rowAction={rowAction}
-            />
-          ))}
+          {contactData.isLoading ? (
+            Array.from({ length: 6 }).map((_, idx) => (
+              <ContactRowSkeleton key={`contact-sk-${idx}`} />
+            ))
+          ) : (
+            <>
+              {contactData.contactsAfterFilter.map((section) => (
+                <AlphabetIndex
+                  key={section.key}
+                  section={section}
+                  rowAction={rowAction}
+                />
+              ))}
 
-          {contactData.contactsAfterFilter.length === 0 && (
-            <Box
-              sx={{
-                py: 6,
-                textAlign: "center",
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: 15,
-                  color: "#8a91a3",
-                }}
-              >
-                No contacts found
-              </Typography>
-            </Box>
+              {contactData.contactsAfterFilter.length === 0 && (
+                <Box
+                  sx={{
+                    py: 6,
+                    textAlign: "center",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: 15,
+                      color: "#8a91a3",
+                    }}
+                  >
+                    No contacts found
+                  </Typography>
+                </Box>
+              )}
+            </>
           )}
 
           {isMobile && <Box sx={{ height: 12 }} />}

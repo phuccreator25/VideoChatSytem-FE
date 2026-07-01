@@ -1,11 +1,10 @@
 export const ChatItemTypes = {
   TEXT: "text",
   FILE: "file",
-  GIF: 'gif'
+  GIF: "gif",
 } as const;
 
-export type ChatItemType =
-  (typeof ChatItemTypes)[keyof typeof ChatItemTypes];
+export type ChatItemType = (typeof ChatItemTypes)[keyof typeof ChatItemTypes];
 
 export type MessageStatus =
   | "sending"
@@ -49,7 +48,16 @@ export type MessageAttachment = {
   updatedAt?: string;
   previewUrl?: string | null;
   file?: File | null;
-  recordDuration?: number | null
+  recordDuration?: number | null;
+};
+
+export type PreviewType = {
+  title?: string;
+  description?: string;
+  image?: string;
+  url?: string;
+  siteName?: string;
+  domain?: string;
 };
 
 export type MessageType = {
@@ -61,6 +69,7 @@ export type MessageType = {
   type: ChatItemType;
   content?: string | null;
   attachments?: MessageAttachment[];
+  preview?: PreviewType;
   replyMessage?: MessageType | null;
   gifUrl?: string | null;
   replyToMessageId?: string | null;
@@ -80,7 +89,7 @@ export type reactionMessage = {
   name: string;
   emotion: "LIKE" | "HAHA" | "SAD" | "WOW" | "LOVE" | "ANGRY";
   createAt: string;
-}
+};
 
 export type SelectedGif = {
   provider: "giphy";

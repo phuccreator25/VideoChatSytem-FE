@@ -2,8 +2,7 @@ import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import FormatQuoteRoundedIcon from "@mui/icons-material/FormatQuoteRounded";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+
 
 import type { MessageType } from "../../../types/chat/chat.model.type";
 import { ImageFrame, type ImageFrameItem } from "../Images/ImageFrame.chat";
@@ -16,9 +15,11 @@ import { AudioBubble } from "../Audio/audioBubble.chat";
 import { MessageStatus } from "../Status/messageStatus.chat";
 import { VideoBubble } from "../Video/videoBubble.chat";
 import { EmotionPicker } from "../Emotion/emotionPicker.chat";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { EmotionDetailPopover } from "../Emotion/emotionDetailsPopover.chat";
 import { PopoverShare } from "./PopoverShare.chat";
+import renderMessageContent from "../../../helpers/renderMessageUrl.helper";
+import { ReplyQuoteBubble } from "./ReplyBubble.chat";
 
 type TempPreviewFile = {
   tempAttachmentId?: string;
@@ -123,161 +124,9 @@ const getFileNote = (msg: MessageType) => {
   return String(msg.content || "").trim();
 };
 
-// ── ReplyQuoteBubble ──────────────────────────────────────────────────────
-function ReplyQuoteBubble({
-  replyMsg,
-  isLeft,
-}: {
-  replyMsg: MessageType;
-  isLeft: boolean;
-}) {
-  const attachments = replyMsg.attachments || [];
-
-  const firstImage = attachments.find(
-    (a) =>
-      a.resourceType === "image" ||
-      String(a.mimeType || "").startsWith("image/"),
-  );
-
-  const firstFile = attachments.find(
-    (a) =>
-      a.resourceType !== "image" &&
-      !String(a.mimeType || "").startsWith("image/"),
-  );
-
-  const textColor = isLeft ? COLORS.textMuted : "rgba(199, 210, 254, 0.85)";
-  const accentColor = isLeft ? "#6366f1" : "rgba(165, 180, 252, 0.9)";
-
-  const renderContent = () => {
-
-    if (replyMsg.type === "text") {
-      return (
-        <Typography
-          sx={{
-            fontSize: 12.5,
-            color: textColor,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            lineHeight: 1.5,
-            textAlign: "left",
-          }}
-        >
-          {replyMsg.content || ""}
-        </Typography>
-      );
-    }
-
-    if (replyMsg.type === "gif") {
-      return (
-        <Typography sx={{ fontSize: 12.5, color: textColor, textAlign: "left" }}>
-          GIF
-        </Typography>
-      );
-    }
-
-    if (replyMsg.type === "file") {
-      if (firstImage) {
-        return (
-          <Stack direction="row" spacing={1} alignItems="center">
-            {(firstImage.fileUrl || firstImage.previewUrl) && (
-              <Box
-                component="img"
-                src={String(firstImage.fileUrl || firstImage.previewUrl)}
-                alt=""
-                sx={{ width: 36, height: 36, borderRadius: 1, objectFit: "cover", flexShrink: 0 }}
-              />
-            )}
-            <Typography sx={{ fontSize: 12.5, color: textColor }}>[Image]</Typography>
-          </Stack>
-        );
-      }
-
-      if (firstFile) {
-        return (
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <InsertDriveFileOutlinedIcon sx={{ fontSize: 15, flexShrink: 0, color: textColor }} />
-            <Typography
-              noWrap
-              sx={{ fontSize: 12.5, color: textColor, textAlign: "left" }}
-            >
-              [File] {firstFile.fileName || ""}
-            </Typography>
-          </Stack>
-        );
-      }
-
-      if (replyMsg.content) {
-        return (
-          <Typography sx={{ fontSize: 12.5, color: textColor, textAlign: "left" }}>
-            {replyMsg.content}
-          </Typography>
-        );
-      }
-    }
-
-    return null;
-  };
-
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "stretch",
-        mb: 0.5,
-        borderRadius: 2,
-        overflow: "hidden",
-        cursor: "pointer",
-        bgcolor: isLeft ? "rgba(241, 245, 249, 0.85)" : "rgba(55, 48, 163, 0.45)",
-        border: isLeft
-          ? "1px solid rgba(148, 163, 184, 0.2)"
-          : "1px solid rgba(99, 102, 241, 0.25)",
-        opacity: 0.92,
-        "&:hover": { opacity: 1 },
-        transition: "opacity 0.15s",
-      }}
-    >
-      {/* border trái tím */}
-      <Box sx={{ width: 3, flexShrink: 0, bgcolor: accentColor }} />
-
-      <Stack
-        direction="row"
-        spacing={0.75}
-        alignItems="center"
-        sx={{ px: 1, py: 0.75, flex: 1, minWidth: 0 }}
-      >
-        <FormatQuoteRoundedIcon sx={{ fontSize: 15, flexShrink: 0, color: accentColor }} />
-
-        <Box
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-          }}
-        >
-          <Typography
-            sx={{
-              fontSize: 11.5,
-              fontWeight: 700,
-              color: accentColor,
-              lineHeight: 1.4,
-              mb: 0.2,
-            }}
-          >
-            {"Reply"}
-          </Typography>
-          {renderContent()}
-        </Box>
-      </Stack>
-    </Box>
-  );
-}
 
 // ── MessageItem ───────────────────────────────────────────────────────────
-export function MessageItem({
+export const MessageItem = memo(function MessageItem({
   msg,
   isLeft,
   displayName,
@@ -287,7 +136,8 @@ export function MessageItem({
   onUnReact,
   onHandleShare,
   onResend,
-  onDeleteFailed
+  onDeleteFailed,
+  onGoToMessage
 }: {
   msg: MessageType;
   isLeft: boolean;
@@ -299,6 +149,7 @@ export function MessageItem({
   onHandleShare: (targetConversationIds: string[], messageId: string) => Promise<void>;
   onResend?: (msg: MessageType) => void;
   onDeleteFailed?: (msgId: string) => void;
+  onGoToMessage?: (msg: MessageType) => void;
 }) {
   const attachments = getAttachments(msg);
   const imageItems = parseImageItems(msg);
@@ -322,6 +173,11 @@ export function MessageItem({
   const isText = msg.type === "text";
   const isGif = msg.type === "gif";
   const shouldShowStatus = !isLeft;
+
+  const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+  const hasUrl = msg.content && /https?:\/\/[^\s]+/.test(msg.content);
+  const urlMatches = msg.content?.match(URL_REGEX);
+  const hasLinkPreview = Boolean(hasUrl && urlMatches?.length === 1 && (msg.preview || msg.type === "text"));
 
   const replyMessage = msg.replyMessage || null
 
@@ -416,7 +272,7 @@ export function MessageItem({
 
         {/* ── TEXT BUBBLE ── */}
         {(isText && !msg.isRevoked) && (
-          <Box sx={{ position: "relative", maxWidth: { xs: "90%", sm: "75%" } }}>
+          <Box sx={{ position: "relative", width: hasLinkPreview ? "100%" : "auto", maxWidth: { xs: "90%", sm: hasLinkPreview ? 420 : "75%" } }}>
             <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant={'text'} />
             <Box
               onMouseEnter={() => setShowEmotionTrigger(true)}
@@ -436,6 +292,7 @@ export function MessageItem({
                 px: 2.1,
                 py: 1.35,
                 minWidth: 140,
+                width: "100%",
                 opacity: msg.status === "sending" ? 0.78 : 1,
                 boxShadow: isLeft
                   ? "0 8px 22px rgba(15, 23, 42, 0.07)"
@@ -446,7 +303,7 @@ export function MessageItem({
             >
               {replyMessage && (
                 <Box sx={{ mb: 1 }}>
-                  <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} />
+                  <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
                 </Box>
               )}
 
@@ -455,12 +312,17 @@ export function MessageItem({
                 color: isLeft ? COLORS.textMain : "#f8faff",
                 textAlign: "left", wordBreak: "break-word", letterSpacing: 0.1,
               }}>
-                {msg.content || ""}
+                {renderMessageContent(msg.content || "", isLeft)}
               </Typography>
 
               {(() => {
-                const url = msg.content?.match(/https?:\/\/[^\s]+/)?.[0];
-                return url ? <LinkPreview url={url} isLeft={isLeft} /> : null;
+                if (!hasLinkPreview) return null;
+
+                if (msg.preview || (msg.type === "text" && hasUrl)) {
+                  return <LinkPreview preview={msg.preview || null} isLeft={isLeft} />;
+                }
+
+                return null;
               })()}
 
               <Box sx={{
@@ -532,7 +394,7 @@ export function MessageItem({
             >
               {replyMessage && (
                 <Box sx={{ px: 1, pt: 1 }}>
-                  <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} />
+                  <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
                 </Box>
               )}
 
@@ -611,7 +473,7 @@ export function MessageItem({
           >
             {replyMessage && (
               <Box sx={{ mb: 1 }}>
-                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} />
+                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
               </Box>
             )}
             <Typography
@@ -641,7 +503,7 @@ export function MessageItem({
             <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant={'image'} />
             {replyMessage && (
               <Box sx={{ mb: 0.5 }}>
-                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} />
+                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
               </Box>
             )}
             <ImageFrame
@@ -680,7 +542,7 @@ export function MessageItem({
             {/* Reply quote chỉ hiện 1 lần phía trên */}
             {replyMessage && (
               <Box sx={{ mb: 0.5 }}>
-                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} />
+                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
               </Box>
             )}
 
@@ -783,7 +645,7 @@ export function MessageItem({
 
             {replyMessage && (
               <Box sx={{ mb: 0.5 }}>
-                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} />
+                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
               </Box>
             )}
 
@@ -846,4 +708,12 @@ export function MessageItem({
       </Box>
     </Stack>
   );
-}
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.msg === nextProps.msg &&
+    prevProps.isLeft === nextProps.isLeft &&
+    prevProps.displayName === nextProps.displayName &&
+    prevProps.avatar === nextProps.avatar
+  );
+});
+

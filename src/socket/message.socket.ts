@@ -89,7 +89,7 @@ export const unbindReceivedMessages = (
 };
 
 export const bindPinMessage = (
-  callback: (payload: pinMessages) => void,
+  callback: (payload: pinMessages ) => void,
 ) => {
   const socket = getSocket();
   socket.off("messages:pinMessage", callback);
@@ -176,6 +176,21 @@ export const unbindRevokeMessage = (
 ) => {
   const socket = getSocket();
   socket.off("messages:revoke", callback);
+};
+
+export const bindUpdateLinkPreview = (
+  callback: (payload: MessageType) => void,
+) => {
+  const socket = getSocket();
+  socket.off("messages:updateLinkPreview", callback);
+  socket.on("messages:updateLinkPreview", callback);
+};
+
+export const unbindUpdateLinkPreview = (
+  callback: (payload: MessageType) => void,
+) => {
+  const socket = getSocket();
+  socket.off("messages:updateLinkPreview", callback);
 };
 
 

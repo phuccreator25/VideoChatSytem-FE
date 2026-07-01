@@ -19,10 +19,12 @@ import type { MessageType, SelectedGif } from "../../../types/chat/chat.model.ty
 import { EmoijPopover } from "./emojiPopover.chat";
 import { GifPopover } from "./gifPopover.chat";
 import { ReplyPreview } from "./ReplyPreview.chat";
+import { SelectedLinkPreview } from "./SelectedLinkPreview.chat";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import { Tooltip } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
+import type { LinkPreviewData } from "../../../types/chat/chat.payload.type";
 
 type voiceUi = {
   isRecording: boolean,
@@ -58,7 +60,10 @@ export function InputBar({
   onRemoveReply,
   voiceUi,
   voiceData,
-  voiceHandler
+  voiceHandler,
+  linkPreview = null,
+  isLoadingLinkPreview = false,
+  onRemoveLinkPreview,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -72,9 +77,12 @@ export function InputBar({
   onRemoveGif?: () => void;
   messageReplyed?: MessageType | null;
   onRemoveReply?: () => void;
-  voiceUi: voiceUi,
-  voiceData: voiceData,
-  voiceHandler: voiceHandler 
+  voiceUi: voiceUi;
+  voiceData: voiceData;
+  voiceHandler: voiceHandler;
+  linkPreview?: LinkPreviewData | null;
+  isLoadingLinkPreview?: boolean;
+  onRemoveLinkPreview?: () => void;
 }) {
   const hasText = value.trim().length > 0;
   const hasGif = selectedGif ? true : false;
@@ -123,6 +131,15 @@ export function InputBar({
 
       {/* ── Preview Gif ── */}
       <SelectedGifPreview gif={selectedGif} onRemove={onRemoveGif} />
+
+      {/* ── Preview Link ── */}
+      {(linkPreview || isLoadingLinkPreview) && (
+        <SelectedLinkPreview
+          linkPreview={linkPreview}
+          isLoading={isLoadingLinkPreview}
+          onRemove={onRemoveLinkPreview}
+        />
+      )}
 
       {voiceUi.previewUrl && voiceData.recordedFile && (
         <Box
@@ -431,7 +448,7 @@ export function InputBar({
 
         <IconButton
           onClick={() => {
-            
+
             if (!hasText && files.length < 1 && !hasGif && !voiceData.recordedFile) return;
             console.log('1');
             onSend();

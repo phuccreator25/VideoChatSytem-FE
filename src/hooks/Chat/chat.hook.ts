@@ -8,6 +8,7 @@ import {
 } from "../../types/chat/chat.model.type";
 import type {
   ConversationReadPayload,
+  LinkPreviewData,
   MessageReceivedPayload,
   SendMessagePayload,
 } from "../../types/chat/chat.payload.type";
@@ -23,6 +24,7 @@ import {
   bindReceivedMessages,
   bindRevokeMessage,
   bindUnReactEmotionMessage,
+  bindUpdateLinkPreview,
   emitConversationRead,
   emitTypingMesssage,
   unbindConversationReadSuccess,
@@ -34,6 +36,7 @@ import {
   unbindReceivedMessages,
   unbindRevokeMessage,
   unbindUnReactEmotionMessage,
+  unbindUpdateLinkPreview,
 } from "../../socket/message.socket";
 import ChatAPI from "../../api/Chat.api";
 import { connectSocket } from "../../socket/socket";
@@ -68,12 +71,15 @@ export function useChatFrame() {
   const currentUserId = currentUser?._id || "";
 
   const [messages, setMessages] = useState<MessageType[]>([]);
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const [messagesSearch, setMessagesSearch] = useState<MessageType[]>([]);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [currentSearchIndex, setCurrentSearchIndex] = useState(-1);
-  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
   const [isHasMoreMessages, setIsHasMoreMessages] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -86,6 +92,11 @@ export function useChatFrame() {
   const [messageReplyed, setMessageReplyed] = useState<MessageType | null>(
     null,
   );
+
+  const [linkPreview, setLinkPreview] = useState<LinkPreviewData | null>(null);
+  const [isLoadingLinkPreview, setIsLoadingLinkPreview] = useState(false);
+  const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+  const [previousUrl, setPreviousUrl] = useState<string | null>("");
 
   const [openAddContactModal, setOpenAddContactModal] = useState(false);
   const [invitationMessage, setInvitationMessage] = useState("");
@@ -138,34 +149,41 @@ export function useChatFrame() {
   useEffect(() => {
     const fetchMessages = async () => {
       if (!conversationId) return;
+      setIsMessagesLoading(true);
+      try {
+        const conversationRes =
+          await ConversationsAPI.getConversationById(conversationId);
 
-      const conversationRes =
-        await ConversationsAPI.getConversationById(conversationId);
+        const pinMessages =
+          conversationRes.data.data.conversation.pinMessages || [];
+        await dispatch(
+          setAllPinnedMessagesByConversation({
+            conversationId,
+            pinMessages,
+          }),
+        );
 
-      const pinMessages = conversationRes.data.data.conversation.pinMessages || [];
-      await dispatch(
-        setAllPinnedMessagesByConversation({
-          conversationId,
-          pinMessages,
-        })
-      );
+        await dispatch(setUserData(conversationRes.data.data.user));
 
-      await dispatch(setUserData(conversationRes.data.data.user));
+        await dispatch(
+          updateContactRelation({
+            userId: conversationRes.data.data.user?.userId,
+            relation: conversationRes.data.data.user?.relationStatus,
+          }),
+        );
 
-      await dispatch(
-        updateContactRelation({
-          userId: conversationRes.data.data.user?.userId,
-          relation: conversationRes.data.data.user?.relationStatus,
-        }),
-      );
+        setMessages(conversationRes.data.data.messages);
 
-      setMessages(conversationRes.data.data.messages);
+        await emitConversationRead(conversationId);
 
-      await emitConversationRead(conversationId);
-
-      requestAnimationFrame(() => {
-        scrollToBottom("auto");
-      });
+        requestAnimationFrame(() => {
+          scrollToBottom("auto");
+        });
+      } catch (error) {
+        console.error("Fetch messages error:", error);
+      } finally {
+        setIsMessagesLoading(false);
+      }
     };
 
     fetchMessages();
@@ -243,8 +261,9 @@ export function useChatFrame() {
         const existingIndex = currentMessages.findIndex(
           (msg) =>
             msg.id === payload.id ||
-            msg.tempMessageId === payload.tempMessageId ||
-            msg.id === payload.tempMessageId,
+            (payload.tempMessageId &&
+              (msg.tempMessageId === payload.tempMessageId ||
+                msg.id === payload.tempMessageId)),
         );
 
         if (existingIndex >= 0) {
@@ -375,7 +394,7 @@ export function useChatFrame() {
     const handleReactEmotion = (payload: reactEmotionMessageSocket) => {
       if (!conversationId) return;
       console.log(payload);
-      
+
       setMessages((prev) => {
         const currentMessages = prev || [];
 
@@ -400,7 +419,7 @@ export function useChatFrame() {
 
     const handleUnReactEmotion = (payload: reactEmotionMessageSocket) => {
       if (!conversationId) return;
-      
+
       setMessages((prev) => {
         const currentMessages = prev || [];
 
@@ -440,6 +459,16 @@ export function useChatFrame() {
       );
     };
 
+    const handleUpdateLinkPreview = (payload: MessageType) => {
+      if (!conversationId || payload.conversationId !== conversationId) return;
+
+      setMessages((prev) =>
+        (prev || []).map((msg) =>
+          msg.id === payload.id ? { ...msg, preview: payload.preview } : msg,
+        ),
+      );
+    };
+
     bindMessageNew(handleNewMessage);
     bindConversationReadSuccess(handleReadMessage);
     bindReceivedMessages(handleUpdateStatusMessage);
@@ -449,6 +478,7 @@ export function useChatFrame() {
     bindUnReactEmotionMessage(handleUnReactEmotion);
     bindDeleteMessage(handleDeleteMessage);
     bindRevokeMessage(handleRevokeMessage);
+    bindUpdateLinkPreview(handleUpdateLinkPreview);
 
     return () => {
       unbindMessageNew(handleNewMessage);
@@ -460,6 +490,7 @@ export function useChatFrame() {
       unbindUnReactEmotionMessage(handleUnReactEmotion);
       unbindDeleteMessage(handleDeleteMessage);
       unbindRevokeMessage(handleRevokeMessage);
+      unbindUpdateLinkPreview(handleUpdateLinkPreview);
     };
   }, [conversationId, userData?.userId]);
 
@@ -492,7 +523,7 @@ export function useChatFrame() {
             setAllPinnedMessagesByConversation({
               conversationId,
               pinMessages,
-            })
+            }),
           );
 
           setMessages(res.data.data.messages);
@@ -517,6 +548,53 @@ export function useChatFrame() {
       socket.io.off("reconnect", syncCurrentConversation);
     };
   }, [conversationId]);
+
+  useEffect(() => {
+    if (!conversationId || !inputText.trim()) {
+      setLinkPreview(null);
+      setPreviousUrl("");
+      return;
+    }
+
+    const match = inputText.match(URL_REGEX);
+
+    if (match && match.length === 1) {
+      const currentUrl = match[0];
+
+      if (currentUrl === previousUrl) return;
+
+      setPreviousUrl(currentUrl);
+
+      const timeout = setTimeout(() => {
+        handleGetLinkPreview(currentUrl);
+      }, 1000);
+
+      return () => clearTimeout(timeout);
+    } else {
+      setLinkPreview(null);
+      setPreviousUrl("");
+    }
+  }, [inputText, conversationId]);
+
+  const handleGetLinkPreview = async (url: string) => {
+    const isCurrentRequest = true;
+
+    try {
+      setIsLoadingLinkPreview(true);
+
+      const response = await ChatAPI.onGetLinkPreview(url);
+
+      if (response && isCurrentRequest) {
+        setLinkPreview(response.data.data);
+        setPreviousUrl(url);
+      }
+    } catch (error) {
+      console.error("Get link preview failed:", error);
+      setLinkPreview(null);
+    } finally {
+      setIsLoadingLinkPreview(false);
+    }
+  };
 
   //Xử lý gửi tin nhắn
   const handleSend = async () => {
@@ -574,6 +652,15 @@ export function useChatFrame() {
       };
     });
 
+    const previewLink = {
+      title: linkPreview?.title || "",
+      description: linkPreview?.description || "",
+      image: linkPreview?.image || "",
+      url: linkPreview?.url || "",
+      siteName: linkPreview?.siteName || "",
+      domain: linkPreview?.domain || "",
+    };
+
     const tempMessage = {
       id: tempMessageId,
       tempMessageId,
@@ -587,6 +674,7 @@ export function useChatFrame() {
       content,
       gifUrl: gifSnapshot?.url || null,
       attachments: previewFiles,
+      preview: previewLink,
       status: "sending",
       replyToMessageId: replyMessageSnapshot?.id ?? null,
       replyMessage: replyMessageSnapshot ?? null,
@@ -635,6 +723,7 @@ export function useChatFrame() {
           type: ChatItemTypes.TEXT,
           content: inputText.trim() || "",
           replyToMessageId: replyMessageSnapshot?.id ?? null,
+          preview: linkPreview?.url ? previewLink : null,
         };
       }
 
@@ -660,9 +749,9 @@ export function useChatFrame() {
         };
 
         const withoutTemp = currentMessages.filter(
-          (msg) => msg.id !== tempMessageId && msg.tempMessageId !== tempMessageId
+          (msg) =>
+            msg.id !== tempMessageId && msg.tempMessageId !== tempMessageId,
         );
-
 
         if (withoutTemp.some((msg) => msg.id === mergedSavedMessage.id)) {
           return withoutTemp;
@@ -689,7 +778,7 @@ export function useChatFrame() {
   //Gửi lại tin nhắn lỗi
   const handleResend = async (messageFailed: MessageType) => {
     if (!conversationId || !currentUserId) return;
-    
+
     const tempMessageId = messageFailed.tempMessageId || messageFailed.id;
     const content = messageFailed.content || "";
     const type = messageFailed.type;
@@ -712,23 +801,20 @@ export function useChatFrame() {
 
       if (type === ChatItemTypes.FILE) {
         const formData = new FormData();
-       
+
         formData.append("tempMessageId", tempMessageId);
         formData.append("conversationId", conversationId);
         formData.append("type", ChatItemTypes.FILE);
         formData.append("content", content);
-       
+
         messageFailed.attachments?.forEach((item) => {
           if (item.file) {
             formData.append("files", item.file);
-            formData.append(
-              "recordDuration",
-              String(item.recordDuration ?? 0)
-            );
+            formData.append("recordDuration", String(item.recordDuration ?? 0));
             formData.append("tempAttachmentIds", item.tempAttachmentId || "");
           }
         });
-        
+
         payload = formData;
       } else if (type === ChatItemTypes.GIF) {
         payload = {
@@ -744,19 +830,20 @@ export function useChatFrame() {
           type: ChatItemTypes.TEXT,
           content: content,
           replyToMessageId: replyToMessageId ?? null,
+          preview: messageFailed.preview as LinkPreviewData,
         };
       }
 
       const res = await ChatAPI.onSendMessage(payload, conversationId);
-      
+
       const savedMessage = res.data.data;
-     
+
       setMessages((prev) => {
         const currentMessages = prev || [];
         const currentTempMessage = currentMessages.find(
-          (msg) => msg.id === tempMessageId || msg.id === messageFailed.id
+          (msg) => msg.id === tempMessageId || msg.id === messageFailed.id,
         );
-        
+
         const mergedSavedMessage = {
           ...savedMessage,
           attachments: savedMessage.attachments?.length
@@ -766,15 +853,16 @@ export function useChatFrame() {
               )
             : currentTempMessage?.attachments,
         };
-        
+
         const withoutTemp = currentMessages.filter(
-          (msg) => msg.id !== tempMessageId && msg.id !== messageFailed.id
+          (msg) => msg.id !== tempMessageId && msg.id !== messageFailed.id,
         );
-        
-        if (withoutTemp.some((msg) => msg.id === mergedSavedMessage.id)) { // Kiểm tra trùng lặp
+
+        if (withoutTemp.some((msg) => msg.id === mergedSavedMessage.id)) {
+          // Kiểm tra trùng lặp
           return withoutTemp;
         }
-        
+
         return [...withoutTemp, mergedSavedMessage];
       });
     } catch (error) {
@@ -795,7 +883,9 @@ export function useChatFrame() {
   // Xóa tin nhắn lỗi cục bộ khỏi giao diện
   const handleDeleteFailedMessage = (msgId: string) => {
     setMessages((prev) =>
-      (prev || []).filter((msg) => msg.id !== msgId && msg.tempMessageId !== msgId)
+      (prev || []).filter(
+        (msg) => msg.id !== msgId && msg.tempMessageId !== msgId,
+      ),
     );
   };
 
@@ -973,36 +1063,48 @@ export function useChatFrame() {
   };
 
   //Share Message
-  const onHandleShare = async (targetConversationIds: string[], messageId: string) => {
+  const onHandleShare = async (
+    targetConversationIds: string[],
+    messageId: string,
+  ) => {
     try {
       if (!targetConversationIds.length || !messageId) return;
-      
+
       await ChatAPI.onForwardMessage(messageId, targetConversationIds);
     } catch (error) {
       console.log("ERROE SHARE: ", error);
     }
   };
 
-  //Search Messages
-  const navigateToSearchResult = async (index: number) => {
-    if (index < 0 || index >= messagesSearch.length) return;
-   
-    const targetMsg = messagesSearch[index];
-    
-    setCurrentSearchIndex(index);
+  //Navigate to message
+  const navigateToMessage = async (targetMsg: MessageType) => {
+    if (!targetMsg || !targetMsg.id) return;
+
     const element = document.getElementById(`msg-${targetMsg.id}`);
-    
+
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
-      
+
       setHighlightedMessageId(targetMsg.id);
-     
+
       setTimeout(() => {
-        setHighlightedMessageId((prev) => prev === targetMsg.id ? null : prev);
+        setHighlightedMessageId((prev) =>
+          prev === targetMsg.id ? null : prev,
+        );
       }, 2000);
     } else {
       await autoFetchUntilFound(targetMsg);
     }
+  };
+
+  //Handle Navigate to search result
+  const navigateToSearchResult = async (index: number) => {
+    if (index < 0 || index >= messagesSearch.length) return;
+
+    const targetMsg = messagesSearch[index];
+
+    setCurrentSearchIndex(index);
+    await navigateToMessage(targetMsg);
   };
 
   //Tải tin nhắn tự động khi không tìm thấy
@@ -1010,7 +1112,8 @@ export function useChatFrame() {
     if (!conversationId) return;
 
     // Lấy mốc thời gian tin nhắn cũ nhất hiện tại trong giao diện
-    let currentOldestCreatedAt = messages[0]?.createdAt || new Date().toISOString();
+    let currentOldestCreatedAt =
+      messages[0]?.createdAt || new Date().toISOString();
     let accumulatedMessages: MessageType[] = [];
     let found = false;
     let hasMore = true;
@@ -1023,7 +1126,7 @@ export function useChatFrame() {
       try {
         const res = await ConversationsAPI.getMoreMessagesConversations(
           conversationId,
-          currentOldestCreatedAt
+          currentOldestCreatedAt,
         );
         const fetched = res.data.data.messages;
 
@@ -1071,7 +1174,9 @@ export function useChatFrame() {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
           setHighlightedMessageId(targetMsg.id);
           setTimeout(() => {
-            setHighlightedMessageId((prev) => prev === targetMsg.id ? null : prev);
+            setHighlightedMessageId((prev) =>
+              prev === targetMsg.id ? null : prev,
+            );
           }, 2000);
         }
       }, 150);
@@ -1080,13 +1185,20 @@ export function useChatFrame() {
 
   const goToNextSearch = () => {
     if (messagesSearch.length === 0) return;
-    const nextIndex = currentSearchIndex === -1 ? messagesSearch.length - 1 : (currentSearchIndex + 1) % messagesSearch.length;
+    const nextIndex =
+      currentSearchIndex === -1
+        ? messagesSearch.length - 1
+        : (currentSearchIndex + 1) % messagesSearch.length;
     navigateToSearchResult(nextIndex);
   };
 
   const goToPrevSearch = () => {
     if (messagesSearch.length === 0) return;
-    const prevIndex = currentSearchIndex === -1 ? messagesSearch.length - 1 : (currentSearchIndex - 1 + messagesSearch.length) % messagesSearch.length;
+    const prevIndex =
+      currentSearchIndex === -1
+        ? messagesSearch.length - 1
+        : (currentSearchIndex - 1 + messagesSearch.length) %
+          messagesSearch.length;
     navigateToSearchResult(prevIndex);
   };
 
@@ -1111,29 +1223,31 @@ export function useChatFrame() {
   const handleSearchMessage = async (keyword: string) => {
     try {
       if (!keyword || !conversationId) return;
-      
+
       setSearchKeyword(keyword);
       const res = await ChatAPI.onSearchMessage(keyword, conversationId);
       const messages = res.data.data;
-      
+
       setMessagesSearch(messages);
       setIsSearchDrawerOpen(true);
       setIsProfileDrawerOpen(false);
-      
+
       if (messages && messages.length > 0) {
         const lastIndex = messages.length - 1;
-        
+
         setCurrentSearchIndex(lastIndex);
-        
+
         setTimeout(() => {
           const targetMsg = messages[lastIndex];
           const element = document.getElementById(`msg-${targetMsg.id}`);
-         
+
           if (element) {
             element.scrollIntoView({ behavior: "smooth", block: "center" });
             setHighlightedMessageId(targetMsg.id);
             setTimeout(() => {
-              setHighlightedMessageId((prev) => prev === targetMsg.id ? null : prev);
+              setHighlightedMessageId((prev) =>
+                prev === targetMsg.id ? null : prev,
+              );
             }, 2000);
           }
         }, 150);
@@ -1155,9 +1269,9 @@ export function useChatFrame() {
 
   //Scroll Load More Messages
   const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
-    if(!conversationId) return;
+    if (!conversationId) return;
     const target = e.currentTarget;
-    
+
     if (target.scrollTop === 0 && isHasMoreMessages && !isLoadingMore) {
       setIsLoadingMore(true);
       // Lưu lại chiều cao hiện tại của scroll để sau khi render xong không bị giật màn hình
@@ -1165,11 +1279,11 @@ export function useChatFrame() {
 
       // Lấy tin nhắn cũ nhất hiện có
       const oldestMsg = messages[0];
-      
+
       if (!oldestMsg) {
         setIsLoadingMore(false);
         return;
-      };
+      }
 
       await handleLoadMoreMessages(oldestMsg.createdAt ?? "");
 
@@ -1182,15 +1296,18 @@ export function useChatFrame() {
   };
 
   const handleLoadMoreMessages = async (beforeTimestamp: string) => {
-    if(!conversationId) return;
-    
+    if (!conversationId) return;
+
     try {
-      const res = await ConversationsAPI.getMoreMessagesConversations(conversationId, beforeTimestamp);
+      const res = await ConversationsAPI.getMoreMessagesConversations(
+        conversationId,
+        beforeTimestamp,
+      );
       const newMessages = res.data.data.messages;
-      
+
       setMessages((prev) => [...newMessages, ...prev]);
 
-      if(newMessages.length < 20) {
+      if (newMessages.length < 20) {
         setIsHasMoreMessages(false);
       }
 
@@ -1199,6 +1316,8 @@ export function useChatFrame() {
       console.log("ERROE LOAD MORE: ", error);
     }
   };
+
+  //Get Preview Links
 
   return {
     ui: {
@@ -1211,6 +1330,9 @@ export function useChatFrame() {
       voiceUi,
       isSearchDrawerOpen,
       isProfileDrawerOpen,
+      linkPreview,
+      isLoadingLinkPreview,
+      isMessagesLoading,
     },
 
     data: {
@@ -1255,11 +1377,13 @@ export function useChatFrame() {
       handleSearchMessage,
       closeSearchDrawer,
       navigateToSearchResult,
+      navigateToMessage,
       goToNextSearch,
       goToPrevSearch,
       handleScroll,
       openProfileDrawer,
       closeProfileDrawer,
+      setLinkPreview,
     },
 
     ref: {

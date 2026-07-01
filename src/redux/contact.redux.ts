@@ -4,10 +4,12 @@ import ContactApi from "../api/Contact.api";
 
 type ContactState = {
   contacts: contacts[];
+  isLoading: boolean;
 };
 
 const initialState: ContactState = {
   contacts: [],
+  isLoading: false,
 };
 
 export const onGetDataContact = createAsyncThunk(
@@ -35,8 +37,15 @@ const contactSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder.addCase(onGetDataContact.pending, (state) => {
+      state.isLoading = true;
+    });
     builder.addCase(onGetDataContact.fulfilled, (state, action) => {
       state.contacts = action.payload;
+      state.isLoading = false;
+    });
+    builder.addCase(onGetDataContact.rejected, (state) => {
+      state.isLoading = false;
     });
   },
 });

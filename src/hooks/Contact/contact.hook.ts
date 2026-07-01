@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ContactSection, contacts } from "../../types/contact/contact.model.type";
+import type {
+  ContactSection,
+  contacts,
+} from "../../types/contact/contact.model.type";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../../redux/store";
 import { onGetDataContact } from "../../redux/contact.redux";
 import ContactApi from "../../api/Contact.api";
-import {
-  updateNickNameUser,
-} from "../../redux/chat.redux";
 import useOpenConversation from "../../helpers/openConversation.helper";
 
 export function useContact() {
   const contacts = useSelector((state: RootState) => state.contact.contacts);
+  const isLoading = useSelector((state: RootState) => state.contact.isLoading);
 
   const [searchValue, setSearchValue] = useState<string>("");
   const [anchorElRowAction, setAnchorElRowAction] =
@@ -116,6 +117,7 @@ export function useContact() {
       filteredContacts,
       contactsAfterFilter,
       selectedContact,
+      isLoading,
     },
     ui: {
       searchValue,
