@@ -37,7 +37,6 @@ export const VideoCallModal = ({
 }) => {
     const { startCallSession, localVideoRef, openUserMedia, closeUserMedia, toggleAudio, toggleVideo, endCall, remoteStream, remoteVideoRef, localStream } = useVideoCall();
 
-
     // UI States
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOff, setIsVideoOff] = useState(false);

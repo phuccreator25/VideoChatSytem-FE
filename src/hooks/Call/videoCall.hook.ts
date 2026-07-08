@@ -12,7 +12,7 @@ import {
 import callApi from "../../api/Call.api";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../../redux/store";
-import { onEndCallAction } from "../../redux/call.redux";
+import { onEndCallAction, clearIceCandidates } from "../../redux/call.redux";
 
 export const useVideoCall = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -26,6 +26,9 @@ export const useVideoCall = () => {
   const callInfo = useSelector((state: RootState) => state.call.callInfo);
   const incomingCall = useSelector(
     (state: RootState) => state.call.incomingCall,
+  );
+  const iceCandidates = useSelector(
+    (state: RootState) => state.call.iceCandidates,
   );
 
   // Quản lý States cho UI hiển thị
@@ -254,6 +257,25 @@ export const useVideoCall = () => {
     }
   };
 
+  // Áp dụng các Ice Candidates được lưu tạm từ Redux khi peerConnection sẵn sàng
+  useEffect(() => {
+    if (peerConnectionRef.current && iceCandidates.length > 0) {
+      const candidatesToApply = [...iceCandidates];
+      dispatch(clearIceCandidates());
+
+      candidatesToApply.forEach(async (candidate) => {
+        try {
+          await peerConnectionRef.current?.addIceCandidate(
+            new RTCIceCandidate(candidate),
+          );
+          console.log("Đã add queued candidate:", candidate);
+        } catch (e) {
+          console.error("Lỗi khi thêm queued ICE candidate:", e);
+        }
+      });
+    }
+  }, [iceCandidates, dispatch]);
+
   // Dọn dẹp sự kiện tránh rò rỉ bộ nhớ (Memory Leak)
   useEffect(() => {
     const handleCallAnswerEvent = async (payload: any) => {
@@ -263,24 +285,10 @@ export const useVideoCall = () => {
       await peerConnectionRef.current.setRemoteDescription(remoteDesc);
     };
 
-    const handleCandidate = async (payload: any) => {
-      if (payload.candidate && peerConnectionRef.current) {
-        try {
-          await peerConnectionRef.current.addIceCandidate(
-            new RTCIceCandidate(payload.candidate),
-          );
-        } catch (e) {
-          console.error("Lỗi khi thêm remote ICE candidate:", e);
-        }
-      }
-    };
-
-    bindCallCandidate(handleCandidate);
     bindCallAnswer(handleCallAnswerEvent);
     return () => {
       closeUserMedia();
       unbindCallAnswer(handleCallAnswerEvent);
-      unbindCallCandidate(handleCandidate);
     };
   }, []);
 

@@ -81,6 +81,7 @@ import {
   clearCallInfo,
   closeCallModal,
   onAcceptCallAction,
+  addIceCandidate,
 } from "../../redux/call.redux";
 import {
   bindCallEnd,
@@ -89,6 +90,8 @@ import {
   unbindCallEnd,
   unbindCallInitiated,
   unbindCallOfferSuccess,
+  bindCallCandidate,
+  unbindCallCandidate,
   type CallOfferSuccessPayload,
 } from "../../socket/callSocket.socket";
 import type { CallEndPayload } from "../../types/call/call.type";
@@ -361,6 +364,12 @@ export default function useChatLayout(activeRail: RailKey) {
       }
     };
 
+    const handleCallCandidateEvent = (payload: any) => {
+      if (payload.candidate) {
+        dispatch(addIceCandidate(payload.candidate));
+      }
+    };
+
     bindInvitationCreated(handleInvitationCreatedEvent);
     bindInvitationCancel(handleInvitationCancelEvent);
     bindInvitationAccept(handleInvitationAcceptEvent);
@@ -379,6 +388,7 @@ export default function useChatLayout(activeRail: RailKey) {
     bindCallOfferSuccess(handleCallOfferSuccessEvent);
     bindCallInitiated(handleCallInitiatedEvent);
     bindCallEnd(handleCallEndEvent);
+    bindCallCandidate(handleCallCandidateEvent);
 
     return () => {
       unbindInvitationCreated(handleInvitationCreatedEvent);
@@ -399,6 +409,7 @@ export default function useChatLayout(activeRail: RailKey) {
       unbindCallOfferSuccess(handleCallOfferSuccessEvent);
       unbindCallInitiated(handleCallInitiatedEvent);
       unbindCallEnd(handleCallEndEvent);
+      unbindCallCandidate(handleCallCandidateEvent);
 
       dispatch(setIsPopoverInvitationOpen(false)); // Tránh việc mở Popo sau đó đóng tab
     };

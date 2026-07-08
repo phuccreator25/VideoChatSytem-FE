@@ -30,6 +30,7 @@ const initialState = {
   },
   callInfo: null,
   isCallModalOpen: false,
+  iceCandidates: [] as any[],
 };
 
 const callSlice = createSlice({
@@ -61,6 +62,7 @@ const callSlice = createSlice({
     },
     closeCallModal: (state) => {
       state.isCallModalOpen = false;
+      state.iceCandidates = [];
     },
     setCallInfo: (state, action) => {
       state.callInfo = action.payload;
@@ -69,6 +71,13 @@ const callSlice = createSlice({
     clearCallInfo: (state) => {
       state.callInfo = null;
       state.isCallModalOpen = false;
+      state.iceCandidates = [];
+    },
+    addIceCandidate: (state, action) => {
+      state.iceCandidates.push(action.payload);
+    },
+    clearIceCandidates: (state) => {
+      state.iceCandidates = [];
     },
   },
   extraReducers: (builder) => {
@@ -88,6 +97,7 @@ const callSlice = createSlice({
       state.incomingCall.callerId = null;
       state.incomingCall.offer = null;
       state.incomingCall.conversationId = null;
+      state.iceCandidates = [];
     });
   },
 });
@@ -99,6 +109,8 @@ export const {
   closeCallModal,
   setCallInfo,
   clearCallInfo,
+  addIceCandidate,
+  clearIceCandidates,
 } = callSlice.actions;
 
 export const callReducer = callSlice.reducer;
