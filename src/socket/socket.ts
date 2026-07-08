@@ -1,7 +1,9 @@
 import { io, Socket } from "socket.io-client";
 import { CONFIG } from "../config/appConfig";
 
-const BASE_URL = CONFIG.API_HOST.replace(/\/api$/, "");
+const BASE_URL = CONFIG.MODE === "development" ? "http://localhost:3000" : "";
+// const BASE_URL =
+//   CONFIG.MODE === "development" ? "http://127.0.0.1:30001" : "";
 
 let socketInstance: Socket | null = null;
 
@@ -32,4 +34,3 @@ export const disconnectSocket = () => {
   socketInstance.disconnect();
   socketInstance = null;
 };
-
