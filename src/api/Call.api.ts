@@ -6,9 +6,8 @@ const callApi = {
   onEndCall: (callId: string) =>
     axiosInterceptor.post("/calls/end-call", { callId }),
 
-  onAcceptCall: (callId: string) => {
-    axiosInterceptor.post("/calls/accept-call", { callId });
-  },
+  onAcceptCall: (callId: string) =>
+    axiosInterceptor.post("/calls/accept-call", { callId }),
 };
 
 export default callApi;

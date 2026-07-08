@@ -26,6 +26,7 @@ const initialState = {
     callId: null,
     callerId: null,
     offer: null,
+    conversationId: null,
   },
   callInfo: null,
   isCallModalOpen: false,
@@ -43,6 +44,7 @@ const callSlice = createSlice({
       state.incomingCall.callId = action.payload.callId;
       state.incomingCall.callerId = action.payload.callerId;
       state.incomingCall.offer = action.payload.offer;
+      state.incomingCall.conversationId = action.payload.conversationId;
     },
     // Hàm này vẫn giữ lại đề phòng trường hợp bạn cần hủy chuông nhanh từ phía socket của đối phương
     closeIncomingCall: (state) => {
@@ -52,6 +54,7 @@ const callSlice = createSlice({
       state.incomingCall.callId = null;
       state.incomingCall.callerId = null;
       state.incomingCall.offer = null;
+      state.incomingCall.conversationId = null;
     },
     openCallModal: (state) => {
       state.isCallModalOpen = true;
@@ -84,6 +87,7 @@ const callSlice = createSlice({
       state.incomingCall.callId = null;
       state.incomingCall.callerId = null;
       state.incomingCall.offer = null;
+      state.incomingCall.conversationId = null;
     });
   },
 });

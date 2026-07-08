@@ -34,6 +34,7 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
 
   //Call Video from Redux
   const isCallModalOpen = useSelector((state: RootState) => state.call.isCallModalOpen);
+  const incomingCall = useSelector((state: RootState) => state.call.incomingCall);
   const dispatch = useDispatch();
 
   const displayName = userData?.nickname ?? userData?.fullname ?? "Unknown user";
@@ -249,7 +250,7 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
         <VideoCallModal
           isOpen={isCallModalOpen}
           handleClose={() => dispatch(closeCallModal())}
-          userData={userData}
+          userData={incomingCall.userData || userData}
         />
 
       </Stack>

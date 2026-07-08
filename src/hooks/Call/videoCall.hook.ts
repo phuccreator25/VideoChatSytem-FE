@@ -213,12 +213,14 @@ export const useVideoCall = () => {
       const remoteDesc = new RTCSessionDescription(incomingCall?.offer);
       await pc.setRemoteDescription(remoteDesc);
 
+      const activeConversationId = incomingCall.conversationId || conversationId || "";
+
       pc.onicecandidate = (event) => {
         if (event.candidate) {
           console.log("candidate: ", event.candidate);
           emitIceCandidate(
             currentUserId || "",
-            conversationId || "",
+            activeConversationId,
             event.candidate,
           );
         }
@@ -230,7 +232,7 @@ export const useVideoCall = () => {
 
       // 6. Phát socket "call:answer" trực tiếp cho Caller
       emitCallAnswer(
-        conversationId || "",
+        activeConversationId,
         incomingCall.callerId || "", // ID của người gọi (lấy từ Redux)
         answer,
       );
