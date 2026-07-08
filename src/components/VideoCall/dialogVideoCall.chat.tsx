@@ -35,7 +35,7 @@ export const VideoCallModal = ({
     handleClose: () => void;
     userData?: ConversationUserInfo | null;
 }) => {
-    const { startCallSession, localVideoRef, openUserMedia, closeUserMedia, toggleAudio, toggleVideo, endCall, remoteStream, remoteVideoRef } = useVideoCall();
+    const { startCallSession, localVideoRef, openUserMedia, closeUserMedia, toggleAudio, toggleVideo, endCall, remoteStream, remoteVideoRef, localStream } = useVideoCall();
 
 
     // UI States
@@ -44,6 +44,18 @@ export const VideoCallModal = ({
     const [isScreenSharing, setIsScreenSharing] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+
+    useEffect(() => {
+        if (localVideoRef.current && localStream) {
+            localVideoRef.current.srcObject = localStream;
+        }
+    }, [localStream, isVideoOff]);
+
+    useEffect(() => {
+        if (remoteVideoRef.current && remoteStream) {
+            remoteVideoRef.current.srcObject = remoteStream;
+        }
+    }, [remoteStream]);
 
     useEffect(() => {
         const initCall = async () => {
@@ -332,21 +344,22 @@ export const VideoCallModal = ({
                     }}
                 >
                     {/* NẾU CÓ LUỒNG VIDEO ĐỐI PHƯƠNG -> SHOW VIDEO TRÀN MÀN HÌNH */}
-                    {remoteStream ? (
-                        <video
-                            ref={remoteVideoRef}
-                            autoPlay
-                            playsInline
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                position: "absolute",
-                                inset: 0,
-                                zIndex: 1,
-                            }}
-                        />
-                    ) : (
+                    <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            position: "absolute",
+                            inset: 0,
+                            zIndex: 1,
+                            display: remoteStream ? "block" : "none",
+                        }}
+                    />
+
+                    {!remoteStream && (
                         /* Main User Profile Screen (Pulsing Avatar Radar) */
                         <Box
                             sx={{
@@ -445,33 +458,31 @@ export const VideoCallModal = ({
                             zIndex: 3,
                         }}
                     >
-                        {isVideoOff ? (
-                            <Box
-                                sx={{
-                                    width: "100%",
-                                    height: "100%",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    bgcolor: "#06070a",
-                                }}
-                            >
-                                <VideocamOffRoundedIcon sx={{ color: "rgba(255,255,255,0.25)", fontSize: 32 }} />
-                            </Box>
-                        ) : (
-                            <video
-                                ref={localVideoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    transform: "scaleX(-1)", // Mirror effect for webcam
-                                }}
-                            />
-                        )}
+                        <Box
+                            sx={{
+                                width: "100%",
+                                height: "100%",
+                                display: isVideoOff ? "flex" : "none",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                bgcolor: "#06070a",
+                            }}
+                        >
+                            <VideocamOffRoundedIcon sx={{ color: "rgba(255,255,255,0.25)", fontSize: 32 }} />
+                        </Box>
+                        <video
+                            ref={localVideoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                transform: "scaleX(-1)", // Mirror effect for webcam
+                                display: isVideoOff ? "none" : "block",
+                            }}
+                        />
                         {/* PIP Badge tag */}
                         <Box
                             sx={{
