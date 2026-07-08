@@ -73,6 +73,25 @@ import {
   unbindUserPresenceChanged,
 } from "../../socket/authSocket.socket";
 import type { TypingSocket } from "../../types/chat/chat.socket.type";
+import {
+  closeIncomingCall,
+  openIncomingCall,
+  setCallInfo,
+  onEndCallAction,
+  clearCallInfo,
+  closeCallModal,
+  onAcceptCallAction,
+} from "../../redux/call.redux";
+import {
+  bindCallEnd,
+  bindCallInitiated,
+  bindCallOfferSuccess,
+  unbindCallEnd,
+  unbindCallInitiated,
+  unbindCallOfferSuccess,
+  type CallOfferSuccessPayload,
+} from "../../socket/callSocket.socket";
+import type { CallEndPayload } from "../../types/call/call.type";
 
 export default function useChatLayout(activeRail: RailKey) {
   const dispatch = useDispatch<AppDispatch>();
@@ -93,6 +112,11 @@ export default function useChatLayout(activeRail: RailKey) {
 
   const [searchParams] = useSearchParams();
 
+  //Call modal
+  const incomingCall = useSelector(
+    (state: RootState) => state.call.incomingCall,
+  );
+
   //Load more received
   const limitParam = Number(searchParams.get("resolvedLimit"));
   const resolvedLimit =
@@ -110,7 +134,7 @@ export default function useChatLayout(activeRail: RailKey) {
   const isReceiver = (payload: InvitationActionSocket) =>
     payload.receiverId === currentUserId;
 
-  // Connect socket and fetch initial invitation count once on user load
+  //Connect socket and fetch initial invitation count once on user load
   useEffect(() => {
     if (!currentUser) return;
     connectSocket();
@@ -314,6 +338,29 @@ export default function useChatLayout(activeRail: RailKey) {
       );
     };
 
+    //call
+    const handleCallOfferSuccessEvent = async (
+      payload: CallOfferSuccessPayload,
+    ) => {
+      await dispatch(openIncomingCall(payload));
+    };
+
+    //Caller
+    const handleCallInitiatedEvent = (payload: { callId: string }) => {
+      console.log("Caller nhận được callId từ socket: ", payload);
+      if (payload.callId) {
+        dispatch(setCallInfo(payload.callId));
+      }
+    };
+
+    const handleCallEndEvent = (payload: CallEndPayload) => {
+      if (payload.shouldCloseUI) {
+        dispatch(closeIncomingCall());
+        dispatch(clearCallInfo());
+        dispatch(closeCallModal());
+      }
+    };
+
     bindInvitationCreated(handleInvitationCreatedEvent);
     bindInvitationCancel(handleInvitationCancelEvent);
     bindInvitationAccept(handleInvitationAcceptEvent);
@@ -328,6 +375,10 @@ export default function useChatLayout(activeRail: RailKey) {
 
     bindContactRemove(handleContactRemoveEvent);
     bindContactUpdateNickName(handleContactUpdateNickNameEvent);
+
+    bindCallOfferSuccess(handleCallOfferSuccessEvent);
+    bindCallInitiated(handleCallInitiatedEvent);
+    bindCallEnd(handleCallEndEvent);
 
     return () => {
       unbindInvitationCreated(handleInvitationCreatedEvent);
@@ -344,6 +395,10 @@ export default function useChatLayout(activeRail: RailKey) {
 
       unbindContactRemove(handleContactRemoveEvent);
       unbindContactUpdateNickName(handleContactUpdateNickNameEvent);
+
+      unbindCallOfferSuccess(handleCallOfferSuccessEvent);
+      unbindCallInitiated(handleCallInitiatedEvent);
+      unbindCallEnd(handleCallEndEvent);
 
       dispatch(setIsPopoverInvitationOpen(false)); // Tránh việc mở Popo sau đó đóng tab
     };
@@ -479,4 +534,31 @@ export default function useChatLayout(activeRail: RailKey) {
     isPopoverInvitation,
     location.pathname,
   ]);
+
+  const handleDeclineCall = async () => {
+    try {
+      if (incomingCall.callId) {
+        await dispatch(onEndCallAction(incomingCall.callId));
+      }
+    } catch (error) {
+      console.error("Lỗi khi từ chối cuộc gọi:", error);
+    }
+  };
+
+  const handleAcceptCall = async () => {
+    if (incomingCall.callId) {
+      await dispatch(onAcceptCallAction(incomingCall.callId)).unwrap();
+    }
+  };
+
+  return {
+    ui: {
+      incomingCall,
+    },
+    handler: {
+      closeIncomingCall: () => dispatch(closeIncomingCall()),
+      declineCall: handleDeclineCall,
+      acceptCall: handleAcceptCall,
+    },
+  };
 }

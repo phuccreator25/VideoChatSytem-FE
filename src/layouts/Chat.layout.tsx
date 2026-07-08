@@ -3,6 +3,7 @@ import LeftRail from '../components/LeftRail';
 import type { RailKey } from '../types/layout/layout.navigation.type';
 import type { ReactNode } from 'react';
 import useChatLayout from '../hooks/ChatLayout/chatlayout.hook';
+import { RingingCallView } from '../components/VideoCall/ringingCall.chat';
 
 const theme = createTheme({});
 type ChatLayoutProps = {
@@ -13,7 +14,7 @@ type ChatLayoutProps = {
 };
 
 export default function ChatLayout({ middlePanel, activeRail, onRailChange, content }: ChatLayoutProps) {
-  useChatLayout(activeRail);
+  const { ui, handler } = useChatLayout(activeRail);
 
   return (
     <ThemeProvider theme={theme}>
@@ -62,6 +63,14 @@ export default function ChatLayout({ middlePanel, activeRail, onRailChange, cont
           </Box>
         </Box>
       </Box>
+
+      <RingingCallView
+        isOpen={ui.incomingCall.isOpen}
+        userData={ui.incomingCall.userData}
+        onDecline={() => handler.declineCall()}
+        onAccept={() => handler.acceptCall()}
+        callType={ui.incomingCall.type ?? "audio"}
+      />
     </ThemeProvider>
   );
 }

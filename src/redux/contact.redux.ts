@@ -16,8 +16,7 @@ export const onGetDataContact = createAsyncThunk(
   "contact/onGetDataContact",
   async () => {
     const res = await ContactApi.onGetContact();
-    console.log(res.data.data);
-    
+
     return (res.data.data || []) as contacts[];
   },
 );
@@ -50,8 +49,6 @@ const contactSlice = createSlice({
   },
 });
 
-export const {
-  updateContactBlockedStatus
-} = contactSlice.actions
+export const { updateContactBlockedStatus } = contactSlice.actions;
 
 export const contactReducer = contactSlice.reducer;
