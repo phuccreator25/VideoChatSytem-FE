@@ -51,7 +51,11 @@ export const useVideoCall = () => {
       const constraints = {
         video:
           callType === "video"
-            ? { width: { ideal: 1024 }, height: { ideal: 768 } }
+            ? {
+                width: { min: 640, ideal: 1280 },
+                height: { min: 480, ideal: 720 },
+                facingMode: "user", // Ưu tiên camera trước nếu test trên điện thoại
+              }
             : false,
         audio: true,
       };
@@ -64,8 +68,27 @@ export const useVideoCall = () => {
         localVideoRef.current.srcObject = stream;
       }
       return stream;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi khi truy cập thiết bị Media:", error);
+      // 🚨 TẦNG DỰ PHÒNG CHÍ MẠNG KHI BỊ LỖI PHẦN CỨNG
+      if (error.name === "NotFoundError" && callType === "video") {
+        console.warn(
+          "Máy không có Webcam! Tự động hạ cấp cuộc gọi xuống chỉ lấy Micro (Voice)...",
+        );
+        try {
+          // Gọi lại hàm nhưng tắt hẳn video đi, chỉ lấy audio
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: false,
+          });
+          setLocalStream(fallbackStream);
+          localStreamRef.current = fallbackStream;
+          return fallbackStream;
+        } catch (audioError) {
+          console.error("Đến cả Micro cũng không tìm thấy:", audioError);
+          throw audioError;
+        }
+      }
       throw error;
     }
   };
@@ -216,7 +239,8 @@ export const useVideoCall = () => {
       const remoteDesc = new RTCSessionDescription(incomingCall?.offer);
       await pc.setRemoteDescription(remoteDesc);
 
-      const activeConversationId = incomingCall.conversationId || conversationId || "";
+      const activeConversationId =
+        incomingCall.conversationId || conversationId || "";
 
       pc.onicecandidate = (event) => {
         if (event.candidate) {
