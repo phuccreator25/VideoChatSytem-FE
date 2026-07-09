@@ -2,12 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   bindCallAnswer,
-  bindCallCandidate,
   emitCallAnswer,
   emitCallOffer,
   emitIceCandidate,
   unbindCallAnswer,
-  unbindCallCandidate,
 } from "../../socket/callSocket.socket";
 import callApi from "../../api/Call.api";
 import { useDispatch, useSelector } from "react-redux";
@@ -253,7 +251,14 @@ export const useVideoCall = () => {
     try {
       if (!callInfo) return;
 
-      await dispatch(onEndCallAction(callInfo));
+      const callId = typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
+      if (!callId) {
+        console.error("Không tìm thấy callId hợp lệ để cúp máy:", callInfo);
+        closeUserMedia();
+        return;
+      }
+
+      await dispatch(onEndCallAction(callId));
 
       closeUserMedia();
     } catch (error) {

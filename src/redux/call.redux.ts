@@ -82,7 +82,10 @@ const callSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(onAcceptCallAction.fulfilled, (state, action) => {
-      state.callInfo = action.payload;
+      state.callInfo =
+        typeof action.payload === "string"
+          ? action.payload
+          : (action.payload?._id || action.meta.arg);
       state.incomingCall.isOpen = false;
       state.isCallModalOpen = true;
     });
