@@ -89,11 +89,14 @@ export const useVideoCall = () => {
         throw new Error("NO_DEVICES_FOUND");
       }
 
+      // Phát hiện thiết bị di động để yêu cầu độ phân giải dạng Portrait dọc
+      const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
       const constraints = {
         video: useVideo
           ? {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
+              width: isMobileDevice ? { ideal: 720 } : { ideal: 1280 },
+              height: isMobileDevice ? { ideal: 1280 } : { ideal: 720 },
               facingMode: "user",
             }
           : false,

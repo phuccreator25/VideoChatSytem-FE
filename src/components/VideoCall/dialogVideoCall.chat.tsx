@@ -47,6 +47,7 @@ export const VideoCallModal = ({
     // State theo dõi trạng thái bật/tắt thiết bị của đối phương (Mic/Camera)
     const [isRemoteVideoMuted, setIsRemoteVideoMuted] = useState(false);
     const [isRemoteAudioMuted, setIsRemoteAudioMuted] = useState(false);
+    const remoteBgVideoRef = useRef<HTMLVideoElement | null>(null);
 
     // Lắng nghe sự kiện track của đối phương để cập nhật giao diện thời gian thực
     useEffect(() => {
@@ -56,31 +57,43 @@ export const VideoCallModal = ({
             return;
         }
 
-        // Lấy các track đầu tiên từ luồng remoteStream
+        // Hàm cập nhật trạng thái thiết bị dựa trên việc track có tồn tại hay không
+        const updateTrackStates = () => {
+            const videoTrack = remoteStream.getVideoTracks()[0];
+            const audioTrack = remoteStream.getAudioTracks()[0];
+
+            // Nếu không có track hoặc track bị tắt/mute thì coi như đối phương đã tắt thiết bị đó
+            setIsRemoteVideoMuted(!videoTrack || !videoTrack.enabled || videoTrack.muted);
+            setIsRemoteAudioMuted(!audioTrack || !audioTrack.enabled || audioTrack.muted);
+        };
+
+        // Khởi chạy cập nhật trạng thái ban đầu ngay khi nhận được remoteStream
+        updateTrackStates();
+
         const videoTrack = remoteStream.getVideoTracks()[0];
         const audioTrack = remoteStream.getAudioTracks()[0];
 
-        // Các hàm xử lý cập nhật trạng thái khi phát hiện sự kiện
+        // Lắng nghe sự kiện mute/unmute của các track
         const handleVideoMute = () => setIsRemoteVideoMuted(true);
         const handleVideoUnmute = () => setIsRemoteVideoMuted(false);
         const handleAudioMute = () => setIsRemoteAudioMuted(true);
         const handleAudioUnmute = () => setIsRemoteAudioMuted(false);
 
         if (videoTrack) {
-            // Thiết lập trạng thái ban đầu của camera đối phương
-            setIsRemoteVideoMuted(!videoTrack.enabled || videoTrack.muted);
             videoTrack.addEventListener("mute", handleVideoMute);
             videoTrack.addEventListener("unmute", handleVideoUnmute);
         }
 
         if (audioTrack) {
-            // Thiết lập trạng thái ban đầu của micro đối phương
-            setIsRemoteAudioMuted(!audioTrack.enabled || audioTrack.muted);
             audioTrack.addEventListener("mute", handleAudioMute);
             audioTrack.addEventListener("unmute", handleAudioUnmute);
         }
 
-        // Cleanup listener khi component unmount hoặc remoteStream thay đổi
+        // Lắng nghe sự kiện stream thay đổi cấu trúc track (đối phương thêm/bớt track camera/mic)
+        remoteStream.addEventListener("addtrack", updateTrackStates);
+        remoteStream.addEventListener("removetrack", updateTrackStates);
+
+        // Dọn dẹp listener khi unmount hoặc remoteStream thay đổi
         return () => {
             if (videoTrack) {
                 videoTrack.removeEventListener("mute", handleVideoMute);
@@ -90,6 +103,8 @@ export const VideoCallModal = ({
                 audioTrack.removeEventListener("mute", handleAudioMute);
                 audioTrack.removeEventListener("unmute", handleAudioUnmute);
             }
+            remoteStream.removeEventListener("addtrack", updateTrackStates);
+            remoteStream.removeEventListener("removetrack", updateTrackStates);
         };
     }, [remoteStream]);
 
@@ -102,6 +117,9 @@ export const VideoCallModal = ({
     useEffect(() => {
         if (remoteVideoRef.current && remoteStream) {
             remoteVideoRef.current.srcObject = remoteStream;
+        }
+        if (remoteBgVideoRef.current && remoteStream) {
+            remoteBgVideoRef.current.srcObject = remoteStream;
         }
     }, [remoteStream]);
 
@@ -394,7 +412,25 @@ export const VideoCallModal = ({
                         zIndex: 1,
                     }}
                 >
-                    {/* NẾU CÓ LUỒNG VIDEO ĐỐI PHƯƠNG VÀ ĐỐI PHƯƠNG KHÔNG TẮT CAM -> SHOW VIDEO TRÀN MÀN HÌNH */}
+                    {/* Background video làm hiệu ứng mờ viền khi đối phương dùng mobile dọc */}
+                    <video
+                        ref={remoteBgVideoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            position: "absolute",
+                            inset: 0,
+                            zIndex: 1,
+                            filter: "blur(30px) brightness(0.4)", // Hiệu ứng làm mờ và giảm độ sáng làm nền
+                            display: (remoteStream && !isRemoteVideoMuted) ? "block" : "none", // Chỉ hiện khi có luồng video
+                        }}
+                    />
+
+                    {/* Foreground video chính hiển thị đúng tỉ lệ gốc (Portrait/Landscape) không bị cắt xén */}
                     <video
                         ref={remoteVideoRef}
                         autoPlay
@@ -403,10 +439,10 @@ export const VideoCallModal = ({
                         style={{
                             width: "100%",
                             height: "100%",
-                            objectFit: "cover",
+                            objectFit: "contain", // Giữ nguyên tỉ lệ tự nhiên của camera đối phương
                             position: "absolute",
                             inset: 0,
-                            zIndex: 1,
+                            zIndex: 2, // Đặt đè lên trên lớp video nền blur
                             display: (remoteStream && !isRemoteVideoMuted) ? "block" : "none", // Ẩn video đi nếu đối phương tắt cam
                         }}
                     />
