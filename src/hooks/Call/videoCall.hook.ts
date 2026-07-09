@@ -48,18 +48,61 @@ export const useVideoCall = () => {
   // 1. Khởi tạo & xử lý Media Thiết bị
   const openUserMedia = async (callType: "voice" | "video") => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        throw new Error("SECURE_CONTEXT_REQUIRED");
+      }
+
+      // Liệt kê các thiết bị phần cứng để phục vụ debug
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      console.log(
+        "--- DANH SÁCH THIẾT BỊ PHẦN CỨNG ĐƯỢC TRÌNH DUYỆT NHẬN DIỆN ---",
+      );
+      console.table(
+        devices.map((d) => ({
+          Loai: d.kind,
+          Ten: d.label || "Chưa cấp quyền (Trống)",
+          ID: d.deviceId || "Chưa cấp quyền (Trống)",
+        })),
+      );
+
+      const hasVideo = devices.some((d) => d.kind === "videoinput");
+      const hasAudio = devices.some((d) => d.kind === "audioinput");
+
+      console.log(
+        `[Media Check] Webcam: ${hasVideo ? "CÓ" : "KHÔNG"}, Microphone: ${hasAudio ? "CÓ" : "KHÔNG"}`,
+      );
+
+      // Nếu không có cả camera lẫn mic
+      if (!hasVideo && !hasAudio) {
+        throw new Error("NO_DEVICES_FOUND");
+      }
+
+      // Xác định các thiết bị thực tế có thể yêu cầu
+      const useVideo = callType === "video" && hasVideo;
+      const useAudio = hasAudio; // Ưu tiên dùng mic nếu có
+
+      if (callType === "video" && !hasVideo) {
+        console.warn(
+          "Máy không có Webcam! Tự động chuyển sang gọi thoại (chỉ lấy Micro)...",
+        );
+      }
+
+      if (!useVideo && !useAudio) {
+        throw new Error("NO_DEVICES_FOUND");
+      }
+
       const constraints = {
-        video:
-          callType === "video"
-            ? {
-                width: { min: 640, ideal: 1280 },
-                height: { min: 480, ideal: 720 },
-                facingMode: "user", // Ưu tiên camera trước nếu test trên điện thoại
-              }
-            : false,
-        audio: true,
+        video: useVideo
+          ? {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "user",
+            }
+          : false,
+        audio: useAudio,
       };
 
+      console.log("Yêu cầu quyền truy cập media với constraints:", constraints);
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       setLocalStream(stream);
       localStreamRef.current = stream;
@@ -70,25 +113,35 @@ export const useVideoCall = () => {
       return stream;
     } catch (error: any) {
       console.error("Lỗi khi truy cập thiết bị Media:", error);
-      // 🚨 TẦNG DỰ PHÒNG CHÍ MẠNG KHI BỊ LỖI PHẦN CỨNG
-      if (error.name === "NotFoundError" && callType === "video") {
-        console.warn(
-          "Máy không có Webcam! Tự động hạ cấp cuộc gọi xuống chỉ lấy Micro (Voice)...",
+
+      // Hiển thị thông báo chi tiết cho người dùng
+      if (error.message === "SECURE_CONTEXT_REQUIRED") {
+        alert(
+          "LỖI BẢO MẬT: WebRTC yêu cầu kết nối an toàn (HTTPS hoặc localhost) để truy cập Camera/Mic. Trình duyệt đã chặn cuộc gọi.",
         );
-        try {
-          // Gọi lại hàm nhưng tắt hẳn video đi, chỉ lấy audio
-          const fallbackStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: false,
-          });
-          setLocalStream(fallbackStream);
-          localStreamRef.current = fallbackStream;
-          return fallbackStream;
-        } catch (audioError) {
-          console.error("Đến cả Micro cũng không tìm thấy:", audioError);
-          throw audioError;
-        }
+      } else if (
+        error.message === "NO_DEVICES_FOUND" ||
+        error.name === "NotFoundError"
+      ) {
+        alert(
+          "LỖI THIẾT BỊ: Trình duyệt không tìm thấy bất kỳ Camera hay Microphone nào.\n\n" +
+            "Cách khắc phục:\n" +
+            "1. Kiểm tra xem Camera/Microphone đã cắm/kết nối đúng chưa.\n" +
+            "2. Đảm bảo bạn đã cho phép ứng dụng truy cập camera/mic trong cài đặt Windows (Settings > Privacy > Camera/Microphone).",
+        );
+      } else if (
+        error.name === "NotAllowedError" ||
+        error.name === "PermissionDeniedError"
+      ) {
+        alert(
+          "LỖI CẤP QUYỀN: Bạn đã từ chối quyền truy cập Camera/Microphone.\n\n" +
+            "Cách khắc phục:\n" +
+            "Hãy nhấn vào biểu tượng ổ khóa ở đầu thanh địa chỉ trình duyệt, chọn 'Cho phép (Allow)' quyền truy cập Camera và Microphone.",
+        );
+      } else {
+        alert(`Lỗi khởi tạo thiết bị: ${error.message || error.name || error}`);
       }
+
       throw error;
     }
   };
