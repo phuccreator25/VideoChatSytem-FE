@@ -189,27 +189,31 @@ export const useVideoCall = () => {
   // ==========================================
 
   const toggleAudio = () => {
-    if (localStream) {
-      localStream.getAudioTracks().forEach((track) => {
+    const activeStream = localStreamRef.current || localStream;
+    if (activeStream) {
+      activeStream.getAudioTracks().forEach((track) => {
         track.enabled = !track.enabled;
         setIsAudioMuted(!track.enabled);
       });
 
-      if (callInfo && currentUserId) {
-        emitCloseAudioCall(callInfo, currentUserId);
+      const callId = typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
+      if (callId && currentUserId) {
+        emitCloseAudioCall(callId, currentUserId);
       }
     }
   };
 
   const toggleVideo = () => {
-    if (localStream) {
-      localStream.getVideoTracks().forEach((track) => {
+    const activeStream = localStreamRef.current || localStream;
+    if (activeStream) {
+      activeStream.getVideoTracks().forEach((track) => {
         track.enabled = !track.enabled;
         setIsVideoStopped(!track.enabled);
       });
 
-      if (callInfo && currentUserId) {
-        emitCloseVideoCall(callInfo, currentUserId);
+      const callId = typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
+      if (callId && currentUserId) {
+        emitCloseVideoCall(callId, currentUserId);
       }
     }
   };

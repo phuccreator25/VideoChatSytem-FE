@@ -373,8 +373,9 @@ export const VideoCallModal = ({
                             objectFit: "contain", // Giữ nguyên tỉ lệ tự nhiên của camera đối phương
                             position: "absolute",
                             inset: 0,
-                            zIndex: 2, // Đặt đè lên trên lớp video nền blur
-                            display: (data.remoteStream && !ui.isRemoteVideoMuted) ? "block" : "none", // Ẩn video đi nếu đối phương tắt cam
+                            zIndex: ui.isRemoteVideoMuted ? -1 : 2, // Đưa xuống dưới khi đối phương tắt cam để hiển thị Avatar phía sau
+                            opacity: ui.isRemoteVideoMuted ? 0 : 1, // Làm mờ hoàn toàn khi tắt cam nhưng giữ nguyên block để loa vẫn phát ra tiếng
+                            display: data.remoteStream ? "block" : "none", // Chỉ ẩn hẳn khi không có luồng dữ liệu nào
                         }}
                     />
 
