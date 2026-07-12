@@ -7,9 +7,8 @@ import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
 import InputBase from "@mui/material/InputBase";
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "../../../redux/store";
-import { openCallModal, closeCallModal } from "../../../redux/call.redux";
+import { useDispatch } from "react-redux";
+import { openCallModal } from "../../../redux/call.redux";
 
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import CallOutlinedIcon from "@mui/icons-material/CallOutlined";
@@ -20,7 +19,6 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 import type { ConversationUserInfo } from "../../../types/chat/chat.conversation.type";
 import { getLastSeenText } from "../../../helpers/formatLastSeenAt.helper";
-import { VideoCallModal } from "../../VideoCall/dialogVideoCall.chat";
 
 type HeaderProps = {
   userData?: ConversationUserInfo | null;
@@ -32,9 +30,6 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  //Call Video from Redux
-  const isCallModalOpen = useSelector((state: RootState) => state.call.isCallModalOpen);
-  const incomingCall = useSelector((state: RootState) => state.call.incomingCall);
   const dispatch = useDispatch();
 
   const displayName = userData?.nickname ?? userData?.fullname ?? "Unknown user";
@@ -246,12 +241,6 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
             </IconButton>
           )}
         </Box>
-
-        <VideoCallModal
-          isOpen={isCallModalOpen}
-          handleClose={() => dispatch(closeCallModal())}
-          userData={incomingCall.userData || userData}
-        />
 
       </Stack>
     </Box>

@@ -85,7 +85,7 @@ const callSlice = createSlice({
       state.callInfo =
         typeof action.payload === "string"
           ? action.payload
-          : (action.payload?._id || action.meta.arg);
+          : action.payload?._id || action.meta.arg;
       state.incomingCall.isOpen = false;
       state.isCallModalOpen = true;
     });

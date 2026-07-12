@@ -189,24 +189,28 @@ export const useVideoCall = () => {
   // ==========================================
 
   const toggleAudio = () => {
-    if (localStream && callInfo && currentUserId) {
+    if (localStream) {
       localStream.getAudioTracks().forEach((track) => {
         track.enabled = !track.enabled;
         setIsAudioMuted(!track.enabled);
       });
 
-      emitCloseAudioCall(callInfo, currentUserId);
+      if (callInfo && currentUserId) {
+        emitCloseAudioCall(callInfo, currentUserId);
+      }
     }
   };
 
   const toggleVideo = () => {
-    if (localStream && callInfo && currentUserId) {
+    if (localStream) {
       localStream.getVideoTracks().forEach((track) => {
         track.enabled = !track.enabled;
         setIsVideoStopped(!track.enabled);
       });
 
-      emitCloseVideoCall(callInfo, currentUserId);
+      if (callInfo && currentUserId) {
+        emitCloseVideoCall(callInfo, currentUserId);
+      }
     }
   };
 

@@ -4,6 +4,7 @@ import type { RailKey } from '../types/layout/layout.navigation.type';
 import type { ReactNode } from 'react';
 import useChatLayout from '../hooks/ChatLayout/chatlayout.hook';
 import { RingingCallView } from '../components/VideoCall/ringingCall.chat';
+import { VideoCallModal } from '../components/VideoCall/dialogVideoCall.chat';
 
 const theme = createTheme({});
 type ChatLayoutProps = {
@@ -70,6 +71,12 @@ export default function ChatLayout({ middlePanel, activeRail, onRailChange, cont
         onDecline={() => handler.declineCall()}
         onAccept={() => handler.acceptCall()}
         callType={ui.incomingCall.type ?? "audio"}
+      />
+
+      <VideoCallModal
+        isOpen={ui.isCallModalOpen}
+        handleClose={handler.closeCallModal}
+        userData={ui.incomingCall.userData || ui.userData}
       />
     </ThemeProvider>
   );

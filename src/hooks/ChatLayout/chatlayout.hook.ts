@@ -117,9 +117,11 @@ export default function useChatLayout(activeRail: RailKey) {
 
   const [searchParams] = useSearchParams();
 
-  //Call modal
   const incomingCall = useSelector(
     (state: RootState) => state.call.incomingCall,
+  );
+  const isCallModalOpen = useSelector(
+    (state: RootState) => state.call.isCallModalOpen,
   );
 
   //Load more received
@@ -580,11 +582,14 @@ export default function useChatLayout(activeRail: RailKey) {
   return {
     ui: {
       incomingCall,
+      isCallModalOpen,
+      userData,
     },
     handler: {
       closeIncomingCall: () => dispatch(closeIncomingCall()),
       declineCall: handleDeclineCall,
       acceptCall: handleAcceptCall,
+      closeCallModal: () => dispatch(closeCallModal()),
     },
   };
 }
