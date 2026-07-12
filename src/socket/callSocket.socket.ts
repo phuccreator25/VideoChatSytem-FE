@@ -1,20 +1,13 @@
 import { getSocket } from "./socket";
 import type { CallEndPayload } from "../types/call/call.type";
+import type {
+  AcceptCallPayload,
+  CallOfferSuccessPayload,
+} from "../types/call/callSocket.type";
 
-export type CallOfferSuccessPayload = {
-  offer: RTCSessionDescriptionInit;
-  callerId: string;
-  calleeId: string;
-  type: string;
-  callId: string;
-  callerInfo: {
-    userId: string;
-    avatar: string;
-    fullname: string;
-    nickname: string | null;
-    isOnline: string;
-  };
-};
+// ==========================================
+// I. EMITTERS (TÍN HIỆU PHÁT ĐI)
+// ==========================================
 
 export const emitCallOffer = (data: {
   conversationId: string;
@@ -70,18 +63,38 @@ export const emitCallAnswer = (
   });
 };
 
-export const bindCallAnswer = (callback: (payload: any) => void) => {
+export const emitCloseVideoCall = (callId: string, currentUserId: string) => {
   const socket = getSocket();
-  socket.off("call:answer", callback);
-  socket.on("call:answer", callback);
+
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+  socket.emit("call:close-video", {
+    callId,
+    currentUserId,
+  });
 };
 
-export const unbindCallAnswer = (callback: (payload: any) => void) => {
+export const emitCloseAudioCall = (callId: string, currentUserId: string) => {
   const socket = getSocket();
-  socket.off("call:answer", callback);
+
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+  socket.emit("call:close-audio", {
+    callId,
+    currentUserId,
+  });
 };
 
-//Callee
+// ==========================================
+// II. BINDERS & UNBINDERS (TÍN HIỆU LẮNG NGHE)
+// ==========================================
+
+// --- 1. Thiết lập cuộc gọi (Offer / Answer / Candidate) ---
+
 export const bindCallOfferSuccess = (
   callback: (payload: CallOfferSuccessPayload) => void,
 ) => {
@@ -97,7 +110,6 @@ export const unbindCallOfferSuccess = (
   socket.off("call:offer:success", callback);
 };
 
-//Caller
 export const bindCallInitiated = (
   callback: (payload: { callId: string }) => void,
 ) => {
@@ -113,19 +125,17 @@ export const unbindCallInitiated = (
   socket.off("call:initiated", callback);
 };
 
-//Call End
-export const bindCallEnd = (callback: (payload: CallEndPayload) => void) => {
+export const bindCallAnswer = (callback: (payload: any) => void) => {
   const socket = getSocket();
-  socket.off("call:end", callback);
-  socket.on("call:end", callback);
+  socket.off("call:answer", callback);
+  socket.on("call:answer", callback);
 };
 
-export const unbindCallEnd = (callback: (payload: CallEndPayload) => void) => {
+export const unbindCallAnswer = (callback: (payload: any) => void) => {
   const socket = getSocket();
-  socket.off("call:end", callback);
+  socket.off("call:answer", callback);
 };
 
-//ICE candidate
 export const bindCallCandidate = (callback: (payload: any) => void) => {
   const socket = getSocket();
   socket.off("call:ice-candidate", callback);
@@ -135,4 +145,64 @@ export const bindCallCandidate = (callback: (payload: any) => void) => {
 export const unbindCallCandidate = (callback: (payload: any) => void) => {
   const socket = getSocket();
   socket.off("call:ice-candidate", callback);
+};
+
+export const bindAcceptCall = (
+  callback: (payload: AcceptCallPayload) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:accept", callback);
+  socket.on("call:accept", callback);
+};
+
+export const unbindAcceptCall = (
+  callback: (payload: AcceptCallPayload) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:accept", callback);
+};
+
+// --- 2. Thay đổi trạng thái thiết bị (Audio / Video) ---
+
+export const bindCloseVideoCall = (
+  callback: (payload: { callId: string; userIdWhoClose: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:close-video", callback);
+  socket.on("call:close-video", callback);
+};
+
+export const unbindCloseVideoCall = (
+  callback: (payload: { callId: string; userIdWhoClose: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:close-video", callback);
+};
+
+export const bindCloseAudioCall = (
+  callback: (payload: { callId: string; userIdWhoClose: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:close-audio", callback);
+  socket.on("call:close-audio", callback);
+};
+
+export const unbindCloseAudioCall = (
+  callback: (payload: { callId: string; userIdWhoClose: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:close-audio", callback);
+};
+
+// --- 3. Kết thúc cuộc gọi ---
+
+export const bindCallEnd = (callback: (payload: CallEndPayload) => void) => {
+  const socket = getSocket();
+  socket.off("call:end", callback);
+  socket.on("call:end", callback);
+};
+
+export const unbindCallEnd = (callback: (payload: CallEndPayload) => void) => {
+  const socket = getSocket();
+  socket.off("call:end", callback);
 };

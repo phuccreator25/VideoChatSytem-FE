@@ -28,4 +28,6 @@ export interface CallEndPayload {
   userIdWhoLeft: string;
   shouldCloseUI: boolean;
   updatedCall: CallModel;
+  reason?: "ended" | "rejected" | "cancelled";
 }
+

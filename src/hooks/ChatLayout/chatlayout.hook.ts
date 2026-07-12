@@ -10,6 +10,7 @@ import type {
 } from "../../types/invitation/invitation.socket.type";
 import { useEffect } from "react";
 import { connectSocket } from "../../socket/socket";
+import { useSnackbar } from "notistack";
 import {
   onGetCountReceivedInvitation,
   onGetCountSentInvitation,
@@ -92,12 +93,13 @@ import {
   unbindCallOfferSuccess,
   bindCallCandidate,
   unbindCallCandidate,
-  type CallOfferSuccessPayload,
 } from "../../socket/callSocket.socket";
 import type { CallEndPayload } from "../../types/call/call.type";
+import type { CallOfferSuccessPayload } from "../../types/call/callSocket.type";
 
 export default function useChatLayout(activeRail: RailKey) {
   const dispatch = useDispatch<AppDispatch>();
+  const { enqueueSnackbar } = useSnackbar();
   const location = useLocation();
   const { applyRelationState } = useApplyRelationState();
 
@@ -341,7 +343,7 @@ export default function useChatLayout(activeRail: RailKey) {
       );
     };
 
-    //call
+    //Call Nhận Offer
     const handleCallOfferSuccessEvent = async (
       payload: CallOfferSuccessPayload,
     ) => {
@@ -358,6 +360,19 @@ export default function useChatLayout(activeRail: RailKey) {
 
     const handleCallEndEvent = (payload: CallEndPayload) => {
       if (payload.shouldCloseUI) {
+        // Hiển thị thông báo tương ứng dựa trên lý do kết thúc cuộc gọi
+        if (payload.userIdWhoLeft !== currentUserId) {
+          if (payload.reason === "rejected") {
+            enqueueSnackbar("Đối phương đã từ chối cuộc gọi", {
+              variant: "info",
+            });
+          } else if (payload.reason === "cancelled") {
+            enqueueSnackbar("Cuộc gọi nhỡ", { variant: "warning" });
+          } else {
+            enqueueSnackbar("Cuộc gọi đã kết thúc", { variant: "info" });
+          }
+        }
+
         dispatch(closeIncomingCall());
         dispatch(clearCallInfo());
         dispatch(closeCallModal());

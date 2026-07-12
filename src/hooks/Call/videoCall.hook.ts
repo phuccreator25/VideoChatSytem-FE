@@ -1,19 +1,31 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
+  bindAcceptCall,
   bindCallAnswer,
+  bindCloseAudioCall,
+  bindCloseVideoCall,
   emitCallAnswer,
   emitCallOffer,
+  emitCloseAudioCall,
+  emitCloseVideoCall,
   emitIceCandidate,
+  unbindAcceptCall,
   unbindCallAnswer,
+  unbindCloseAudioCall,
+  unbindCloseVideoCall,
 } from "../../socket/callSocket.socket";
 import callApi from "../../api/Call.api";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../../redux/store";
 import { onEndCallAction, clearIceCandidates } from "../../redux/call.redux";
+import { enqueueSnackbar } from "notistack";
 
 export const useVideoCall = () => {
+  // 1. Redux & Router Parameters
   const { conversationId } = useParams<{ conversationId: string }>();
+  const dispatch = useDispatch<AppDispatch>();
+
   const currentUserId = useSelector(
     (state: RootState) => state.user.currentUser?._id,
   );
@@ -29,21 +41,32 @@ export const useVideoCall = () => {
     (state: RootState) => state.call.iceCandidates,
   );
 
-  // Quản lý States cho UI hiển thị
+  // 2. React State Variables
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoStopped, setIsVideoStopped] = useState(false);
+  const [isAccepted, setIsAccepted] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
 
-  // Quản lý References cố định xuyên suốt cuộc gọi
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [isRemoteVideoMuted, setIsRemoteVideoMuted] = useState(false);
+  const [isRemoteAudioMuted, setIsRemoteAudioMuted] = useState(false);
+
+  // 3. React Ref Variables
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
 
-  const dispatch = useDispatch<AppDispatch>();
+  // ==========================================
+  // I. KHỞI TẠO & GIẢI PHÓNG MEDIA THIẾT BỊ
+  // ==========================================
 
-  // 1. Khởi tạo & xử lý Media Thiết bị
+  // Khởi tạo media (camera/micro)
   const openUserMedia = async (callType: "voice" | "video") => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
@@ -52,23 +75,9 @@ export const useVideoCall = () => {
 
       // Liệt kê các thiết bị phần cứng để phục vụ debug
       const devices = await navigator.mediaDevices.enumerateDevices();
-      console.log(
-        "--- DANH SÁCH THIẾT BỊ PHẦN CỨNG ĐƯỢC TRÌNH DUYỆT NHẬN DIỆN ---",
-      );
-      console.table(
-        devices.map((d) => ({
-          Loai: d.kind,
-          Ten: d.label || "Chưa cấp quyền (Trống)",
-          ID: d.deviceId || "Chưa cấp quyền (Trống)",
-        })),
-      );
 
       const hasVideo = devices.some((d) => d.kind === "videoinput");
       const hasAudio = devices.some((d) => d.kind === "audioinput");
-
-      console.log(
-        `[Media Check] Webcam: ${hasVideo ? "CÓ" : "KHÔNG"}, Microphone: ${hasAudio ? "CÓ" : "KHÔNG"}`,
-      );
 
       // Nếu không có cả camera lẫn mic
       if (!hasVideo && !hasAudio) {
@@ -80,17 +89,23 @@ export const useVideoCall = () => {
       const useAudio = hasAudio; // Ưu tiên dùng mic nếu có
 
       if (callType === "video" && !hasVideo) {
-        console.warn(
-          "Máy không có Webcam! Tự động chuyển sang gọi thoại (chỉ lấy Micro)...",
-        );
+        enqueueSnackbar("Your device does not have a camera", {
+          variant: "error",
+        });
+        return;
       }
 
       if (!useVideo && !useAudio) {
-        throw new Error("NO_DEVICES_FOUND");
+        enqueueSnackbar("Your device does not have any media devices", {
+          variant: "error",
+        });
+        return;
       }
 
       // Phát hiện thiết bị di động để yêu cầu độ phân giải dạng Portrait dọc
-      const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(
+        navigator.userAgent,
+      );
 
       const constraints = {
         video: useVideo
@@ -103,7 +118,6 @@ export const useVideoCall = () => {
         audio: useAudio,
       };
 
-      console.log("Yêu cầu quyền truy cập media với constraints:", constraints);
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       setLocalStream(stream);
       localStreamRef.current = stream;
@@ -115,32 +129,31 @@ export const useVideoCall = () => {
     } catch (error: any) {
       console.error("Lỗi khi truy cập thiết bị Media:", error);
 
-      // Hiển thị thông báo chi tiết cho người dùng
       if (error.message === "SECURE_CONTEXT_REQUIRED") {
-        alert(
-          "LỖI BẢO MẬT: WebRTC yêu cầu kết nối an toàn (HTTPS hoặc localhost) để truy cập Camera/Mic. Trình duyệt đã chặn cuộc gọi.",
-        );
+        enqueueSnackbar("Secure context required to access media devices", {
+          variant: "error",
+        });
       } else if (
         error.message === "NO_DEVICES_FOUND" ||
         error.name === "NotFoundError"
       ) {
-        alert(
-          "LỖI THIẾT BỊ: Trình duyệt không tìm thấy bất kỳ Camera hay Microphone nào.\n\n" +
-            "Cách khắc phục:\n" +
-            "1. Kiểm tra xem Camera/Microphone đã cắm/kết nối đúng chưa.\n" +
-            "2. Đảm bảo bạn đã cho phép ứng dụng truy cập camera/mic trong cài đặt Windows (Settings > Privacy > Camera/Microphone).",
-        );
+        enqueueSnackbar("No media devices found", {
+          variant: "error",
+        });
       } else if (
         error.name === "NotAllowedError" ||
         error.name === "PermissionDeniedError"
       ) {
-        alert(
-          "LỖI CẤP QUYỀN: Bạn đã từ chối quyền truy cập Camera/Microphone.\n\n" +
-            "Cách khắc phục:\n" +
-            "Hãy nhấn vào biểu tượng ổ khóa ở đầu thanh địa chỉ trình duyệt, chọn 'Cho phép (Allow)' quyền truy cập Camera và Microphone.",
-        );
+        enqueueSnackbar("Permission denied to access media devices", {
+          variant: "error",
+        });
       } else {
-        alert(`Lỗi khởi tạo thiết bị: ${error.message || error.name || error}`);
+        enqueueSnackbar(
+          `Error accessing media devices: ${error.message || error.name || error}`,
+          {
+            variant: "error",
+          },
+        );
       }
 
       throw error;
@@ -160,28 +173,47 @@ export const useVideoCall = () => {
       peerConnectionRef.current = null;
     }
     setRemoteStream(null);
+    setIsAccepted(false);
+    setCallDuration(0);
+    setIsAudioMuted(false);
+    setIsVideoStopped(false);
+    setIsScreenSharing(false);
+    setIsFullScreen(false);
+    setIsSpeakerOn(true);
+    setIsRemoteVideoMuted(false);
+    setIsRemoteAudioMuted(false);
   };
 
-  // 2. Các hàm Toggle Bật/Tắt Mute nhanh (Không hủy phần cứng)
+  // ==========================================
+  // II. ĐIỀU KHIỂN THIẾT BỊ LÀM VIỆC (TOGGLES)
+  // ==========================================
+
   const toggleAudio = () => {
-    if (localStream) {
+    if (localStream && callInfo && currentUserId) {
       localStream.getAudioTracks().forEach((track) => {
         track.enabled = !track.enabled;
         setIsAudioMuted(!track.enabled);
       });
+
+      emitCloseAudioCall(callInfo, currentUserId);
     }
   };
 
   const toggleVideo = () => {
-    if (localStream) {
+    if (localStream && callInfo && currentUserId) {
       localStream.getVideoTracks().forEach((track) => {
         track.enabled = !track.enabled;
         setIsVideoStopped(!track.enabled);
       });
+
+      emitCloseVideoCall(callInfo, currentUserId);
     }
   };
 
-  // 3. Logic Đàm Phán Kết Nối WebRTC (Make Call)
+  // ==========================================
+  // III. THIẾT LẬP KẾT NỐI WEBRTC (SIGNALING)
+  // ==========================================
+
   const makeCall = async (stream?: MediaStream) => {
     const activeStream = stream || localStream;
     if (!conversationId || !activeStream || !ortherUserId || !currentUserId)
@@ -203,18 +235,20 @@ export const useVideoCall = () => {
 
       // Lắng nghe luồng Media đổ về từ phía bên nhận
       pc.ontrack = (event) => {
-        console.log("event: ", event);
-
         if (event.streams && event.streams[0]) {
-          setRemoteStream(event.streams[0]);
+          // Tạo đối tượng MediaStream mới chứa toàn bộ các track hiện tại để thay đổi tham chiếu
+          const newStream = new MediaStream(event.streams[0].getTracks());
+          setRemoteStream(newStream);
+
           if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = event.streams[0];
+            remoteVideoRef.current.srcObject = newStream;
           }
         }
       };
 
       // Xử lý cơ chế thu thập các ICE Candidate khả thi có thể đi được sau đó truyền qua kênh Signaling
       pc.onicecandidate = (event) => {
+        // Khi có ICE Candidate được sinh ra, hãy phát tín hiệu này đi
         if (event.candidate) {
           console.log("candidate: ", event.candidate);
           emitIceCandidate(currentUserId, conversationId, event.candidate); // Hàm emit tín hiệu Candidate của bạn
@@ -223,7 +257,7 @@ export const useVideoCall = () => {
 
       // Tiến hành tạo và thiết lập Session Description Protocol (SDP)
       const offer = await pc.createOffer(); // Nó chứa cả SDP và type:offer
-      await pc.setLocalDescription(offer);
+      await pc.setLocalDescription(offer); // Caller xác nhận gửi Offer đi, đồng nghĩa với việc xác nhận cấu hình của mình. Đồng thời thì candidate mới thực sự được kích hoạt
 
       console.log("offer: ", offer);
 
@@ -237,40 +271,11 @@ export const useVideoCall = () => {
 
       // Phát tín hiệu kèm Offer chính thức tới đối phương
       emitCallOffer(dataSocket);
-
-      // Chờ đợi tín hiệu Answer từ phía đối phương
-      bindCallAnswer(async (payload: any) => {
-        if (!payload.answer || !peerConnectionRef.current) return;
-        // Tiếp nhận SDP của đối phương
-        const remoteDesc = new RTCSessionDescription(payload.answer);
-        await peerConnectionRef.current.setRemoteDescription(remoteDesc);
-      });
     } catch (error) {
       console.error("Lỗi trong quá trình thiết lập cuộc gọi WebRTC:", error);
     }
   };
 
-  const endCall = async () => {
-    try {
-      if (!callInfo) return;
-
-      const callId = typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
-      if (!callId) {
-        console.error("Không tìm thấy callId hợp lệ để cúp máy:", callInfo);
-        closeUserMedia();
-        return;
-      }
-
-      await dispatch(onEndCallAction(callId));
-
-      closeUserMedia();
-    } catch (error) {
-      closeUserMedia();
-      console.error("Lỗi trong quá trình kết thúc cuộc gọi:", error);
-    }
-  };
-
-  // Khi phát hiện là Callee và có Local Stream, chạy hàm answerCall:
   const answerCall = async (stream: MediaStream) => {
     if (!incomingCall?.offer || !incomingCall?.userData) {
       console.error("Không tìm thấy offer của cuộc gọi đến");
@@ -289,16 +294,13 @@ export const useVideoCall = () => {
       // 3. Đăng ký listener ontrack (để hiển thị video của Caller khi kết nối thành công)
       pc.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
-          setRemoteStream(event.streams[0]);
+          const newStream = new MediaStream(event.streams[0].getTracks());
+          setRemoteStream(newStream);
           if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = event.streams[0];
+            remoteVideoRef.current.srcObject = newStream;
           }
         }
       };
-
-      // 4. Set Remote Description bằng SDP Offer của Caller (lấy từ Redux incomingCall.offer)
-      const remoteDesc = new RTCSessionDescription(incomingCall?.offer);
-      await pc.setRemoteDescription(remoteDesc);
 
       const activeConversationId =
         incomingCall.conversationId || conversationId || "";
@@ -314,9 +316,13 @@ export const useVideoCall = () => {
         }
       };
 
+      // 4. Set Remote Description bằng SDP Offer của Caller (lấy từ Redux incomingCall.offer)
+      const remoteDesc = new RTCSessionDescription(incomingCall?.offer);
+      await pc.setRemoteDescription(remoteDesc); // Lưu cấu hình của máy đối phương vào máy của mình
+
       // 5. Tạo SDP Answer & set làm Local Description
       const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
+      await pc.setLocalDescription(answer); // Lưu cấu hình của máy mình vào máy của mình
 
       // 6. Phát socket "call:answer" trực tiếp cho Caller
       emitCallAnswer(
@@ -335,12 +341,71 @@ export const useVideoCall = () => {
 
     if (isCallee) {
       console.log("-> Khởi động luồng Callee (Nhận cuộc gọi & tạo Answer)");
+      setIsAccepted(true);
       await answerCall(stream);
     } else {
       console.log("-> Khởi động luồng Caller (Bắt đầu gọi & tạo Offer)");
       await makeCall(stream);
     }
   };
+
+  const endCall = async () => {
+    try {
+      if (!callInfo) return;
+
+      const callId =
+        typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
+      if (!callId) {
+        console.error("Không tìm thấy callId hợp lệ để cúp máy:", callInfo);
+        closeUserMedia();
+        return;
+      }
+
+      await dispatch(onEndCallAction(callId));
+
+      closeUserMedia();
+    } catch (error) {
+      closeUserMedia();
+      console.error("Lỗi trong quá trình kết thúc cuộc gọi:", error);
+    }
+  };
+
+  // ==========================================
+  // IV. CÁC TÁC VỤ PHỤ (SIDE EFFECTS)
+  // ==========================================
+
+  // Bộ đếm thời gian cuộc gọi
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isAccepted) {
+      interval = setInterval(() => {
+        setCallDuration((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setCallDuration(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isAccepted]);
+
+  // Tự động gán localStream khi thẻ video hoặc stream thay đổi
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      if (localVideoRef.current.srcObject !== localStream) {
+        localVideoRef.current.srcObject = localStream;
+      }
+    }
+  }, [localStream]);
+
+  // Tự động gán remoteStream khi thẻ video hoặc stream thay đổi
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      if (remoteVideoRef.current.srcObject !== remoteStream) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      }
+    }
+  }, [remoteStream]);
 
   // Áp dụng các Ice Candidates được lưu tạm từ Redux khi peerConnection sẵn sàng
   useEffect(() => {
@@ -361,36 +426,100 @@ export const useVideoCall = () => {
     }
   }, [iceCandidates, dispatch]);
 
-  // Dọn dẹp sự kiện tránh rò rỉ bộ nhớ (Memory Leak)
+  // Đăng ký các sự kiện socket lắng nghe từ đối phương
   useEffect(() => {
-    const handleCallAnswerEvent = async (payload: any) => {
+    const handleCallAnswer = async (payload: any) => {
       if (!payload.answer || !peerConnectionRef.current) return;
       // Tiếp nhận SDP của đối phương
       const remoteDesc = new RTCSessionDescription(payload.answer);
-      await peerConnectionRef.current.setRemoteDescription(remoteDesc);
+      await peerConnectionRef.current.setRemoteDescription(remoteDesc); // Browser sẽ tự động phân tácg SDP từ callee và kích hoạt pc.ontrack
     };
 
-    bindCallAnswer(handleCallAnswerEvent);
+    const handleAcceptCall = () => {
+      setIsAccepted(true);
+    };
+
+    const handleCallCloseVideo = (payload: {
+      callId: string;
+      userIdWhoClose: string;
+    }) => {
+      const callId =
+        typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
+      if (
+        callId === payload.callId &&
+        payload.userIdWhoClose !== currentUserId
+      ) {
+        setIsRemoteVideoMuted((prev) => !prev);
+      }
+    };
+
+    const handleCallCloseAudio = (payload: {
+      callId: string;
+      userIdWhoClose: string;
+    }) => {
+      const callId =
+        typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
+      if (
+        callId === payload.callId &&
+        payload.userIdWhoClose !== currentUserId
+      ) {
+        setIsRemoteAudioMuted((prev) => !prev);
+      }
+    };
+
+    bindCallAnswer(handleCallAnswer);
+    bindAcceptCall(handleAcceptCall);
+    bindCloseVideoCall(handleCallCloseVideo);
+    bindCloseAudioCall(handleCallCloseAudio);
+    return () => {
+      unbindCallAnswer(handleCallAnswer);
+      unbindAcceptCall(handleAcceptCall);
+      unbindCloseVideoCall(handleCallCloseVideo);
+      unbindCloseAudioCall(handleCallCloseAudio);
+    };
+  }, [callInfo, currentUserId]);
+
+  // Giải phóng media thiết bị khi component unmount
+  useEffect(() => {
     return () => {
       closeUserMedia();
-      unbindCallAnswer(handleCallAnswerEvent);
     };
   }, []);
 
   return {
-    localStream,
-    remoteStream,
-    localVideoRef,
-    remoteVideoRef,
-    isAudioMuted,
-    isVideoStopped,
-    openUserMedia,
-    closeUserMedia,
-    toggleAudio,
-    toggleVideo,
-    makeCall,
-    endCall,
-    callInfo,
-    startCallSession,
+    ui: {
+      isAudioMuted,
+      isVideoStopped,
+      isScreenSharing,
+      isFullScreen,
+      isSpeakerOn,
+      isRemoteVideoMuted,
+      isRemoteAudioMuted,
+      isAccepted,
+      callDuration,
+    },
+    data: {
+      localStream,
+      remoteStream,
+      callInfo,
+    },
+    refs: {
+      localVideoRef,
+      remoteVideoRef,
+    },
+    handler: {
+      openUserMedia,
+      closeUserMedia,
+      toggleAudio,
+      toggleVideo,
+      makeCall,
+      endCall,
+      startCallSession,
+      setIsScreenSharing,
+      setIsFullScreen,
+      setIsSpeakerOn,
+      setIsRemoteVideoMuted,
+      setIsRemoteAudioMuted,
+    },
   };
 };

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useVideoCall } from "../../hooks/Call/videoCall.hook";
 import {
     Dialog,
@@ -23,8 +23,13 @@ import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import VolumeOffRoundedIcon from "@mui/icons-material/VolumeOffRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-
 import type { ConversationUserInfo } from "../../types/chat/chat.conversation.type";
+
+const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+};
 
 export const VideoCallModal = ({
     isOpen,
@@ -35,108 +40,30 @@ export const VideoCallModal = ({
     handleClose: () => void;
     userData?: ConversationUserInfo | null;
 }) => {
-    const { startCallSession, localVideoRef, openUserMedia, closeUserMedia, toggleAudio, toggleVideo, endCall, remoteStream, remoteVideoRef, localStream } = useVideoCall();
+    const { ui, data, handler, refs: { localVideoRef, remoteVideoRef } } = useVideoCall();
 
-    // UI States
-    const [isMuted, setIsMuted] = useState(false);
-    const [isVideoOff, setIsVideoOff] = useState(false);
-    const [isScreenSharing, setIsScreenSharing] = useState(false);
-    const [isFullScreen, setIsFullScreen] = useState(false);
-    const [isSpeakerOn, setIsSpeakerOn] = useState(true);
-
-    // State theo dõi trạng thái bật/tắt thiết bị của đối phương (Mic/Camera)
-    const [isRemoteVideoMuted, setIsRemoteVideoMuted] = useState(false);
-    const [isRemoteAudioMuted, setIsRemoteAudioMuted] = useState(false);
     const remoteBgVideoRef = useRef<HTMLVideoElement | null>(null);
-
-    // Lắng nghe sự kiện track của đối phương để cập nhật giao diện thời gian thực
-    useEffect(() => {
-        if (!remoteStream) {
-            setIsRemoteVideoMuted(false);
-            setIsRemoteAudioMuted(false);
-            return;
+    const setRemoteBgVideoEl = useCallback((el: HTMLVideoElement | null) => {
+        remoteBgVideoRef.current = el;
+        if (el && el.srcObject !== data.remoteStream) {
+            el.srcObject = data.remoteStream;
         }
-
-        // Hàm cập nhật trạng thái thiết bị dựa trên việc track có tồn tại hay không
-        const updateTrackStates = () => {
-            const videoTrack = remoteStream.getVideoTracks()[0];
-            const audioTrack = remoteStream.getAudioTracks()[0];
-
-            // Nếu không có track hoặc track bị tắt/mute thì coi như đối phương đã tắt thiết bị đó
-            setIsRemoteVideoMuted(!videoTrack || !videoTrack.enabled || videoTrack.muted);
-            setIsRemoteAudioMuted(!audioTrack || !audioTrack.enabled || audioTrack.muted);
-        };
-
-        // Khởi chạy cập nhật trạng thái ban đầu ngay khi nhận được remoteStream
-        updateTrackStates();
-
-        const videoTrack = remoteStream.getVideoTracks()[0];
-        const audioTrack = remoteStream.getAudioTracks()[0];
-
-        // Lắng nghe sự kiện mute/unmute của các track
-        const handleVideoMute = () => setIsRemoteVideoMuted(true);
-        const handleVideoUnmute = () => setIsRemoteVideoMuted(false);
-        const handleAudioMute = () => setIsRemoteAudioMuted(true);
-        const handleAudioUnmute = () => setIsRemoteAudioMuted(false);
-
-        if (videoTrack) {
-            videoTrack.addEventListener("mute", handleVideoMute);
-            videoTrack.addEventListener("unmute", handleVideoUnmute);
-        }
-
-        if (audioTrack) {
-            audioTrack.addEventListener("mute", handleAudioMute);
-            audioTrack.addEventListener("unmute", handleAudioUnmute);
-        }
-
-        // Lắng nghe sự kiện stream thay đổi cấu trúc track (đối phương thêm/bớt track camera/mic)
-        remoteStream.addEventListener("addtrack", updateTrackStates);
-        remoteStream.addEventListener("removetrack", updateTrackStates);
-
-        // Dọn dẹp listener khi unmount hoặc remoteStream thay đổi
-        return () => {
-            if (videoTrack) {
-                videoTrack.removeEventListener("mute", handleVideoMute);
-                videoTrack.removeEventListener("unmute", handleVideoUnmute);
-            }
-            if (audioTrack) {
-                audioTrack.removeEventListener("mute", handleAudioMute);
-                audioTrack.removeEventListener("unmute", handleAudioUnmute);
-            }
-            remoteStream.removeEventListener("addtrack", updateTrackStates);
-            remoteStream.removeEventListener("removetrack", updateTrackStates);
-        };
-    }, [remoteStream]);
-
-    useEffect(() => {
-        if (localVideoRef.current && localStream) {
-            localVideoRef.current.srcObject = localStream;
-        }
-    }, [localStream, isVideoOff]);
-
-    useEffect(() => {
-        if (remoteVideoRef.current && remoteStream) {
-            remoteVideoRef.current.srcObject = remoteStream;
-        }
-        if (remoteBgVideoRef.current && remoteStream) {
-            remoteBgVideoRef.current.srcObject = remoteStream;
-        }
-    }, [remoteStream]);
+    }, [data.remoteStream]);
 
     useEffect(() => {
         const initCall = async () => {
             if (isOpen) {
                 try {
-                    const stream = await openUserMedia("video");
+                    const stream = await handler.openUserMedia("video");
                     if (stream) {
                         // Tự động phân tích vai trò và kết nối
-                        await startCallSession(stream);
+                        await handler.startCallSession(stream);
                     }
                 } catch (err) {
                     console.error("Failed to initialize call:", err);
                 }
             } else {
-                closeUserMedia();
+                handler.closeUserMedia();
             }
         };
 
@@ -189,22 +116,26 @@ export const VideoCallModal = ({
     return (
         <Dialog
             open={isOpen}
-            fullScreen={isFullScreen}
+            onClose={() => {
+                handler.endCall();
+                handleClose();
+            }}
+            fullScreen={ui.isFullScreen}
             maxWidth={false}
             PaperProps={{
                 sx: {
-                    borderRadius: isFullScreen ? 0 : { xs: 0, sm: "24px" },
+                    borderRadius: ui.isFullScreen ? 0 : { xs: 0, sm: "24px" },
                     overflow: "hidden",
                     boxShadow: "0 32px 80px rgba(0, 0, 0, 0.6), 0 0 50px rgba(99, 102, 241, 0.05)",
-                    border: isFullScreen ? "none" : { xs: "none", sm: "1px solid rgba(255, 255, 255, 0.08)" },
+                    border: ui.isFullScreen ? "none" : { xs: "none", sm: "1px solid rgba(255, 255, 255, 0.08)" },
                     bgcolor: "#07080e",
-                    width: isFullScreen ? "100vw" : { xs: "100vw", sm: 840 },
-                    height: isFullScreen ? "100vh" : { xs: "100dvh", sm: 560 },
-                    minWidth: isFullScreen ? "100vw" : { xs: "100vw", sm: 480 },
-                    minHeight: isFullScreen ? "100vh" : { xs: "100dvh", sm: 360 },
+                    width: ui.isFullScreen ? "100vw" : { xs: "100vw", sm: 840 },
+                    height: ui.isFullScreen ? "100vh" : { xs: "100dvh", sm: 560 },
+                    minWidth: ui.isFullScreen ? "100vw" : { xs: "100vw", sm: 480 },
+                    minHeight: ui.isFullScreen ? "100vh" : { xs: "100dvh", sm: 360 },
                     maxWidth: "100vw",
                     maxHeight: "100dvh",
-                    resize: isFullScreen ? "none" : "both",
+                    resize: ui.isFullScreen ? "none" : "both",
                     transition: "all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)",
                 },
             }}
@@ -235,7 +166,7 @@ export const VideoCallModal = ({
                 />
 
                 {/* Resize corner indicator (only shown when not fullscreen) */}
-                {!isFullScreen && (
+                {!ui.isFullScreen && (
                     <Box
                         sx={{
                             position: "absolute",
@@ -327,7 +258,7 @@ export const VideoCallModal = ({
                             <Typography
                                 component="div"
                                 sx={{
-                                    color: "#10b981",
+                                    color: ui.isAccepted ? "#10b981" : "#f59e0b",
                                     fontWeight: 700,
                                     fontSize: 11,
                                     display: "flex",
@@ -344,8 +275,8 @@ export const VideoCallModal = ({
                                         width: 6,
                                         height: 6,
                                         borderRadius: "50%",
-                                        bgcolor: "#10b981",
-                                        boxShadow: "0 0 10px #10b981",
+                                        bgcolor: ui.isAccepted ? "#10b981" : "#f59e0b",
+                                        boxShadow: ui.isAccepted ? "0 0 10px #10b981" : "0 0 10px #f59e0b",
                                         animation: "blinkDot 1.5s infinite ease-in-out",
                                         "@keyframes blinkDot": {
                                             "0%, 100%": { opacity: 0.4 },
@@ -353,7 +284,7 @@ export const VideoCallModal = ({
                                         }
                                     }}
                                 />
-                                Calling...
+                                {ui.isAccepted ? "Connected" : "Calling..."}
                             </Typography>
                         </Box>
                     </Stack>
@@ -362,7 +293,7 @@ export const VideoCallModal = ({
                     <Stack direction="row" spacing={1.5}>
                         <Tooltip title="Fullscreen">
                             <IconButton
-                                onClick={() => setIsFullScreen((prev) => !prev)}
+                                onClick={() => handler.setIsFullScreen((prev) => !prev)}
                                 sx={{
                                     color: "rgba(255, 255, 255, 0.7)",
                                     bgcolor: "rgba(255, 255, 255, 0.05)",
@@ -374,7 +305,7 @@ export const VideoCallModal = ({
                                     },
                                 }}
                             >
-                                {isFullScreen ? (
+                                {ui.isFullScreen ? (
                                     <FullscreenExitRoundedIcon />
                                 ) : (
                                     <FullscreenRoundedIcon />
@@ -414,7 +345,7 @@ export const VideoCallModal = ({
                 >
                     {/* Background video làm hiệu ứng mờ viền khi đối phương dùng mobile dọc */}
                     <video
-                        ref={remoteBgVideoRef}
+                        ref={setRemoteBgVideoEl}
                         autoPlay
                         playsInline
                         muted
@@ -426,7 +357,7 @@ export const VideoCallModal = ({
                             inset: 0,
                             zIndex: 1,
                             filter: "blur(30px) brightness(0.4)", // Hiệu ứng làm mờ và giảm độ sáng làm nền
-                            display: (remoteStream && !isRemoteVideoMuted) ? "block" : "none", // Chỉ hiện khi có luồng video
+                            display: (data.remoteStream && !ui.isRemoteVideoMuted) ? "block" : "none", // Chỉ hiện khi có luồng video
                         }}
                     />
 
@@ -435,7 +366,7 @@ export const VideoCallModal = ({
                         ref={remoteVideoRef}
                         autoPlay
                         playsInline
-                        muted={!isSpeakerOn}
+                        muted={!ui.isSpeakerOn}
                         style={{
                             width: "100%",
                             height: "100%",
@@ -443,12 +374,12 @@ export const VideoCallModal = ({
                             position: "absolute",
                             inset: 0,
                             zIndex: 2, // Đặt đè lên trên lớp video nền blur
-                            display: (remoteStream && !isRemoteVideoMuted) ? "block" : "none", // Ẩn video đi nếu đối phương tắt cam
+                            display: (data.remoteStream && !ui.isRemoteVideoMuted) ? "block" : "none", // Ẩn video đi nếu đối phương tắt cam
                         }}
                     />
 
                     {/* HIỂN THỊ GIAO DIỆN CONCEPT 1 (GLASSMORPHISM HOLOGRAM) KHI TẮT CAMERA HOẶC CHƯA KẾT NỐI */}
-                    {(!remoteStream || isRemoteVideoMuted) && (
+                    {(!data.remoteStream || ui.isRemoteVideoMuted) && (
                         <Box
                             sx={{
                                 display: "flex",
@@ -507,7 +438,7 @@ export const VideoCallModal = ({
                                 />
 
                                 {/* Nhãn Mic tắt (Muted badge) màu đỏ hiển thị đè lên góc dưới bên phải Avatar */}
-                                {((!remoteStream && isMuted) || (remoteStream && isRemoteAudioMuted)) && (
+                                {((!data.remoteStream && ui.isAudioMuted) || (data.remoteStream && ui.isRemoteAudioMuted)) && (
                                     <Box
                                         sx={{
                                             position: "absolute",
@@ -565,13 +496,17 @@ export const VideoCallModal = ({
                                             width: 6,
                                             height: 6,
                                             borderRadius: "50%",
-                                            // Chấm màu cam khi tắt mic, màu xanh lá cây khi đang kết nối và bật mic
-                                            bgcolor: remoteStream
-                                                ? (isRemoteAudioMuted ? "#f97316" : "#10b981")
-                                                : "#10b981",
-                                            boxShadow: remoteStream
-                                                ? (isRemoteAudioMuted ? "0 0 8px #f97316" : "0 0 8px #10b981")
-                                                : "0 0 8px #10b981",
+                                            // Chấm màu cam khi tắt mic/chưa accept, màu xanh lá cây khi đang kết nối và bật mic
+                                            bgcolor: !ui.isAccepted
+                                                ? "#f97316"
+                                                : ui.isRemoteAudioMuted
+                                                    ? "#f97316"
+                                                    : "#10b981",
+                                            boxShadow: !ui.isAccepted
+                                                ? "0 0 8px #f97316"
+                                                : ui.isRemoteAudioMuted
+                                                    ? "0 0 8px #f97316"
+                                                    : "0 0 8px #10b981",
                                         }}
                                     />
                                     {/* Text thông báo trạng thái */}
@@ -583,11 +518,11 @@ export const VideoCallModal = ({
                                             letterSpacing: "0.05em",
                                         }}
                                     >
-                                        {!remoteStream
-                                            ? "00:00"
-                                            : isRemoteVideoMuted
-                                                ? "Video Paused"
-                                                : "Connected"}
+                                        {!ui.isAccepted
+                                            ? "Ringing..."
+                                            : ui.isRemoteVideoMuted
+                                                ? `Video Paused (${formatDuration(ui.callDuration)})`
+                                                : formatDuration(ui.callDuration)}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -600,8 +535,8 @@ export const VideoCallModal = ({
                             position: "absolute",
                             bottom: 16,
                             right: 16,
-                            width: { xs: 90, sm: isFullScreen ? 220 : 180, md: isFullScreen ? 260 : 180 },
-                            height: { xs: 135, sm: isFullScreen ? 165 : 135, md: isFullScreen ? 195 : 135 },
+                            width: { xs: 90, sm: ui.isFullScreen ? 220 : 180, md: ui.isFullScreen ? 260 : 180 },
+                            height: { xs: 135, sm: ui.isFullScreen ? 165 : 135, md: ui.isFullScreen ? 195 : 135 },
                             borderRadius: "16px",
                             overflow: "hidden",
                             boxShadow: "0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.1)",
@@ -615,7 +550,7 @@ export const VideoCallModal = ({
                             sx={{
                                 width: "100%",
                                 height: "100%",
-                                display: isVideoOff ? "flex" : "none",
+                                display: ui.isVideoStopped ? "flex" : "none",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 bgcolor: "#06070a",
@@ -633,7 +568,7 @@ export const VideoCallModal = ({
                                 height: "100%",
                                 objectFit: "cover",
                                 transform: "scaleX(-1)", // Mirror effect for webcam
-                                display: isVideoOff ? "none" : "block",
+                                display: ui.isVideoStopped ? "none" : "block",
                             }}
                         />
                         {/* PIP Badge tag */}
@@ -653,7 +588,7 @@ export const VideoCallModal = ({
                                 gap: 0.75
                             }}
                         >
-                            <Box sx={{ width: 5, height: 5, borderRadius: "50%", bgcolor: isVideoOff ? "#ef4444" : "#10b981" }} />
+                            <Box sx={{ width: 5, height: 5, borderRadius: "50%", bgcolor: ui.isVideoStopped ? "#ef4444" : "#10b981" }} />
                             <Typography sx={{ color: "#ffffff", fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
                                 You
                             </Typography>
@@ -686,46 +621,40 @@ export const VideoCallModal = ({
                         }}
                     >
                         {/* Audio Toggle button */}
-                        <Tooltip title={isMuted ? "Unmute Mic" : "Mute Mic"}>
+                        <Tooltip title={ui.isAudioMuted ? "Unmute Mic" : "Mute Mic"}>
                             <IconButton
-                                onClick={() => {
-                                    setIsMuted((prev) => !prev);
-                                    toggleAudio();
-                                }}
-                                sx={controlButtonSx(isMuted)}
+                                onClick={handler.toggleAudio}
+                                sx={controlButtonSx(ui.isAudioMuted)}
                             >
-                                {isMuted ? <MicOffRoundedIcon /> : <MicRoundedIcon />}
+                                {ui.isAudioMuted ? <MicOffRoundedIcon /> : <MicRoundedIcon />}
                             </IconButton>
                         </Tooltip>
 
                         {/* Video Camera Toggle button */}
-                        <Tooltip title={isVideoOff ? "Turn Cam On" : "Turn Cam Off"}>
+                        <Tooltip title={ui.isVideoStopped ? "Turn Cam On" : "Turn Cam Off"}>
                             <IconButton
-                                onClick={() => {
-                                    setIsVideoOff((prev) => !prev);
-                                    toggleVideo();
-                                }}
-                                sx={controlButtonSx(isVideoOff)}
+                                onClick={handler.toggleVideo}
+                                sx={controlButtonSx(ui.isVideoStopped)}
                             >
-                                {isVideoOff ? <VideocamOffRoundedIcon /> : <VideocamRoundedIcon />}
+                                {ui.isVideoStopped ? <VideocamOffRoundedIcon /> : <VideocamRoundedIcon />}
                             </IconButton>
                         </Tooltip>
 
                         {/* Speaker Toggle button */}
-                        <Tooltip title={isSpeakerOn ? "Mute Speaker" : "Unmute Speaker"}>
+                        <Tooltip title={ui.isSpeakerOn ? "Mute Speaker" : "Unmute Speaker"}>
                             <IconButton
-                                onClick={() => setIsSpeakerOn((prev) => !prev)}
-                                sx={controlButtonSx(!isSpeakerOn)}
+                                onClick={() => handler.setIsSpeakerOn((prev) => !prev)}
+                                sx={controlButtonSx(!ui.isSpeakerOn)}
                             >
-                                {isSpeakerOn ? <VolumeUpRoundedIcon /> : <VolumeOffRoundedIcon />}
+                                {ui.isSpeakerOn ? <VolumeUpRoundedIcon /> : <VolumeOffRoundedIcon />}
                             </IconButton>
                         </Tooltip>
 
                         {/* Screen Share toggle button */}
-                        <Tooltip title={isScreenSharing ? "Stop sharing" : "Share screen"}>
+                        <Tooltip title={ui.isScreenSharing ? "Stop sharing" : "Share screen"}>
                             <IconButton
-                                onClick={() => setIsScreenSharing((prev) => !prev)}
-                                sx={controlButtonSx(isScreenSharing)}
+                                onClick={() => handler.setIsScreenSharing((prev) => !prev)}
+                                sx={controlButtonSx(ui.isScreenSharing)}
                             >
                                 <ScreenShareRoundedIcon />
                             </IconButton>
@@ -742,7 +671,7 @@ export const VideoCallModal = ({
                         <Tooltip title="End Call">
                             <IconButton
                                 onClick={() => {
-                                    endCall()
+                                    handler.endCall()
                                     handleClose()
                                 }}
                                 sx={controlButtonSx(false, true)}
