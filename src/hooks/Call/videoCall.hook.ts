@@ -397,17 +397,17 @@ export const useVideoCall = () => {
     }
   };
 
-  const startCallSession = async (stream: MediaStream) => {
+  const startCallSession = async (stream: MediaStream | null) => {
     // Kiểm tra xem trong Redux có incomingCall.offer (nghĩa là có cuộc gọi đến gửi offer cho mình) hay không
     const isCallee = !!incomingCall?.offer;
 
     if (isCallee) {
       console.log("-> Khởi động luồng Callee (Nhận cuộc gọi & tạo Answer)");
       setIsAccepted(true);
-      await answerCall(stream);
+      await answerCall(stream!);
     } else {
       console.log("-> Khởi động luồng Caller (Bắt đầu gọi & tạo Offer)");
-      await makeCall(stream);
+      await makeCall(stream!);
     }
   };
 

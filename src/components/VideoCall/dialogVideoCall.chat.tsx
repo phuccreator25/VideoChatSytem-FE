@@ -53,15 +53,24 @@ export const VideoCallModal = ({
     useEffect(() => {
         const initCall = async () => {
             if (isOpen) {
+                let localStream: MediaStream | null = null;
+
                 try {
-                    const stream = await handler.openUserMedia("video");
-                    if (stream) {
-                        // Tự động phân tích vai trò và kết nối
-                        await handler.startCallSession(stream);
-                    }
+                    // 1. Cố gắng lấy stream của chính mình
+                    localStream = await handler.openUserMedia("video");
                 } catch (err) {
-                    console.error("Failed to initialize call:", err);
+                    // Nếu lỗi thiết bị local, chỉ log ra chứ KHÔNG chặn đứng cuộc gọi
+                    console.warn("Không lấy được media cá nhân (vẫn tiếp tục kết nối để nhận từ đối phương):", err);
                 }
+
+                // 2. LUÔN LUÔN khởi tạo session kết nối WebRTC (dù localStream có hay không)
+                try {
+                    // Chúng ta truyền localStream qua (có thể là stream xịn, hoặc là null)
+                    await handler.startCallSession(localStream );
+                } catch (sessionErr) {
+                    console.error("Lỗi nghiêm trọng khi thiết lập session cuộc gọi:", sessionErr);
+                }
+
             } else {
                 handler.closeUserMedia();
             }
