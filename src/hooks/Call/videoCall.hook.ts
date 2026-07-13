@@ -337,7 +337,9 @@ export const useVideoCall = () => {
       const res = await callApi.onGetTurnCredentials();
       console.log("res: ", res);
 
-      const pc = new RTCPeerConnection({ iceServers: res.data.iceServers });
+      const pc = new RTCPeerConnection({
+        iceServers: res.data.data.iceServers,
+      });
       peerConnectionRef.current = pc;
 
       // 2. Add local camera/mic stream
