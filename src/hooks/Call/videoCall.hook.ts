@@ -55,6 +55,7 @@ export const useVideoCall = () => {
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [isRemoteVideoMuted, setIsRemoteVideoMuted] = useState(false);
   const [isRemoteAudioMuted, setIsRemoteAudioMuted] = useState(false);
+  const [isRemoteDescSet, setIsRemoteDescSet] = useState(false);
 
   // 3. React Ref Variables
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -381,6 +382,9 @@ export const useVideoCall = () => {
       // 4. Set Remote Description bằng SDP Offer của Caller (lấy từ Redux incomingCall.offer)
       const remoteDesc = new RTCSessionDescription(incomingCall?.offer);
       await pc.setRemoteDescription(remoteDesc); // Lưu cấu hình của máy đối phương vào máy của mình
+      setIsRemoteDescSet(true);
+      console.log("remoteStream: ", remoteStream);
+      console.log("Đã có remoteStream chưa?", !!remoteStream);
 
       // 5. Tạo SDP Answer & set làm Local Description
       const answer = await pc.createAnswer();
@@ -489,22 +493,22 @@ export const useVideoCall = () => {
 
   // Áp dụng các Ice Candidates được lưu tạm từ Redux khi peerConnection sẵn sàng
   useEffect(() => {
-    if (peerConnectionRef.current && iceCandidates.length > 0) {
+    const pc = peerConnectionRef.current;
+
+    if (pc && isRemoteDescSet && iceCandidates.length > 0) {
       const candidatesToApply = [...iceCandidates];
       dispatch(clearIceCandidates());
 
       candidatesToApply.forEach(async (candidate) => {
         try {
-          await peerConnectionRef.current?.addIceCandidate(
-            new RTCIceCandidate(candidate),
-          );
-          console.log("Đã add queued candidate:", candidate);
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          console.log("Đã add queued candidate thành công:", candidate);
         } catch (e) {
           console.error("Lỗi khi thêm queued ICE candidate:", e);
         }
       });
     }
-  }, [iceCandidates, dispatch]);
+  }, [iceCandidates, dispatch, isRemoteDescSet]);
 
   // Đăng ký các sự kiện socket lắng nghe từ đối phương
   useEffect(() => {
@@ -514,6 +518,7 @@ export const useVideoCall = () => {
       const remoteDesc = new RTCSessionDescription(payload.answer);
       await peerConnectionRef.current.setRemoteDescription(remoteDesc); // Browser sẽ tự động phân tácg SDP từ callee và kích hoạt pc.ontrack
       console.log("Đã nhận answer từ đối phương");
+      setIsRemoteDescSet(true);
     };
 
     const handleAcceptCall = () => {
@@ -561,7 +566,7 @@ export const useVideoCall = () => {
       unbindCloseVideoCall(handleCallCloseVideo);
       unbindCloseAudioCall(handleCallCloseAudio);
     };
-  }, [callInfo, currentUserId]);
+  }, [callInfo, currentUserId, isRemoteDescSet]);
 
   // Giải phóng media thiết bị khi component unmount
   useEffect(() => {
