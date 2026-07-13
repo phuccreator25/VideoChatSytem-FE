@@ -339,6 +339,7 @@ export const useVideoCall = () => {
 
       const pc = new RTCPeerConnection({
         iceServers: res.data.data.iceServers,
+        iceTransportPolicy: "relay", // 🔥 BẮT BUỘC: Ép trình duyệt bỏ qua P2P, đi thẳng qua TURN Server
       });
       peerConnectionRef.current = pc;
 
