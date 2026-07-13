@@ -94,6 +94,7 @@ export const useVideoCall = () => {
 
       // 4. Kích hoạt pop-up xin quyền từ trình duyệt
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log("Local media tracks acquired:", stream.getTracks().map(t => `${t.kind}: enabled=${t.enabled}, readyState=${t.readyState}`));
 
       // 5. Lưu trữ stream vào state và ref nếu thành công
       setLocalStream(stream);
@@ -252,8 +253,10 @@ export const useVideoCall = () => {
 
       // Lắng nghe luồng Media đổ về từ phía bên nhận
       pc.ontrack = (event) => {
+        console.log("ontrack (makeCall): nhận track", event.track.kind, "từ streams:", event.streams.map(s => s.id));
         if (event.streams && event.streams[0]) {
           const incomingStream = event.streams[0];
+          console.log("Track list trong incomingStream:", incomingStream.getTracks().map(t => `${t.kind} (${t.id}): enabled=${t.enabled}`));
           setRemoteStream(incomingStream);
 
           if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== incomingStream) {
@@ -309,8 +312,10 @@ export const useVideoCall = () => {
 
       // 3. Đăng ký listener ontrack (để hiển thị video của Caller khi kết nối thành công)
       pc.ontrack = (event) => {
+        console.log("ontrack (answerCall): nhận track", event.track.kind, "từ streams:", event.streams.map(s => s.id));
         if (event.streams && event.streams[0]) {
           const incomingStream = event.streams[0];
+          console.log("Track list trong incomingStream:", incomingStream.getTracks().map(t => `${t.kind} (${t.id}): enabled=${t.enabled}`));
           setRemoteStream(incomingStream);
           if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== incomingStream) {
             remoteVideoRef.current.srcObject = incomingStream;
@@ -411,15 +416,26 @@ export const useVideoCall = () => {
       if (localVideoRef.current.srcObject !== localStream) {
         localVideoRef.current.srcObject = localStream;
       }
+      localVideoRef.current.play().catch((err) => {
+        console.error("Lỗi tự động phát video cục bộ:", err);
+      });
     }
   }, [localStream]);
 
   // Tự động gán remoteStream khi thẻ video hoặc stream thay đổi
   useEffect(() => {
+    console.log("remoteStream changed state:", remoteStream?.id, "remoteVideoRef present:", !!remoteVideoRef.current);
     if (remoteVideoRef.current && remoteStream) {
       if (remoteVideoRef.current.srcObject !== remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
+        console.log("Gán remoteStream thành công cho remoteVideoRef");
       }
+      // Gọi play() tường minh sau khi DOM cập nhật hiển thị để tránh lỗi autoplay do display: none
+      remoteVideoRef.current.play().then(() => {
+        console.log("Phát stream từ xa thành công (có hình và tiếng)");
+      }).catch((err) => {
+        console.error("Lỗi tự động phát video/audio từ xa:", err);
+      });
     }
   }, [remoteStream]);
 
