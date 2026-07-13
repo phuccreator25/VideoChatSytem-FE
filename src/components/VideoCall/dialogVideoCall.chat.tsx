@@ -502,7 +502,7 @@ export const VideoCallModal = ({
                                 />
 
                                 {/* Nhãn Mic tắt (Muted badge) màu đỏ hiển thị đè lên góc dưới bên phải Avatar */}
-                                {((!data.remoteStream && ui.isAudioMuted) || (data.remoteStream && ui.isRemoteAudioMuted)) && (
+                                {ui.isRemoteAudioMuted && (
                                     <Box
                                         sx={{
                                             position: "absolute",

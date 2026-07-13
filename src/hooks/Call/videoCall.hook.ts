@@ -256,6 +256,8 @@ export const useVideoCall = () => {
     try {
       // Gọi API lấy cấu hình TURN động từ service đã viết của bạn
       const res = await callApi.onGetTurnCredentials();
+      console.log("res", res.data);
+
       const configuration = { iceServers: res.data.iceServers };
 
       // Lưu trữ instance kết nối vào Ref để bảo toàn bộ nhớ
@@ -333,6 +335,8 @@ export const useVideoCall = () => {
     try {
       // 1. Khởi tạo PeerConnection với Turn/Stun
       const res = await callApi.onGetTurnCredentials();
+      console.log("res: ", res.data);
+
       const pc = new RTCPeerConnection({ iceServers: res.data.iceServers });
       peerConnectionRef.current = pc;
 
