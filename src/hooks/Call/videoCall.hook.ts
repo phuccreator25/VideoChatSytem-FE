@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   bindAcceptCall,
@@ -69,34 +69,69 @@ export const useVideoCall = () => {
   // Khởi tạo media (camera/micro)
   const openUserMedia = async (callType: "voice" | "video") => {
     try {
-      // 1. Kiểm tra môi trường Secure Context (HTTPS / Localhost)
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("SECURE_CONTEXT_REQUIRED");
       }
 
-      // 2. Phát hiện thiết bị di động để tối ưu cấu hình camera dọc (Portrait)
       const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(
         navigator.userAgent,
       );
 
-      // 3. Thiết lập constraints trực tiếp dựa trên loại cuộc gọi
+      // Cấu hình ban đầu dựa theo mong muốn của user
       const constraints: MediaStreamConstraints = {
-        audio: true, // Luôn yêu cầu mic cho cả cuộc gọi thoại và video
+        audio: true,
         video:
           callType === "video"
             ? {
                 width: isMobileDevice ? { ideal: 720 } : { ideal: 1280 },
                 height: isMobileDevice ? { ideal: 1280 } : { ideal: 720 },
-                facingMode: "user", // Ưu tiên camera trước trên điện thoại
+                facingMode: "user",
               }
             : false,
       };
 
-      // 4. Kích hoạt pop-up xin quyền từ trình duyệt
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log("Local media tracks acquired:", stream.getTracks().map(t => `${t.kind}: enabled=${t.enabled}, readyState=${t.readyState}`));
+      let stream: MediaStream;
 
-      // 5. Lưu trữ stream vào state và ref nếu thành công
+      try {
+        // Thử xin quyền theo cấu hình mong muốn đầu tiên
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (firstError: any) {
+        // BẮT BÀI: Nếu lỗi là không tìm thấy thiết bị khi đang cố gọi Video
+        if (
+          (firstError.name === "NotFoundError" ||
+            firstError.name === "DevicesNotFoundError") &&
+          callType === "video"
+        ) {
+          console.warn(
+            "Không tìm thấy camera, tự động hạ cấp xuống xin quyền mỗi Microphone...",
+          );
+
+          enqueueSnackbar(
+            "Không tìm thấy camera. Hệ thống tự động chuyển sang cuộc gọi thoại.",
+            {
+              variant: "warning",
+            },
+          );
+
+          // Cấu hình lại: chỉ xin quyền Mic
+          constraints.video = false;
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+        } else {
+          // Nếu là lỗi khác (như bị từ chối quyền), ném lỗi ra ngoài cho block catch lớn xử lý
+          throw firstError;
+        }
+      }
+
+      console.log(
+        "Local media tracks acquired:",
+        stream
+          .getTracks()
+          .map(
+            (t) =>
+              `${t.kind}: enabled=${t.enabled}, readyState=${t.readyState}`,
+          ),
+      );
+
       setLocalStream(stream);
       localStreamRef.current = stream;
 
@@ -108,59 +143,39 @@ export const useVideoCall = () => {
     } catch (error: any) {
       console.error("Lỗi khi truy cập thiết bị Media:", error);
 
-      // 6. Xử lý tường minh từng loại lỗi trả về từ trình duyệt
       if (error.message === "SECURE_CONTEXT_REQUIRED") {
         enqueueSnackbar(
           "Yêu cầu kết nối bảo mật (HTTPS) để sử dụng camera/micro.",
-          {
-            variant: "error",
-          },
+          { variant: "error" },
         );
-      }
-      // Lỗi xảy ra khi máy không có phần cứng (VD: Gọi video nhưng máy bàn không có webcam)
-      else if (
+      } else if (
         error.name === "NotFoundError" ||
         error.name === "DevicesNotFoundError"
       ) {
-        const missingDevice =
-          callType === "video" ? "Camera hoặc Microphone" : "Microphone";
+        // Lúc này chắc chắn là máy không có cả mic lẫn camera
         enqueueSnackbar(
-          `Không tìm thấy ${missingDevice} trên thiết bị của bạn.`,
-          {
-            variant: "error",
-          },
+          "Không tìm thấy bất kỳ thiết bị Microphone hay Camera nào.",
+          { variant: "error" },
         );
-      }
-      // Lỗi khi người dùng bấm "Block" (Từ chối) trên pop-up xin quyền
-      else if (
+      } else if (
         error.name === "NotAllowedError" ||
         error.name === "PermissionDeniedError"
       ) {
-        const deniedDevice =
-          callType === "video" ? "Camera/Microphone" : "Microphone";
         enqueueSnackbar(
-          `Bạn đã chặn quyền truy cập ${deniedDevice}. Vui lòng mở lại trong cài đặt trình duyệt.`,
-          {
-            variant: "error",
-          },
+          "Bạn đã chặn quyền truy cập thiết bị. Vui lòng mở lại trong cài đặt trình duyệt.",
+          { variant: "error" },
         );
-      }
-      // Lỗi khi thiết bị đang bị ứng dụng khác chiếm dụng (VD: Zoom, Skype đang bật)
-      else if (
+      } else if (
         error.name === "NotReadableError" ||
         error.name === "TrackStartError"
       ) {
         enqueueSnackbar("Thiết bị đang được sử dụng bởi một ứng dụng khác.", {
           variant: "error",
         });
-      }
-      // Các lỗi không xác định khác
-      else {
+      } else {
         enqueueSnackbar(
           `Lỗi kết nối thiết bị: ${error.message || error.name}`,
-          {
-            variant: "error",
-          },
+          { variant: "error" },
         );
       }
 
@@ -253,13 +268,26 @@ export const useVideoCall = () => {
 
       // Lắng nghe luồng Media đổ về từ phía bên nhận
       pc.ontrack = (event) => {
-        console.log("ontrack (makeCall): nhận track", event.track.kind, "từ streams:", event.streams.map(s => s.id));
+        console.log(
+          "ontrack (makeCall): nhận track",
+          event.track.kind,
+          "từ streams:",
+          event.streams.map((s) => s.id),
+        );
         if (event.streams && event.streams[0]) {
           const incomingStream = event.streams[0];
-          console.log("Track list trong incomingStream:", incomingStream.getTracks().map(t => `${t.kind} (${t.id}): enabled=${t.enabled}`));
+          console.log(
+            "Track list trong incomingStream:",
+            incomingStream
+              .getTracks()
+              .map((t) => `${t.kind} (${t.id}): enabled=${t.enabled}`),
+          );
           setRemoteStream(incomingStream);
 
-          if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== incomingStream) {
+          if (
+            remoteVideoRef.current &&
+            remoteVideoRef.current.srcObject !== incomingStream
+          ) {
             remoteVideoRef.current.srcObject = incomingStream;
           }
         }
@@ -312,12 +340,25 @@ export const useVideoCall = () => {
 
       // 3. Đăng ký listener ontrack (để hiển thị video của Caller khi kết nối thành công)
       pc.ontrack = (event) => {
-        console.log("ontrack (answerCall): nhận track", event.track.kind, "từ streams:", event.streams.map(s => s.id));
+        console.log(
+          "ontrack (answerCall): nhận track",
+          event.track.kind,
+          "từ streams:",
+          event.streams.map((s) => s.id),
+        );
         if (event.streams && event.streams[0]) {
           const incomingStream = event.streams[0];
-          console.log("Track list trong incomingStream:", incomingStream.getTracks().map(t => `${t.kind} (${t.id}): enabled=${t.enabled}`));
+          console.log(
+            "Track list trong incomingStream:",
+            incomingStream
+              .getTracks()
+              .map((t) => `${t.kind} (${t.id}): enabled=${t.enabled}`),
+          );
           setRemoteStream(incomingStream);
-          if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== incomingStream) {
+          if (
+            remoteVideoRef.current &&
+            remoteVideoRef.current.srcObject !== incomingStream
+          ) {
             remoteVideoRef.current.srcObject = incomingStream;
           }
         }
@@ -424,18 +465,26 @@ export const useVideoCall = () => {
 
   // Tự động gán remoteStream khi thẻ video hoặc stream thay đổi
   useEffect(() => {
-    console.log("remoteStream changed state:", remoteStream?.id, "remoteVideoRef present:", !!remoteVideoRef.current);
+    console.log(
+      "remoteStream changed state:",
+      remoteStream?.id,
+      "remoteVideoRef present:",
+      !!remoteVideoRef.current,
+    );
     if (remoteVideoRef.current && remoteStream) {
       if (remoteVideoRef.current.srcObject !== remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
         console.log("Gán remoteStream thành công cho remoteVideoRef");
       }
       // Gọi play() tường minh sau khi DOM cập nhật hiển thị để tránh lỗi autoplay do display: none
-      remoteVideoRef.current.play().then(() => {
-        console.log("Phát stream từ xa thành công (có hình và tiếng)");
-      }).catch((err) => {
-        console.error("Lỗi tự động phát video/audio từ xa:", err);
-      });
+      remoteVideoRef.current
+        .play()
+        .then(() => {
+          console.log("Phát stream từ xa thành công (có hình và tiếng)");
+        })
+        .catch((err) => {
+          console.error("Lỗi tự động phát video/audio từ xa:", err);
+        });
     }
   }, [remoteStream]);
 
