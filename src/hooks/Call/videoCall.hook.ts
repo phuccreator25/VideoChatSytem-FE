@@ -271,27 +271,28 @@ export const useVideoCall = () => {
 
       // Lắng nghe luồng Media đổ về từ phía bên nhận
       pc.ontrack = (event) => {
-        console.log(
-          "ontrack (makeCall): nhận track",
-          event.track.kind,
-          "từ streams:",
-          event.streams.map((s) => s.id),
-        );
+        console.log("ontrack nhận track:", event.track.kind);
+
         if (event.streams && event.streams[0]) {
           const incomingStream = event.streams[0];
-          console.log(
-            "Track list trong incomingStream:",
-            incomingStream
-              .getTracks()
-              .map((t) => `${t.kind} (${t.id}): enabled=${t.enabled}`),
-          );
-          setRemoteStream(incomingStream);
 
-          if (
-            remoteVideoRef.current &&
-            remoteVideoRef.current.srcObject !== incomingStream
-          ) {
+          // 🔥 Đổ thẳng trực tiếp vào Ref DOM ngay lập tức, không đợi React State re-render
+          if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = incomingStream;
+
+            // Lắng nghe sự kiện nạp xong cấu hình từ Internet để ép phát
+            remoteVideoRef.current.onloadedmetadata = () => {
+              remoteVideoRef.current
+                ?.play()
+                .then(() =>
+                  console.log(
+                    "🔥 Phát stream trực tiếp từ ontrack thành công!",
+                  ),
+                )
+                .catch((err) =>
+                  console.warn("Chờ luồng dữ liệu ổn định:", err),
+                );
+            };
           }
         }
       };
@@ -348,26 +349,28 @@ export const useVideoCall = () => {
 
       // 3. Đăng ký listener ontrack (để hiển thị video của Caller khi kết nối thành công)
       pc.ontrack = (event) => {
-        console.log(
-          "ontrack (answerCall): nhận track",
-          event.track.kind,
-          "từ streams:",
-          event.streams.map((s) => s.id),
-        );
+        console.log("ontrack nhận track:", event.track.kind);
+
         if (event.streams && event.streams[0]) {
           const incomingStream = event.streams[0];
-          console.log(
-            "Track list trong incomingStream:",
-            incomingStream
-              .getTracks()
-              .map((t) => `${t.kind} (${t.id}): enabled=${t.enabled}`),
-          );
-          setRemoteStream(incomingStream);
-          if (
-            remoteVideoRef.current &&
-            remoteVideoRef.current.srcObject !== incomingStream
-          ) {
+
+          // 🔥 Đổ thẳng trực tiếp vào Ref DOM ngay lập tức, không đợi React State re-render
+          if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = incomingStream;
+
+            // Lắng nghe sự kiện nạp xong cấu hình từ Internet để ép phát
+            remoteVideoRef.current.onloadedmetadata = () => {
+              remoteVideoRef.current
+                ?.play()
+                .then(() =>
+                  console.log(
+                    "🔥 Phát stream trực tiếp từ ontrack thành công!",
+                  ),
+                )
+                .catch((err) =>
+                  console.warn("Chờ luồng dữ liệu ổn định:", err),
+                );
+            };
           }
         }
       };
@@ -462,52 +465,52 @@ export const useVideoCall = () => {
   }, [isAccepted]);
 
   // Tự động gán localStream khi thẻ video hoặc stream thay đổi
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      if (localVideoRef.current.srcObject !== localStream) {
-        localVideoRef.current.srcObject = localStream;
-      }
-      localVideoRef.current.play().catch((err) => {
-        console.error("Lỗi tự động phát video cục bộ:", err);
-      });
-    }
-  }, [localStream]);
+  // useEffect(() => {
+  //   if (localVideoRef.current && localStream) {
+  //     if (localVideoRef.current.srcObject !== localStream) {
+  //       localVideoRef.current.srcObject = localStream;
+  //     }
+  //     localVideoRef.current.play().catch((err) => {
+  //       console.error("Lỗi tự động phát video cục bộ:", err);
+  //     });
+  //   }
+  // }, [localStream]);
 
-  // Tự động gán remoteStream khi thẻ video hoặc stream thay đổi
-  useEffect(() => {
-    console.log(
-      "remoteStream changed state:",
-      remoteStream?.id,
-      "remoteVideoRef present:",
-      !!remoteVideoRef.current,
-    );
-    // if (remoteVideoRef.current && remoteStream) {
-    //   if (remoteVideoRef.current.srcObject !== remoteStream) {
-    //     remoteVideoRef.current.srcObject = remoteStream;
-    //     console.log("Gán remoteStream thành công cho remoteVideoRef");
-    //   }
-    //   // Gọi play() tường minh sau khi DOM cập nhật hiển thị để tránh lỗi autoplay do display: none
-    //   remoteVideoRef.current
-    //     .play()
-    //     .then(() => {
-    //       console.log("Phát stream từ xa thành công (có hình và tiếng)");
-    //     })
-    //     .catch((err) => {
-    //       console.error("Lỗi tự động phát video/audio từ xa:", err);
-    //     });
-    // }
-    if (remoteVideoRef.current && remoteStream) {
-      // 💥 Bỏ cái if bọc ngoài đi, ép gán lại và ép gọi .play() liên tục mỗi khi state trigger
-      remoteVideoRef.current.srcObject = remoteStream;
+  // // Tự động gán remoteStream khi thẻ video hoặc stream thay đổi
+  // useEffect(() => {
+  //   console.log(
+  //     "remoteStream changed state:",
+  //     remoteStream?.id,
+  //     "remoteVideoRef present:",
+  //     !!remoteVideoRef.current,
+  //   );
+  //   // if (remoteVideoRef.current && remoteStream) {
+  //   //   if (remoteVideoRef.current.srcObject !== remoteStream) {
+  //   //     remoteVideoRef.current.srcObject = remoteStream;
+  //   //     console.log("Gán remoteStream thành công cho remoteVideoRef");
+  //   //   }
+  //   //   // Gọi play() tường minh sau khi DOM cập nhật hiển thị để tránh lỗi autoplay do display: none
+  //   //   remoteVideoRef.current
+  //   //     .play()
+  //   //     .then(() => {
+  //   //       console.log("Phát stream từ xa thành công (có hình và tiếng)");
+  //   //     })
+  //   //     .catch((err) => {
+  //   //       console.error("Lỗi tự động phát video/audio từ xa:", err);
+  //   //     });
+  //   // }
+  //   if (remoteVideoRef.current && remoteStream) {
+  //     // 💥 Bỏ cái if bọc ngoài đi, ép gán lại và ép gọi .play() liên tục mỗi khi state trigger
+  //     remoteVideoRef.current.srcObject = remoteStream;
 
-      remoteVideoRef.current
-        .play()
-        .then(() =>
-          console.log("Phát stream từ xa thành công (có hình và tiếng)"),
-        )
-        .catch((err) => console.error("Lỗi tự động phát:", err));
-    }
-  }, [remoteStream]);
+  //     remoteVideoRef.current
+  //       .play()
+  //       .then(() =>
+  //         console.log("Phát stream từ xa thành công (có hình và tiếng)"),
+  //       )
+  //       .catch((err) => console.error("Lỗi tự động phát:", err));
+  //   }
+  // }, [remoteStream]);
 
   // Áp dụng các Ice Candidates được lưu tạm từ Redux khi peerConnection sẵn sàng
   useEffect(() => {
