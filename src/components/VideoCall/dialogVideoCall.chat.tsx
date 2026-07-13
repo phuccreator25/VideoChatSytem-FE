@@ -66,7 +66,7 @@ export const VideoCallModal = ({
                 // 2. LUÔN LUÔN khởi tạo session kết nối WebRTC (dù localStream có hay không)
                 try {
                     // Chúng ta truyền localStream qua (có thể là stream xịn, hoặc là null)
-                    await handler.startCallSession(localStream );
+                    await handler.startCallSession(localStream);
                 } catch (sessionErr) {
                     console.error("Lỗi nghiêm trọng khi thiết lập session cuộc gọi:", sessionErr);
                 }
@@ -352,12 +352,23 @@ export const VideoCallModal = ({
                         zIndex: 1,
                     }}
                 >
-                    {/* Background video làm hiệu ứng mờ viền khi đối phương dùng mobile dọc */}
+                    {data.remoteStream && (
+                        <audio
+                            autoPlay
+                            muted={!ui.isSpeakerOn}
+                            ref={(el) => {
+                                if (el && el.srcObject !== data.remoteStream) {
+                                    el.srcObject = data.remoteStream;
+                                }
+                            }}
+                        />
+                    )}
+                    {/* Background video làm hiệu ứng mờ viền */}
                     <video
                         ref={setRemoteBgVideoEl}
                         autoPlay
                         playsInline
-                        muted
+                        muted // Luôn luôn mute để không bị lặp tiếng với thẻ audio ẩn phía trên
                         style={{
                             width: "100%",
                             height: "100%",
@@ -365,26 +376,31 @@ export const VideoCallModal = ({
                             position: "absolute",
                             inset: 0,
                             zIndex: 1,
-                            filter: "blur(30px) brightness(0.4)", // Hiệu ứng làm mờ và giảm độ sáng làm nền
-                            display: (data.remoteStream && !ui.isRemoteVideoMuted) ? "block" : "none", // Chỉ hiện khi có luồng video
+                            filter: "blur(30px) brightness(0.4)",
+                            display: (data.remoteStream && !ui.isRemoteVideoMuted) ? "block" : "none",
                         }}
                     />
 
-                    {/* Foreground video chính hiển thị đúng tỉ lệ gốc (Portrait/Landscape) không bị cắt xén */}
+                    {/* Foreground video chính - LUÔN LUÔN MUTED để tránh trình duyệt đóng băng hình ảnh */}
                     <video
                         ref={remoteVideoRef}
                         autoPlay
                         playsInline
-                        muted={!ui.isSpeakerOn}
+                        muted // BẮT BUỘC MUTE: Tiếng đã có thẻ <audio> phía trên lo, thẻ này chỉ lo hiện HÌNH
+                        onLoadedMetadata={(e) => {
+                            // Ép trình duyệt bắt đầu play luồng hình ảnh ngay khi nạp xong
+                            e.currentTarget.play().catch(err => console.log("Autoplay video: ", err));
+                        }}
                         style={{
                             width: "100%",
                             height: "100%",
-                            objectFit: "contain", // Giữ nguyên tỉ lệ tự nhiên của camera đối phương
+                            objectFit: "contain",
                             position: "absolute",
                             inset: 0,
-                            zIndex: ui.isRemoteVideoMuted ? -1 : 2, // Đưa xuống dưới khi đối phương tắt cam để hiển thị Avatar phía sau
-                            opacity: ui.isRemoteVideoMuted ? 0 : 1, // Làm mờ hoàn toàn khi tắt cam nhưng giữ nguyên block để loa vẫn phát ra tiếng
-                            display: data.remoteStream ? "block" : "none", // Chỉ ẩn hẳn khi không có luồng dữ liệu nào
+                            zIndex: ui.isRemoteVideoMuted ? -1 : 2,
+                            opacity: ui.isRemoteVideoMuted ? 0 : 1,
+                            // Sửa điều kiện hiển thị an toàn hơn: Kiểm tra ref thực tế thay vì chỉ tin vào state
+                            display: "block",
                         }}
                     />
 
