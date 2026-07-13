@@ -481,20 +481,31 @@ export const useVideoCall = () => {
       "remoteVideoRef present:",
       !!remoteVideoRef.current,
     );
+    // if (remoteVideoRef.current && remoteStream) {
+    //   if (remoteVideoRef.current.srcObject !== remoteStream) {
+    //     remoteVideoRef.current.srcObject = remoteStream;
+    //     console.log("Gán remoteStream thành công cho remoteVideoRef");
+    //   }
+    //   // Gọi play() tường minh sau khi DOM cập nhật hiển thị để tránh lỗi autoplay do display: none
+    //   remoteVideoRef.current
+    //     .play()
+    //     .then(() => {
+    //       console.log("Phát stream từ xa thành công (có hình và tiếng)");
+    //     })
+    //     .catch((err) => {
+    //       console.error("Lỗi tự động phát video/audio từ xa:", err);
+    //     });
+    // }
     if (remoteVideoRef.current && remoteStream) {
-      if (remoteVideoRef.current.srcObject !== remoteStream) {
-        remoteVideoRef.current.srcObject = remoteStream;
-        console.log("Gán remoteStream thành công cho remoteVideoRef");
-      }
-      // Gọi play() tường minh sau khi DOM cập nhật hiển thị để tránh lỗi autoplay do display: none
+      // 💥 Bỏ cái if bọc ngoài đi, ép gán lại và ép gọi .play() liên tục mỗi khi state trigger
+      remoteVideoRef.current.srcObject = remoteStream;
+
       remoteVideoRef.current
         .play()
-        .then(() => {
-          console.log("Phát stream từ xa thành công (có hình và tiếng)");
-        })
-        .catch((err) => {
-          console.error("Lỗi tự động phát video/audio từ xa:", err);
-        });
+        .then(() =>
+          console.log("Phát stream từ xa thành công (có hình và tiếng)"),
+        )
+        .catch((err) => console.error("Lỗi tự động phát:", err));
     }
   }, [remoteStream]);
 
