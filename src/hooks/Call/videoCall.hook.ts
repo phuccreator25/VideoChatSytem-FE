@@ -69,87 +69,94 @@ export const useVideoCall = () => {
   // Khởi tạo media (camera/micro)
   const openUserMedia = async (callType: "voice" | "video") => {
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      // 1. Kiểm tra môi trường Secure Context (HTTPS / Localhost)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("SECURE_CONTEXT_REQUIRED");
       }
 
-      // Liệt kê các thiết bị phần cứng để phục vụ debug
-      const devices = await navigator.mediaDevices.enumerateDevices();
-
-      const hasVideo = devices.some((d) => d.kind === "videoinput");
-      const hasAudio = devices.some((d) => d.kind === "audioinput");
-
-      // Nếu không có cả camera lẫn mic
-      if (!hasVideo && !hasAudio) {
-        throw new Error("NO_DEVICES_FOUND");
-      }
-
-      // Xác định các thiết bị thực tế có thể yêu cầu
-      const useVideo = callType === "video" && hasVideo;
-      const useAudio = hasAudio; // Ưu tiên dùng mic nếu có
-
-      if (callType === "video" && !hasVideo) {
-        enqueueSnackbar("Your device does not have a camera", {
-          variant: "error",
-        });
-        return;
-      }
-
-      if (!useVideo && !useAudio) {
-        enqueueSnackbar("Your device does not have any media devices", {
-          variant: "error",
-        });
-        return;
-      }
-
-      // Phát hiện thiết bị di động để yêu cầu độ phân giải dạng Portrait dọc
+      // 2. Phát hiện thiết bị di động để tối ưu cấu hình camera dọc (Portrait)
       const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(
         navigator.userAgent,
       );
 
-      const constraints = {
-        video: useVideo
-          ? {
-              width: isMobileDevice ? { ideal: 720 } : { ideal: 1280 },
-              height: isMobileDevice ? { ideal: 1280 } : { ideal: 720 },
-              facingMode: "user",
-            }
-          : false,
-        audio: useAudio,
+      // 3. Thiết lập constraints trực tiếp dựa trên loại cuộc gọi
+      const constraints: MediaStreamConstraints = {
+        audio: true, // Luôn yêu cầu mic cho cả cuộc gọi thoại và video
+        video:
+          callType === "video"
+            ? {
+                width: isMobileDevice ? { ideal: 720 } : { ideal: 1280 },
+                height: isMobileDevice ? { ideal: 1280 } : { ideal: 720 },
+                facingMode: "user", // Ưu tiên camera trước trên điện thoại
+              }
+            : false,
       };
 
+      // 4. Kích hoạt pop-up xin quyền từ trình duyệt
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      // 5. Lưu trữ stream vào state và ref nếu thành công
       setLocalStream(stream);
       localStreamRef.current = stream;
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
+
       return stream;
     } catch (error: any) {
       console.error("Lỗi khi truy cập thiết bị Media:", error);
 
+      // 6. Xử lý tường minh từng loại lỗi trả về từ trình duyệt
       if (error.message === "SECURE_CONTEXT_REQUIRED") {
-        enqueueSnackbar("Secure context required to access media devices", {
-          variant: "error",
-        });
-      } else if (
-        error.message === "NO_DEVICES_FOUND" ||
-        error.name === "NotFoundError"
+        enqueueSnackbar(
+          "Yêu cầu kết nối bảo mật (HTTPS) để sử dụng camera/micro.",
+          {
+            variant: "error",
+          },
+        );
+      }
+      // Lỗi xảy ra khi máy không có phần cứng (VD: Gọi video nhưng máy bàn không có webcam)
+      else if (
+        error.name === "NotFoundError" ||
+        error.name === "DevicesNotFoundError"
       ) {
-        enqueueSnackbar("No media devices found", {
-          variant: "error",
-        });
-      } else if (
+        const missingDevice =
+          callType === "video" ? "Camera hoặc Microphone" : "Microphone";
+        enqueueSnackbar(
+          `Không tìm thấy ${missingDevice} trên thiết bị của bạn.`,
+          {
+            variant: "error",
+          },
+        );
+      }
+      // Lỗi khi người dùng bấm "Block" (Từ chối) trên pop-up xin quyền
+      else if (
         error.name === "NotAllowedError" ||
         error.name === "PermissionDeniedError"
       ) {
-        enqueueSnackbar("Permission denied to access media devices", {
+        const deniedDevice =
+          callType === "video" ? "Camera/Microphone" : "Microphone";
+        enqueueSnackbar(
+          `Bạn đã chặn quyền truy cập ${deniedDevice}. Vui lòng mở lại trong cài đặt trình duyệt.`,
+          {
+            variant: "error",
+          },
+        );
+      }
+      // Lỗi khi thiết bị đang bị ứng dụng khác chiếm dụng (VD: Zoom, Skype đang bật)
+      else if (
+        error.name === "NotReadableError" ||
+        error.name === "TrackStartError"
+      ) {
+        enqueueSnackbar("Thiết bị đang được sử dụng bởi một ứng dụng khác.", {
           variant: "error",
         });
-      } else {
+      }
+      // Các lỗi không xác định khác
+      else {
         enqueueSnackbar(
-          `Error accessing media devices: ${error.message || error.name || error}`,
+          `Lỗi kết nối thiết bị: ${error.message || error.name}`,
           {
             variant: "error",
           },
@@ -196,7 +203,8 @@ export const useVideoCall = () => {
         setIsAudioMuted(!track.enabled);
       });
 
-      const callId = typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
+      const callId =
+        typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
       if (callId && currentUserId) {
         emitCloseAudioCall(callId, currentUserId);
       }
@@ -211,7 +219,8 @@ export const useVideoCall = () => {
         setIsVideoStopped(!track.enabled);
       });
 
-      const callId = typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
+      const callId =
+        typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
       if (callId && currentUserId) {
         emitCloseVideoCall(callId, currentUserId);
       }
@@ -244,12 +253,11 @@ export const useVideoCall = () => {
       // Lắng nghe luồng Media đổ về từ phía bên nhận
       pc.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
-          // Tạo đối tượng MediaStream mới chứa toàn bộ các track hiện tại để thay đổi tham chiếu
-          const newStream = new MediaStream(event.streams[0].getTracks());
-          setRemoteStream(newStream);
+          const incomingStream = event.streams[0];
+          setRemoteStream(incomingStream);
 
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = newStream;
+          if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== incomingStream) {
+            remoteVideoRef.current.srcObject = incomingStream;
           }
         }
       };
@@ -302,10 +310,10 @@ export const useVideoCall = () => {
       // 3. Đăng ký listener ontrack (để hiển thị video của Caller khi kết nối thành công)
       pc.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
-          const newStream = new MediaStream(event.streams[0].getTracks());
-          setRemoteStream(newStream);
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = newStream;
+          const incomingStream = event.streams[0];
+          setRemoteStream(incomingStream);
+          if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== incomingStream) {
+            remoteVideoRef.current.srcObject = incomingStream;
           }
         }
       };
