@@ -247,7 +247,7 @@ export const useVideoCall = () => {
   // III. THIẾT LẬP KẾT NỐI WEBRTC (SIGNALING)
   // ==========================================
 
-  const makeCall = async (stream?: MediaStream) => {
+  const makeCall = async (stream?: MediaStream | null) => {
     const activeStream = stream || localStream;
     if (!conversationId || !activeStream || !ortherUserId || !currentUserId)
       return;
@@ -323,7 +323,7 @@ export const useVideoCall = () => {
     }
   };
 
-  const answerCall = async (stream: MediaStream) => {
+  const answerCall = async (stream: MediaStream | null) => {
     if (!incomingCall?.offer || !incomingCall?.userData) {
       console.error("Không tìm thấy offer của cuộc gọi đến");
       return;
@@ -336,7 +336,7 @@ export const useVideoCall = () => {
       peerConnectionRef.current = pc;
 
       // 2. Add local camera/mic stream
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+      stream?.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       // 3. Đăng ký listener ontrack (để hiển thị video của Caller khi kết nối thành công)
       pc.ontrack = (event) => {
@@ -398,16 +398,15 @@ export const useVideoCall = () => {
   };
 
   const startCallSession = async (stream: MediaStream | null) => {
-    // Kiểm tra xem trong Redux có incomingCall.offer (nghĩa là có cuộc gọi đến gửi offer cho mình) hay không
     const isCallee = !!incomingCall?.offer;
 
     if (isCallee) {
       console.log("-> Khởi động luồng Callee (Nhận cuộc gọi & tạo Answer)");
       setIsAccepted(true);
-      await answerCall(stream!);
+      await answerCall(stream); // <--- Xóa dấu ! ở đây
     } else {
       console.log("-> Khởi động luồng Caller (Bắt đầu gọi & tạo Offer)");
-      await makeCall(stream!);
+      await makeCall(stream); // <--- Xóa dấu ! ở đây (và cập nhật check stream trong hàm makeCall)
     }
   };
 
