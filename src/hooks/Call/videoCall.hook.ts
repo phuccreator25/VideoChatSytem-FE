@@ -335,7 +335,7 @@ export const useVideoCall = () => {
     try {
       // 1. Khởi tạo PeerConnection với Turn/Stun
       const res = await callApi.onGetTurnCredentials();
-      console.log("res: ", res.data);
+      console.log("res: ", res);
 
       const pc = new RTCPeerConnection({ iceServers: res.data.iceServers });
       peerConnectionRef.current = pc;
