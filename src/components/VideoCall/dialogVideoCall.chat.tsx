@@ -1,5 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useVideoCall } from "../../hooks/Call/videoCall.hook";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../redux/store";
 import {
     Dialog,
     Box,
@@ -41,6 +43,8 @@ export const VideoCallModal = ({
     userData?: ConversationUserInfo | null;
 }) => {
     const { ui, data, handler, refs: { localVideoRef, remoteVideoRef } } = useVideoCall();
+    const currentUser = useSelector((state: RootState) => state.user.currentUser);
+    const myAvatar = currentUser?.avatar || "";
 
     const remoteBgVideoRef = useRef<HTMLVideoElement | null>(null);
     const setRemoteBgVideoEl = useCallback((el: HTMLVideoElement | null) => {
@@ -259,11 +263,18 @@ export const VideoCallModal = ({
                             }}
                         />
                         <Box>
-                            <Typography
-                                sx={{ color: "#ffffff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}
-                            >
-                                {displayName}
-                            </Typography>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Typography
+                                    sx={{ color: "#ffffff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}
+                                >
+                                    {displayName}
+                                </Typography>
+                                {ui.isRemoteAudioMuted && (
+                                    <Tooltip title="Muted">
+                                        <MicOffRoundedIcon sx={{ color: "#ef4444", fontSize: 16 }} />
+                                    </Tooltip>
+                                )}
+                            </Stack>
                             <Typography
                                 component="div"
                                 sx={{
@@ -293,7 +304,7 @@ export const VideoCallModal = ({
                                         }
                                     }}
                                 />
-                                {ui.isAccepted ? "Connected" : "Calling..."}
+                                {ui.isAccepted ? `Connected • ${formatDuration(ui.callDuration)}` : "Calling..."}
                             </Typography>
                         </Box>
                     </Stack>
@@ -394,7 +405,7 @@ export const VideoCallModal = ({
                         style={{
                             width: "100%",
                             height: "100%",
-                            objectFit: "contain",
+                            objectFit: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "cover" : "contain",
                             position: "absolute",
                             inset: 0,
                             zIndex: ui.isRemoteVideoMuted ? -1 : 2,
@@ -403,6 +414,33 @@ export const VideoCallModal = ({
                             display: "block",
                         }}
                     />
+
+                    {/* Floating remote mic-muted indicator on top of video */}
+                    {data.remoteStream && !ui.isRemoteVideoMuted && ui.isRemoteAudioMuted && (
+                        <Box
+                            sx={{
+                                position: "absolute",
+                                top: 20,
+                                left: 20,
+                                zIndex: 10,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                px: 2,
+                                py: 1,
+                                borderRadius: "12px",
+                                bgcolor: "rgba(239, 68, 68, 0.25)",
+                                border: "1px solid rgba(239, 68, 68, 0.4)",
+                                backdropFilter: "blur(8px)",
+                                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                            }}
+                        >
+                            <MicOffRoundedIcon sx={{ color: "#ef4444", fontSize: 18 }} />
+                            <Typography sx={{ color: "#ffffff", fontSize: 12, fontWeight: 600 }}>
+                                {displayName} is muted
+                            </Typography>
+                        </Box>
+                    )}
 
                     {/* HIỂN THỊ GIAO DIỆN CONCEPT 1 (GLASSMORPHISM HOLOGRAM) KHI TẮT CAMERA HOẶC CHƯA KẾT NỐI */}
                     {(!data.remoteStream || ui.isRemoteVideoMuted) && (
@@ -561,8 +599,8 @@ export const VideoCallModal = ({
                             position: "absolute",
                             bottom: 16,
                             right: 16,
-                            width: { xs: 90, sm: ui.isFullScreen ? 220 : 180, md: ui.isFullScreen ? 260 : 180 },
-                            height: { xs: 135, sm: ui.isFullScreen ? 165 : 135, md: ui.isFullScreen ? 195 : 135 },
+                            width: { xs: 110, sm: ui.isFullScreen ? 220 : 180, md: ui.isFullScreen ? 260 : 180 },
+                            height: { xs: 165, sm: ui.isFullScreen ? 165 : 135, md: ui.isFullScreen ? 195 : 135 },
                             borderRadius: "16px",
                             overflow: "hidden",
                             boxShadow: "0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.1)",
@@ -577,12 +615,40 @@ export const VideoCallModal = ({
                                 width: "100%",
                                 height: "100%",
                                 display: ui.isVideoStopped ? "flex" : "none",
+                                flexDirection: "column",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 bgcolor: "#06070a",
+                                position: "relative",
                             }}
                         >
-                            <VideocamOffRoundedIcon sx={{ color: "rgba(255,255,255,0.25)", fontSize: 32 }} />
+                            <Avatar
+                                src={myAvatar}
+                                alt="You"
+                                sx={{
+                                    width: { xs: 48, sm: 64 },
+                                    height: { xs: 48, sm: 64 },
+                                    border: "2px solid rgba(255, 255, 255, 0.15)",
+                                    boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+                                }}
+                            />
+                            <Box
+                                sx={{
+                                    position: "absolute",
+                                    bottom: 6,
+                                    right: 6,
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: "50%",
+                                    bgcolor: "rgba(239, 68, 68, 0.95)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                                }}
+                            >
+                                <VideocamOffRoundedIcon sx={{ color: "#ffffff", fontSize: 13 }} />
+                            </Box>
                         </Box>
                         <video
                             ref={localVideoRef}
@@ -618,6 +684,9 @@ export const VideoCallModal = ({
                             <Typography sx={{ color: "#ffffff", fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
                                 You
                             </Typography>
+                            {ui.isAudioMuted && (
+                                <MicOffRoundedIcon sx={{ color: "#ef4444", fontSize: 12 }} />
+                            )}
                         </Box>
                     </Box>
                 </Box>
