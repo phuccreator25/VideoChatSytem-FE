@@ -514,10 +514,12 @@ export const useVideoCall = () => {
       // Tiếp nhận SDP của đối phương
       const remoteDesc = new RTCSessionDescription(payload.answer);
       await peerConnectionRef.current.setRemoteDescription(remoteDesc); // Browser sẽ tự động phân tácg SDP từ callee và kích hoạt pc.ontrack
+      console.log("Đã nhận answer từ đối phương");
     };
 
     const handleAcceptCall = () => {
       setIsAccepted(true);
+      console.log("Đã nhận accept từ đối phương");
     };
 
     const handleCallCloseVideo = (payload: {
@@ -532,6 +534,7 @@ export const useVideoCall = () => {
       ) {
         setIsRemoteVideoMuted((prev) => !prev);
       }
+      console.log("Đối phương tắt cam");
     };
 
     const handleCallCloseAudio = (payload: {
@@ -546,6 +549,7 @@ export const useVideoCall = () => {
       ) {
         setIsRemoteAudioMuted((prev) => !prev);
       }
+      console.log("Đối phương tắt mic");
     };
 
     bindCallAnswer(handleCallAnswer);
