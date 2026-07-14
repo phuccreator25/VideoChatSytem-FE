@@ -370,13 +370,18 @@ export const VideoCallModal = ({
                             muted={!ui.isSpeakerOn}
                             ref={(el) => {
                                 if (el) {
+                                    console.log("🔊 Thẻ Audio đã mount. Stream ID:", data?.remoteStream?.id, "Tracks:", data?.remoteStream?.getTracks().map(t => `${t.kind}: readyState=${t.readyState}, enabled=${t.enabled}`));
                                     if (el.srcObject !== data.remoteStream) {
                                         el.srcObject = data.remoteStream;
                                     }
-                                    //Ép trình duyệt phát âm thanh
-                                    el.play().catch((err) =>
-                                        console.warn("Trình duyệt chặn phát âm thanh tự động:", err)
-                                    );
+                                    // Ép trình duyệt phát âm thanh
+                                    el.play()
+                                        .then(() => console.log("🔊 Phát audio từ xa thành công!"))
+                                        .catch((err) =>
+                                            console.warn("Trình duyệt chặn phát âm thanh tự động:", err)
+                                        );
+                                } else {
+                                    console.log("🔊 Thẻ Audio bị unmount");
                                 }
                             }}
                         />
