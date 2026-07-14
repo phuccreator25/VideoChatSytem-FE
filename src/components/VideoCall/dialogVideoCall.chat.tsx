@@ -369,8 +369,14 @@ export const VideoCallModal = ({
                             autoPlay
                             muted={!ui.isSpeakerOn}
                             ref={(el) => {
-                                if (el && el.srcObject !== data.remoteStream) {
-                                    el.srcObject = data.remoteStream;
+                                if (el) {
+                                    if (el.srcObject !== data.remoteStream) {
+                                        el.srcObject = data.remoteStream;
+                                    }
+                                    //Ép trình duyệt phát âm thanh
+                                    el.play().catch((err) =>
+                                        console.warn("Trình duyệt chặn phát âm thanh tự động:", err)
+                                    );
                                 }
                             }}
                         />
