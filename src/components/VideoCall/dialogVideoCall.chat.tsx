@@ -363,6 +363,7 @@ export const VideoCallModal = ({
                         zIndex: 1,
                     }}
                 >
+                    {/* 1. Thẻ Audio phát tiếng */}
                     {data.remoteStream && (
                         <audio
                             autoPlay
@@ -374,46 +375,52 @@ export const VideoCallModal = ({
                             }}
                         />
                     )}
-                    {/* Background video làm hiệu ứng mờ viền */}
-                    <video
-                        ref={setRemoteBgVideoEl}
-                        autoPlay
-                        playsInline
-                        muted // Luôn luôn mute để không bị lặp tiếng với thẻ audio ẩn phía trên
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            position: "absolute",
-                            inset: 0,
-                            zIndex: 1,
-                            filter: "blur(30px) brightness(0.4)",
-                            display: (data.remoteStream && !ui.isRemoteVideoMuted) ? "block" : "none",
-                        }}
-                    />
-
-                    {/* Foreground video chính - LUÔN LUÔN MUTED để tránh trình duyệt đóng băng hình ảnh */}
-                    <video
-                        ref={remoteVideoRef}
-                        autoPlay
-                        playsInline
-                        muted // BẮT BUỘC MUTE: Tiếng đã có thẻ <audio> phía trên lo, thẻ này chỉ lo hiện HÌNH
-                        onLoadedMetadata={(e) => {
-                            // Ép trình duyệt bắt đầu play luồng hình ảnh ngay khi nạp xong
-                            e.currentTarget.play().catch(err => console.log("Autoplay video: ", err));
-                        }}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "cover" : "contain",
-                            position: "absolute",
-                            inset: 0,
-                            zIndex: ui.isRemoteVideoMuted ? -1 : 2,
-                            opacity: ui.isRemoteVideoMuted ? 0 : 1,
-                            // Sửa điều kiện hiển thị an toàn hơn: Kiểm tra ref thực tế thay vì chỉ tin vào state
-                            display: "block",
-                        }}
-                    />
+                    {/* 2. Video nền làm mờ viền */}
+                    {data.remoteStream && !ui.isRemoteVideoMuted && (
+                        <video
+                            autoPlay
+                            playsInline
+                            muted
+                            ref={(el) => {
+                                if (el && el.srcObject !== data.remoteStream) {
+                                    el.srcObject = data.remoteStream;
+                                }
+                            }}
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                position: "absolute",
+                                inset: 0,
+                                zIndex: 1,
+                                filter: "blur(30px) brightness(0.4)",
+                            }}
+                        />
+                    )}
+                    {/* 3. Video chính hiển thị hình ảnh */}
+                    {data.remoteStream && !ui.isRemoteVideoMuted && (
+                        <video
+                            autoPlay
+                            playsInline
+                            muted
+                            ref={(el) => {
+                                if (el && el.srcObject !== data.remoteStream) {
+                                    el.srcObject = data.remoteStream;
+                                }
+                            }}
+                            onLoadedMetadata={(e) => {
+                                e.currentTarget.play().catch(err => console.warn(err));
+                            }}
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "cover" : "contain",
+                                position: "absolute",
+                                inset: 0,
+                                zIndex: 2,
+                            }}
+                        />
+                    )}
 
                     {/* Floating remote mic-muted indicator on top of video */}
                     {data.remoteStream && !ui.isRemoteVideoMuted && ui.isRemoteAudioMuted && (
