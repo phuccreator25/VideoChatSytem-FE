@@ -275,6 +275,7 @@ export const useVideoCall = () => {
 
         if (event.streams && event.streams[0]) {
           const incomingStream = event.streams[0];
+          setRemoteStream(incomingStream);
 
           // 🔥 Đổ thẳng trực tiếp vào Ref DOM ngay lập tức, không đợi React State re-render
           if (remoteVideoRef.current) {
@@ -353,6 +354,7 @@ export const useVideoCall = () => {
 
         if (event.streams && event.streams[0]) {
           const incomingStream = event.streams[0];
+          setRemoteStream(incomingStream);
 
           // 🔥 Đổ thẳng trực tiếp vào Ref DOM ngay lập tức, không đợi React State re-render
           if (remoteVideoRef.current) {
