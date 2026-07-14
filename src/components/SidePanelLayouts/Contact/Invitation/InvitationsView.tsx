@@ -4,6 +4,10 @@ import Divider from "@mui/material/Divider";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
+import { useNavigate } from "react-router-dom";
 
 import { customScrollbarSx } from "../../../../utils/CustomScroll";
 import { COLORS } from "../../../../utils/Colors";
@@ -65,6 +69,8 @@ function InvitationSectionTitle({
 
 export default function InvitationsFrame() {
   const { helpers } = useInvitation();
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   const {
     receivedAllInvitations,
@@ -105,17 +111,24 @@ export default function InvitationsFrame() {
         }}
       >
         <Stack spacing={0.75}>
-          <Typography
-            sx={{
-              fontSize: { xs: 22, sm: 26 },
-              fontWeight: 800,
-              color: "#13213f",
-              letterSpacing: "-0.01em",
-              lineHeight: 1.15,
-            }}
-          >
-            Connection Invitations
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: isMobile ? -0.5 : 0 }}>
+            {isMobile && (
+              <IconButton onClick={() => navigate("/chat")} sx={{ color: "#13213f", p: 0.5 }}>
+                <ArrowBackIosNewRoundedIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            )}
+            <Typography
+              sx={{
+                fontSize: { xs: 22, sm: 26 },
+                fontWeight: 800,
+                color: "#13213f",
+                letterSpacing: "-0.01em",
+                lineHeight: 1.15,
+              }}
+            >
+              Connection Invitations
+            </Typography>
+          </Stack>
           <Typography
             sx={{
               fontSize: { xs: 13, sm: 14 },

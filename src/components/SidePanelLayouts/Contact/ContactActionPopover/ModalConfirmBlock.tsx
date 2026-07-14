@@ -30,7 +30,7 @@ export function ConfirmBlockModal({
 
     const handleConfirm = async () => {
         try {
-            if (!selectedContact) return
+            if (!selectedContact) return;
             setIsSubmitting(true);
             const result = await onConfirm(selectedContact);
 
@@ -42,7 +42,7 @@ export function ConfirmBlockModal({
                 await distpatch(updateContactBlockedStatus({
                     contactId: selectedContact._id,
                     isBlocked: true
-                }))
+                }));
                 
                 onClose();
             }
@@ -55,7 +55,7 @@ export function ConfirmBlockModal({
 
     const handleConfirmUnblock = async () => {
         try {
-            if (!selectedContact) return
+            if (!selectedContact) return;
             
             setIsSubmitting(true);
             const result = await handleUnblock(selectedContact);
@@ -68,7 +68,7 @@ export function ConfirmBlockModal({
                 await distpatch(updateContactBlockedStatus({
                     contactId: selectedContact._id,
                     isBlocked: false
-                }))
+                }));
 
                 onClose();
             }
@@ -87,12 +87,12 @@ export function ConfirmBlockModal({
             fullWidth
             hideBackdrop
             TransitionComponent={Zoom}
-            transitionDuration={220}
+            transitionDuration={250}
             PaperProps={{
                 sx: {
-                    borderRadius: 3,
+                    borderRadius: "24px",
                     backgroundColor: "#ffffff",
-                    border: "1px solid #ede9fe",
+                    border: "1px solid rgba(124, 58, 237, 0.15)",
                     boxShadow: "none",
                     overflow: "hidden",
                     m: 0,
@@ -101,24 +101,26 @@ export function ConfirmBlockModal({
         >
             <DialogTitle
                 sx={{
-                    px: 3,
-                    py: 2,
+                    px: 3.5,
+                    pt: 3.5,
+                    pb: 2,
                     fontSize: 20,
-                    fontWeight: 650,
-                    color: "#7c3aed",
-                    borderBottom: "1px solid #ede9fe",
-                    backgroundColor: "#faf7ff",
+                    fontWeight: 800,
+                    background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    borderBottom: "1px solid rgba(148, 163, 184, 0.08)",
                 }}
             >
-                Block this user
+                {selectedContact?.isBlocked ? "Unblock this user" : "Block this user"}
             </DialogTitle>
 
             <DialogContent
                 sx={{
-                    px: 3,
-                    pt: 3,
+                    px: 3.5,
+                    pt: 4,
                     pb: 2.5,
-                    backgroundColor: "#ffffff",
+                    backgroundColor: "transparent",
                 }}
             >
                 <Box
@@ -131,27 +133,28 @@ export function ConfirmBlockModal({
                 >
                     <Box
                         sx={{
-                            mt: 2,
-                            width: 48,
-                            height: 48,
-                            borderRadius: "50%",
+                            width: 54,
+                            height: 54,
+                            borderRadius: "16px",
                             display: "grid",
                             placeItems: "center",
-                            bgcolor: "#f5f3ff",
+                            bgcolor: "rgba(124, 58, 237, 0.08)",
                             color: "#7c3aed",
-                            mb: 1.5,
+                            mb: 2.5,
+                            boxShadow: "0 8px 20px rgba(124, 58, 237, 0.1)",
                         }}
                     >
-                        <BlockRoundedIcon sx={{ fontSize: 24 }} />
+                        <BlockRoundedIcon sx={{ fontSize: 26 }} />
                     </Box>
 
                     <Typography
                         sx={{
                             fontSize: 18,
-                            fontWeight: 700,
-                            color: "#111827",
+                            fontWeight: 800,
+                            color: "#0f172a",
                             lineHeight: 1.4,
-                            mb: 0.75,
+                            mb: 1,
+                            letterSpacing: "-0.01em",
                         }}
                     >
                         {selectedContact?.isBlocked ? "Unblock this user?" : "Block this user?"}
@@ -159,8 +162,8 @@ export function ConfirmBlockModal({
 
                     <Typography
                         sx={{
-                            fontSize: 14,
-                            color: "#4b5563",
+                            fontSize: 14.5,
+                            color: "#64748b",
                             lineHeight: 1.6,
                             maxWidth: 320,
                         }}
@@ -172,7 +175,7 @@ export function ConfirmBlockModal({
                             component="span"
                             sx={{
                                 fontWeight: 700,
-                                color: "#111827",
+                                color: "#0f172a",
                             }}
                         >
                             {displayName}
@@ -184,11 +187,13 @@ export function ConfirmBlockModal({
 
             <DialogActions
                 sx={{
-                    px: 3,
-                    pb: 2.5,
-                    pt: 0.5,
+                    px: 3.5,
+                    pb: 3,
+                    pt: 1,
                     justifyContent: "flex-end",
-                    gap: 1.5,
+                    gap: 2,
+                    borderTop: "1px solid rgba(148, 163, 184, 0.08)",
+                    bgcolor: "rgba(248, 250, 252, 0.4)",
                 }}
             >
                 <Button
@@ -196,18 +201,21 @@ export function ConfirmBlockModal({
                     variant="contained"
                     disabled={isSubmitting}
                     sx={{
-                        minWidth: 96,
-                        height: 44,
+                        minWidth: 92,
+                        height: 38,
                         textTransform: "none",
-                        fontSize: 16,
-                        fontWeight: 600,
-                        color: "#5b647a",
-                        backgroundColor: "#eef2f7",
+                        fontSize: 14.5,
+                        fontWeight: 700,
+                        color: "#475569",
+                        backgroundColor: "#f1f5f9",
                         boxShadow: "none",
-                        borderRadius: 2,
+                        borderRadius: "12px",
+                        transition: "all 0.2s ease",
                         "&:hover": {
                             backgroundColor: "#e2e8f0",
+                            color: "#1e293b",
                             boxShadow: "none",
+                            transform: "translateY(-1px)",
                         },
                     }}
                 >
@@ -220,21 +228,23 @@ export function ConfirmBlockModal({
                     disabled={!selectedContact || isSubmitting}
                     sx={{
                         minWidth: 124,
-                        height: 44,
+                        height: 38,
                         textTransform: "none",
-                        fontSize: 16,
+                        fontSize: 14.5,
                         fontWeight: 700,
                         color: "#ffffff",
-                        backgroundColor: "#7c3aed",
-                        boxShadow: "none",
-                        borderRadius: 2,
+                        background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                        boxShadow: "0 6px 16px rgba(124, 58, 237, 0.22)",
+                        borderRadius: "12px",
+                        transition: "all 0.2s ease",
                         "&:hover": {
-                            backgroundColor: "#6d28d9",
-                            boxShadow: "none",
+                            background: "linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%)",
+                            boxShadow: "0 8px 20px rgba(124, 58, 237, 0.32)",
+                            transform: "translateY(-1px)",
                         },
                     }}
                 >
-                    {isSubmitting ? (selectedContact?.isBlocked ? "Unblocking..." : "Blocking...") : selectedContact?.isBlocked ? " Unblock" : "Block"}
+                    {isSubmitting ? (selectedContact?.isBlocked ? "Unblocking..." : "Blocking...") : selectedContact?.isBlocked ? "Unblock" : "Block"}
                 </Button>
             </DialogActions>
         </Dialog>

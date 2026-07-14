@@ -1,10 +1,10 @@
-import { type ReactNode } from 'react';
-import { Box, Paper } from '@mui/material';
+import { type ReactNode } from "react";
+import { Box, Paper } from "@mui/material";
 
 const COLORS = {
-  pageBg: '#f5f5f7',
-  border: '#e9e9ef',
-  shadow: '0 10px 30px rgba(20, 20, 43, 0.08)',
+  pageBg: "#f5f5f7",
+  border: "#e9e9ef",
+  shadow: "0 10px 30px rgba(20, 20, 43, 0.08)",
 };
 
 type SidePanelLayoutProps = {
@@ -30,6 +30,7 @@ export default function SidePanelLayout({
         display: 'flex',
         flexDirection: 'column',
         minHeight: 0,
+        textAlign: "left",
       }}
     >
       {header ? (

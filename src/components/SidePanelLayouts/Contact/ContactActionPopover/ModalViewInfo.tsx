@@ -69,26 +69,29 @@ export function ViewUserInfoModal({
             fullWidth
             hideBackdrop
             TransitionComponent={Zoom}
-            transitionDuration={220}
+            transitionDuration={250}
             PaperProps={{
                 sx: {
-                    borderRadius: 3,
+                    borderRadius: "24px",
                     backgroundColor: "#ffffff",
-                    border: "1px solid #ede9fe",
+                    border: "1px solid rgba(148, 163, 184, 0.15)",
                     boxShadow: "none",
                     overflow: "hidden",
-                    m: 0
+                    m: 0,
                 },
             }}
         >
             <DialogTitle
                 sx={{
-                    px: 3,
-                    py: 2.25,
-                    fontSize: 18,
-                    fontWeight: 600,
-                    color: "#6f63f6",
-                    borderBottom: "1px solid #f3e8ff",
+                    px: 3.5,
+                    pt: 3,
+                    pb: 2,
+                    fontSize: 20,
+                    fontWeight: 800,
+                    background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    borderBottom: "1px solid rgba(148, 163, 184, 0.08)",
                 }}
             >
                 Account information
@@ -96,9 +99,9 @@ export function ViewUserInfoModal({
 
             <DialogContent
                 sx={{
-                    px: 3,
+                    px: 3.5,
                     py: 3,
-                    backgroundColor: "#ffffff",
+                    backgroundColor: "transparent",
                     maxHeight: 560,
                     ...scrollSx,
                 }}
@@ -111,39 +114,45 @@ export function ViewUserInfoModal({
                         textAlign: "center",
                     }}
                 >
-                    <Avatar
-                        src={user?.avatar || undefined}
-                        alt={displayName}
+                    <Box
                         sx={{
-                            width: 88,
-                            height: 88,
-                            mb: 2,
-                            mt: 0.5,
-                            fontSize: 30,
-                            fontWeight: 700,
-                            bgcolor: user?.avatar ? undefined : "#ede9fe",
-                            color: "#6f63f6",
-                            border: "2px solid #ddd6fe",
+                            position: "relative",
+                            mb: 2.5,
                         }}
                     >
-                        {avatarLetter}
-                    </Avatar>
+                        <Avatar
+                            src={user?.avatar || undefined}
+                            alt={displayName}
+                            sx={{
+                                width: 92,
+                                height: 92,
+                                fontSize: 32,
+                                fontWeight: 800,
+                                bgcolor: user?.avatar ? undefined : "linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%)",
+                                color: "#4f46e5",
+                                border: "3px solid #ffffff",
+                                boxShadow: "0 8px 24px rgba(79, 70, 229, 0.12)",
+                            }}
+                        >
+                            {avatarLetter}
+                        </Avatar>
+                    </Box>
 
                     <Box
                         sx={{
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            gap: 0.75,
+                            gap: 0.5,
                             mb: 0.5,
                         }}
                     >
                         <Typography
                             sx={{
-                                fontSize: 27,
-                                fontWeight: 700,
-                                color: "#111827",
-                                lineHeight: 1.2,
+                                fontSize: 24,
+                                fontWeight: 800,
+                                color: "#0f172a",
+                                letterSpacing: "-0.02em",
                             }}
                         >
                             {displayName}
@@ -153,24 +162,27 @@ export function ViewUserInfoModal({
                             size="small"
                             onClick={() => setOpenSetNicknameModal(true)}
                             sx={{
-                                color: "#6f63f6",
-                                p: 0.5,
+                                color: "#4f46e5",
+                                p: 0.75,
+                                bgcolor: "rgba(79, 70, 229, 0.05)",
+                                transition: "all 0.2s ease",
                                 "&:hover": {
-                                    backgroundColor: "#f5f3ff",
+                                    backgroundColor: "rgba(79, 70, 229, 0.12)",
+                                    transform: "scale(1.08)",
                                 },
                             }}
                         >
-                            <EditRoundedIcon sx={{ fontSize: 18 }} />
+                            <EditRoundedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                     </Box>
 
                     {user?.nickname && (
                         <Typography
                             sx={{
-                                mt: 0.75,
-                                fontSize: 15,
-                                color: "#7d84a0",
-                                lineHeight: 1.4,
+                                mt: 0.5,
+                                fontSize: 14,
+                                color: "#64748b",
+                                fontWeight: 500,
                             }}
                         >
                             {user.fullname}
@@ -180,110 +192,127 @@ export function ViewUserInfoModal({
                     {user?.isBlocked ? (
                         <Typography
                             sx={{
-                                mt: 0.75,
-                                fontSize: 15,
-                                color: "#dc2626",
-                                lineHeight: 1.4,
+                                mt: 2,
+                                fontSize: 14,
+                                color: "#ef4444",
                                 fontWeight: 600,
-                                mb: 1.5
+                                mb: 1.5,
+                                px: 2,
+                                py: 1,
+                                bgcolor: "rgba(239, 68, 68, 0.06)",
+                                border: "1px solid rgba(239, 68, 68, 0.15)",
+                                borderRadius: "12px",
                             }}
                         >
                             Unblock this person to send messages and make calls.
                         </Typography>
-                    ) : ( <Stack
-                        direction="row"
-                        spacing={1.5}
-                        sx={{
-                            mt: 2.5,
-                            mb: 3,
-                            width: "100%",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <Button
-                            variant="contained"
-                            startIcon={<CallRoundedIcon />}
-                            onClick={handleCall}
+                    ) : (
+                        <Stack
+                            direction="row"
+                            spacing={2}
                             sx={{
-                                minWidth: 132,
-                                height: 46,
-                                textTransform: "none",
-                                fontSize: 15,
-                                fontWeight: 700,
-                                color: "#ffffff",
-                                backgroundColor: "#6f63f6",
-                                boxShadow: "none",
-                                borderRadius: 3,
-                                "&:hover": {
-                                    backgroundColor: "#5b50eb",
-                                    boxShadow: "none",
-                                },
+                                mt: 3,
+                                mb: 3.5,
+                                width: "100%",
+                                justifyContent: "center",
                             }}
                         >
-                            Call
-                        </Button>
+                            <Button
+                                variant="contained"
+                                startIcon={<CallRoundedIcon />}
+                                onClick={handleCall}
+                                sx={{
+                                    flex: 1,
+                                    maxWidth: 140,
+                                    height: 44,
+                                    textTransform: "none",
+                                    fontSize: 15,
+                                    fontWeight: 700,
+                                    color: "#ffffff",
+                                    background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                                    boxShadow: "0 8px 20px rgba(79, 70, 229, 0.25)",
+                                    borderRadius: "14px",
+                                    transition: "all 0.22s ease",
+                                    "&:hover": {
+                                        background: "linear-gradient(135deg, #4338ca 0%, #6d28d9 100%)",
+                                        boxShadow: "0 10px 24px rgba(79, 70, 229, 0.35)",
+                                        transform: "translateY(-1.5px)",
+                                    },
+                                }}
+                            >
+                                Call
+                            </Button>
 
-                        <Button
-                            variant="outlined"
-                            startIcon={<ChatBubbleRoundedIcon />}
-                            onClick={handleMessage}
-                            sx={{
-                                minWidth: 132,
-                                height: 46,
-                                textTransform: "none",
-                                fontSize: 15,
-                                fontWeight: 700,
-                                color: "#6f63f6",
-                                borderColor: "#c4b5fd",
-                                borderRadius: 3,
-                                "&:hover": {
-                                    borderColor: "#a78bfa",
-                                    backgroundColor: "#f5f3ff",
-                                },
-                            }}
-                        >
-                            Message
-                        </Button>
-                    </Stack>
-                    )}  
-                   
+                            <Button
+                                variant="outlined"
+                                startIcon={<ChatBubbleRoundedIcon />}
+                                onClick={handleMessage}
+                                sx={{
+                                    flex: 1,
+                                    maxWidth: 140,
+                                    height: 44,
+                                    textTransform: "none",
+                                    fontSize: 15,
+                                    fontWeight: 700,
+                                    color: "#4f46e5",
+                                    borderColor: "rgba(79, 70, 229, 0.28)",
+                                    bgcolor: "rgba(79, 70, 229, 0.02)",
+                                    borderRadius: "14px",
+                                    transition: "all 0.22s ease",
+                                    "&:hover": {
+                                        borderColor: "#4f46e5",
+                                        backgroundColor: "rgba(79, 70, 229, 0.06)",
+                                        transform: "translateY(-1.5px)",
+                                    },
+                                }}
+                            >
+                                Message
+                            </Button>
+                        </Stack>
+                    )}
 
                     <Box
                         sx={{
                             width: "100%",
-                            border: "1px solid #ede9fe",
-                            borderRadius: 3,
+                            border: "1px solid rgba(148, 163, 184, 0.12)",
+                            borderRadius: "18px",
                             overflow: "hidden",
-                            mb: 2.5,
+                            mb: 3,
+                            bgcolor: "rgba(248, 250, 252, 0.55)",
                         }}
                     >
                         <Box
                             sx={{
-                                px: 2,
-                                py: 1.5,
-                                backgroundColor: "#faf7ff",
-                                borderBottom: "1px solid #f3e8ff",
+                                px: 2.5,
+                                py: 1.75,
+                                backgroundColor: "rgba(111, 99, 246, 0.03)",
+                                borderBottom: "1px solid rgba(148, 163, 184, 0.08)",
                             }}
                         >
                             <Typography
                                 sx={{
-                                    fontSize: 15,
+                                    fontSize: 14,
                                     fontWeight: 800,
-                                    color: "#6f63f6",
+                                    color: "#4f46e5",
                                     textAlign: "left",
+                                    letterSpacing: "0.02em",
+                                    textTransform: "uppercase",
                                 }}
                             >
                                 Personal information
                             </Typography>
                         </Box>
 
-                        <Box sx={{ px: 2, py: 1.75 }}>
+                        <Box sx={{ px: 2.5, py: 1.75 }}>
                             <Typography
                                 sx={{
-                                    fontSize: 13,
-                                    color: "#8b5cf6",
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    color: "#94a3b8",
                                     mb: 0.5,
                                     textAlign: "left",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.04em",
                                 }}
                             >
                                 Full name
@@ -292,7 +321,7 @@ export function ViewUserInfoModal({
                                 sx={{
                                     fontSize: 15,
                                     fontWeight: 600,
-                                    color: "#111827",
+                                    color: "#1e293b",
                                     textAlign: "left",
                                 }}
                             >
@@ -300,15 +329,18 @@ export function ViewUserInfoModal({
                             </Typography>
                         </Box>
 
-                        <Divider sx={{ borderColor: "#f3e8ff" }} />
+                        <Divider sx={{ borderColor: "rgba(148, 163, 184, 0.08)" }} />
 
-                        <Box sx={{ px: 2, py: 1.75 }}>
+                        <Box sx={{ px: 2.5, py: 1.75 }}>
                             <Typography
                                 sx={{
-                                    fontSize: 13,
-                                    color: "#8b5cf6",
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    color: "#94a3b8",
                                     mb: 0.5,
                                     textAlign: "left",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.04em",
                                 }}
                             >
                                 Email
@@ -317,7 +349,7 @@ export function ViewUserInfoModal({
                                 sx={{
                                     fontSize: 15,
                                     fontWeight: 600,
-                                    color: "#111827",
+                                    color: "#1e293b",
                                     textAlign: "left",
                                     wordBreak: "break-word",
                                 }}
@@ -330,55 +362,60 @@ export function ViewUserInfoModal({
                     <Box
                         sx={{
                             width: "100%",
-                            border: "1px solid #f3e8ff",
-                            borderRadius: 3,
+                            border: "1px solid rgba(148, 163, 184, 0.12)",
+                            borderRadius: "18px",
                             overflow: "hidden",
+                            bgcolor: "#ffffff",
                         }}
                     >
                         <Button
                             fullWidth
                             onClick={() => {
-                                setOpenModalBlock(true)
-                                onClose()
+                                setOpenModalBlock(true);
+                                onClose();
                             }}
                             startIcon={<BlockRoundedIcon />}
                             sx={{
                                 justifyContent: "flex-start",
-                                px: 2,
-                                py: 1.6,
+                                px: 2.5,
+                                py: 1.75,
                                 textTransform: "none",
                                 fontSize: 15,
                                 fontWeight: 700,
-                                color: "#7c3aed",
+                                color: "#4f46e5",
                                 borderRadius: 0,
+                                transition: "all 0.18s ease",
                                 "&:hover": {
-                                    backgroundColor: "#faf5ff",
+                                    backgroundColor: "rgba(79, 70, 229, 0.04)",
+                                    color: "#3730a3",
                                 },
                             }}
                         >
                             {user?.isBlocked ? "Unblock messages and calls" : "Block messages and calls"}
                         </Button>
 
-                        <Divider sx={{ borderColor: "#f3e8ff" }} />
+                        <Divider sx={{ borderColor: "rgba(148, 163, 184, 0.08)" }} />
 
                         <Button
                             fullWidth
                             onClick={() => {
-                                setOpenModalRemove(true)
-                                onClose()
+                                setOpenModalRemove(true);
+                                onClose();
                             }}
                             startIcon={<DeleteOutlineRoundedIcon />}
                             sx={{
                                 justifyContent: "flex-start",
-                                px: 2,
-                                py: 1.6,
+                                px: 2.5,
+                                py: 1.75,
                                 textTransform: "none",
                                 fontSize: 15,
                                 fontWeight: 700,
-                                color: "#dc2626",
+                                color: "#ef4444",
                                 borderRadius: 0,
+                                transition: "all 0.18s ease",
                                 "&:hover": {
-                                    backgroundColor: "#fef2f2",
+                                    backgroundColor: "rgba(239, 68, 68, 0.04)",
+                                    color: "#b91c1c",
                                 },
                             }}
                         >
@@ -390,28 +427,32 @@ export function ViewUserInfoModal({
 
             <DialogActions
                 sx={{
-                    px: 3,
-                    py: 2,
-                    borderTop: "1px solid #f3e8ff",
+                    px: 3.5,
+                    py: 2.5,
+                    borderTop: "1px solid rgba(148, 163, 184, 0.08)",
                     justifyContent: "flex-end",
+                    bgcolor: "rgba(248, 250, 252, 0.4)",
                 }}
             >
                 <Button
                     onClick={onClose}
                     variant="contained"
                     sx={{
-                        minWidth: 104,
-                        height: 42,
+                        minWidth: 92,
+                        height: 38,
                         textTransform: "none",
-                        fontSize: 15,
+                        fontSize: 14.5,
                         fontWeight: 700,
-                        color: "#5b647a",
-                        backgroundColor: "#eef2f7",
+                        color: "#475569",
+                        backgroundColor: "#f1f5f9",
                         boxShadow: "none",
-                        borderRadius: 2.5,
+                        borderRadius: "12px",
+                        transition: "all 0.2s ease",
                         "&:hover": {
                             backgroundColor: "#e2e8f0",
+                            color: "#1e293b",
                             boxShadow: "none",
+                            transform: "translateY(-1px)",
                         },
                     }}
                 >

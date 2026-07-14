@@ -22,7 +22,7 @@ export function ConfirmRemoveFriendModal({
 }: ConfirmRemoveFriendModalProps) {
     const displayName = selectedContact?.nickname ?? selectedContact?.fullname ?? "";
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const dispatch = useDispatch<AppDispatch>()
+    const dispatch = useDispatch<AppDispatch>();
 
     const handleConfirm = async () => {
         try {
@@ -49,27 +49,29 @@ export function ConfirmRemoveFriendModal({
             fullWidth
             hideBackdrop
             TransitionComponent={Zoom}
-            transitionDuration={220}
+            transitionDuration={250}
             PaperProps={{
                 sx: {
-                    borderRadius: 3,
+                    borderRadius: "24px",
                     backgroundColor: "#ffffff",
-                    border: "1px solid #ede9fe",
+                    border: "1px solid rgba(239, 68, 68, 0.15)",
                     boxShadow: "none",
                     overflow: "hidden",
-                    m: 0
+                    m: 0,
                 },
             }}
         >
             <DialogTitle
                 sx={{
-                    px: 3,
-                    py: 2,
+                    px: 3.5,
+                    pt: 3.5,
+                    pb: 2,
                     fontSize: 20,
-                    fontWeight: 650,
-                    color: "#dc2626",
-                    borderBottom: "1px solid #fee2e2",
-                    backgroundColor: "#fffafa",
+                    fontWeight: 800,
+                    background: "linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    borderBottom: "1px solid rgba(148, 163, 184, 0.08)",
                 }}
             >
                 Remove Contact
@@ -77,10 +79,10 @@ export function ConfirmRemoveFriendModal({
 
             <DialogContent
                 sx={{
-                    px: 3,
-                    pt: 3,
+                    px: 3.5,
+                    pt: 4,
                     pb: 2.5,
-                    backgroundColor: "#ffffff",
+                    backgroundColor: "transparent",
                 }}
             >
                 <Box
@@ -91,30 +93,30 @@ export function ConfirmRemoveFriendModal({
                         textAlign: "center",
                     }}
                 >
-
                     <Box
                         sx={{
-                            marginTop: 2,
-                            width: 44,
-                            height: 44,
-                            borderRadius: "50%",
+                            width: 54,
+                            height: 54,
+                            borderRadius: "16px",
                             display: "grid",
                             placeItems: "center",
-                            bgcolor: "#fff1f2",
-                            color: "#dc2626",
-                            mb: 1.5,
+                            bgcolor: "rgba(239, 68, 68, 0.08)",
+                            color: "#ef4444",
+                            mb: 2.5,
+                            boxShadow: "0 8px 20px rgba(239, 68, 68, 0.1)",
                         }}
                     >
-                        <WarningAmberRoundedIcon sx={{ fontSize: 24 }} />
+                        <WarningAmberRoundedIcon sx={{ fontSize: 28 }} />
                     </Box>
 
                     <Typography
                         sx={{
                             fontSize: 18,
-                            fontWeight: 700,
-                            color: "#111827",
+                            fontWeight: 800,
+                            color: "#0f172a",
                             lineHeight: 1.4,
-                            mb: 0.75,
+                            mb: 1,
+                            letterSpacing: "-0.01em",
                         }}
                     >
                         Are you sure you want to remove this friend?
@@ -122,8 +124,8 @@ export function ConfirmRemoveFriendModal({
 
                     <Typography
                         sx={{
-                            fontSize: 14,
-                            color: "#4b5563",
+                            fontSize: 14.5,
+                            color: "#64748b",
                             lineHeight: 1.6,
                             maxWidth: 320,
                         }}
@@ -133,7 +135,7 @@ export function ConfirmRemoveFriendModal({
                             component="span"
                             sx={{
                                 fontWeight: 700,
-                                color: "#111827",
+                                color: "#0f172a",
                             }}
                         >
                             {displayName}
@@ -145,11 +147,13 @@ export function ConfirmRemoveFriendModal({
 
             <DialogActions
                 sx={{
-                    px: 3,
-                    pb: 2.5,
-                    pt: 0.5,
+                    px: 3.5,
+                    pb: 3,
+                    pt: 1,
                     justifyContent: "flex-end",
-                    gap: 1.5,
+                    gap: 2,
+                    borderTop: "1px solid rgba(148, 163, 184, 0.08)",
+                    bgcolor: "rgba(248, 250, 252, 0.4)",
                 }}
             >
                 <Button
@@ -157,18 +161,21 @@ export function ConfirmRemoveFriendModal({
                     variant="contained"
                     disabled={isSubmitting}
                     sx={{
-                        minWidth: 96,
-                        height: 44,
+                        minWidth: 92,
+                        height: 38,
                         textTransform: "none",
-                        fontSize: 16,
-                        fontWeight: 600,
-                        color: "#5b647a",
-                        backgroundColor: "#eef2f7",
+                        fontSize: 14.5,
+                        fontWeight: 700,
+                        color: "#475569",
+                        backgroundColor: "#f1f5f9",
                         boxShadow: "none",
-                        borderRadius: 2,
+                        borderRadius: "12px",
+                        transition: "all 0.2s ease",
                         "&:hover": {
                             backgroundColor: "#e2e8f0",
+                            color: "#1e293b",
                             boxShadow: "none",
+                            transform: "translateY(-1px)",
                         },
                     }}
                 >
@@ -180,18 +187,20 @@ export function ConfirmRemoveFriendModal({
                     variant="contained"
                     disabled={!selectedContact || isSubmitting}
                     sx={{
-                        minWidth: 132,
-                        height: 44,
+                        minWidth: 124,
+                        height: 38,
                         textTransform: "none",
-                        fontSize: 16,
+                        fontSize: 14.5,
                         fontWeight: 700,
                         color: "#ffffff",
-                        backgroundColor: "#dc2626",
-                        boxShadow: "none",
-                        borderRadius: 2,
+                        background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                        boxShadow: "0 6px 16px rgba(239, 68, 68, 0.22)",
+                        borderRadius: "12px",
+                        transition: "all 0.2s ease",
                         "&:hover": {
-                            backgroundColor: "#b91c1c",
-                            boxShadow: "none",
+                            background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                            boxShadow: "0 8px 20px rgba(239, 68, 68, 0.32)",
+                            transform: "translateY(-1px)",
                         },
                     }}
                 >

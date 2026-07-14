@@ -1,4 +1,5 @@
 import { useState } from "react";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
@@ -32,6 +33,7 @@ import Badge from "@mui/material/Badge";
 
 export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -56,49 +58,60 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
     <Box
       sx={{
         position: "fixed",
-        top: 0,
+        top: isMobile ? "auto" : 0,
+        bottom: 0,
         left: 0,
-        width: { xs: 76, sm: 88, md: 96 },
-        height: "100dvh",
+        right: isMobile ? 0 : "auto",
+        width: isMobile ? "100%" : { sm: 88, md: 96 },
+        height: isMobile ? 64 : "100dvh",
         bgcolor: COLORS.railBg,
-        borderRight: `1px solid ${COLORS.railBorder}`,
+        borderRight: isMobile ? "none" : `1px solid ${COLORS.railBorder}`,
+        borderTop: isMobile ? `1px solid ${COLORS.railBorder}` : "none",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: isMobile ? "row" : "column",
         alignItems: "center",
+        justifyContent: isMobile ? "space-around" : "flex-start",
         zIndex: 1200,
       }}
     >
       <Stack
         alignItems="center"
+        direction={isMobile ? "row" : "column"}
+        justifyContent={isMobile ? "space-around" : "flex-start"}
         sx={{
           width: "100%",
           height: "100%",
-          pt: { xs: 1.5, sm: 2, md: 2.5 },
-          pb: { xs: 1.5, sm: 2, md: 2.5 },
+          pt: isMobile ? 0 : { sm: 2, md: 2.5 },
+          pb: isMobile ? 0 : { sm: 2, md: 2.5 },
+          px: isMobile ? 1 : 0,
         }}
       >
-        <IconButton
-          sx={{
-            width: { xs: 32, sm: 30, md: 38 },
-            height: { xs: 32, sm: 30, md: 38 },
-            borderRadius: "50%",
-            bgcolor: COLORS.primary,
-            color: "#fff",
-            "&:hover": {
+        {!isMobile && (
+          <IconButton
+            sx={{
+              width: { xs: 32, sm: 30, md: 38 },
+              height: { xs: 32, sm: 30, md: 38 },
+              borderRadius: "50%",
               bgcolor: COLORS.primary,
-              opacity: 0.96,
-            },
-          }}
-        >
-          <GraphicEqRoundedIcon sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
-        </IconButton>
+              color: "#fff",
+              "&:hover": {
+                bgcolor: COLORS.primary,
+                opacity: 0.96,
+              },
+            }}
+          >
+            <GraphicEqRoundedIcon sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
+          </IconButton>
+        )}
 
-        <Box sx={{ height: { xs: 36, sm: 54, md: 72 } }} />
+        {!isMobile && <Box sx={{ height: { xs: 36, sm: 54, md: 72 } }} />}
 
         <Stack
-          spacing={{ xs: 3, sm: 4.5, md: 5.5 }}
+          direction={isMobile ? "row" : "column"}
+          spacing={isMobile ? 0 : { sm: 4.5, md: 5.5 }}
           alignItems="center"
-          sx={{ width: "100%" }}
+          justifyContent={isMobile ? "space-around" : "flex-start"}
+          sx={{ width: "100%", flex: isMobile ? 1 : "initial" }}
         >
           <RailItem
             title="Profile"
@@ -177,21 +190,24 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
           />
         </Stack>
 
-        <Box sx={{ flex: 1 }} />
+        {!isMobile && <Box sx={{ flex: 1 }} />}
 
         <Stack
-          spacing={{ xs: 2.5, sm: 3, md: 3.5 }}
+          direction={isMobile ? "row" : "column"}
+          spacing={isMobile ? 1.5 : { sm: 3, md: 3.5 }}
           alignItems="center"
-          sx={{ width: "100%" }}
+          sx={{ width: isMobile ? "auto" : "100%", ml: isMobile ? 1 : 0 }}
         >
-          <RailItem
-            title="Language"
-            icon={
-              <LanguageOutlinedIcon
-                sx={{ fontSize: { xs: 22, sm: 24, md: 26 } }}
-              />
-            }
-          />
+          {!isMobile && (
+            <RailItem
+              title="Language"
+              icon={
+                <LanguageOutlinedIcon
+                  sx={{ fontSize: { xs: 22, sm: 24, md: 26 } }}
+                />
+              }
+            />
+          )}
 
           <Avatar
             aria-describedby={id}

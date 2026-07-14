@@ -74,18 +74,20 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   return (
     <Box
       sx={{
-        width: isOpen ? { xs: 280, sm: 330, md: 360 } : 0,
+        width: isOpen ? { xs: "100%", sm: 330, md: 360 } : 0,
         opacity: isOpen ? 1 : 0,
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        bgcolor: "rgba(255, 255, 255, 0.72)",
+        bgcolor: { xs: "#ffffff", md: "rgba(255, 255, 255, 0.72)" },
         backdropFilter: "blur(30px) saturate(190%)",
         webkitBackdropFilter: "blur(30px) saturate(190%)",
         borderLeft: isOpen ? "1px solid rgba(255, 255, 255, 0.45)" : "0px solid transparent",
-        position: "relative",
-        zIndex: 10,
-        boxShadow: isOpen ? "-15px 0 45px rgba(15, 23, 42, 0.06)" : "none",
+        position: { xs: "absolute", md: "relative" },
+        right: { xs: 0, md: "auto" },
+        top: { xs: 0, md: "auto" },
+        zIndex: 50,
+        boxShadow: isOpen ? "-15px 0 45px rgba(15, 23, 42, 0.08)" : "none",
         transition: "all 0.45s cubic-bezier(0.25, 1, 0.5, 1)",
         overflow: "hidden",
       }}

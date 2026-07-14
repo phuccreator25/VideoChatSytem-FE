@@ -58,7 +58,7 @@ export function ContactActionPopover({ rowAction }: ContactActionPopoverProps) {
                         borderRadius: 3,
                         backgroundColor: "#ffffff",
                         border: "1px solid #ede9fe",
-                        boxShadow: "0 10px 10px rgba(110, 79, 160, 0.12)",
+                        boxShadow: "none",
                         overflow: "hidden",
                     },
                 }}

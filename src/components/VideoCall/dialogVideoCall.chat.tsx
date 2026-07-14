@@ -10,6 +10,8 @@ import {
     IconButton,
     Stack,
     Tooltip,
+    useTheme,
+    useMediaQuery,
 } from "@mui/material";
 
 // Icons
@@ -45,6 +47,8 @@ export const VideoCallModal = ({
     const { ui, data, handler, refs: { localVideoRef, remoteVideoRef } } = useVideoCall();
     const currentUser = useSelector((state: RootState) => state.user.currentUser);
     const myAvatar = currentUser?.avatar || "";
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     const remoteBgVideoRef = useRef<HTMLVideoElement | null>(null);
     const setRemoteBgVideoEl = useCallback((el: HTMLVideoElement | null) => {
@@ -87,8 +91,8 @@ export const VideoCallModal = ({
 
     // Common Control Button Styling (Futuristic cyber pill button style)
     const controlButtonSx = (active: boolean, isEnd: boolean = false) => ({
-        width: { xs: 40, sm: 52 },
-        height: { xs: 40, sm: 52 },
+        width: { xs: 44, sm: 52 },
+        height: { xs: 44, sm: 52 },
         borderRadius: "50%",
         bgcolor: isEnd
             ? "rgba(239, 68, 68, 0.15)"
@@ -133,22 +137,22 @@ export const VideoCallModal = ({
                 handler.endCall();
                 handleClose();
             }}
-            fullScreen={ui.isFullScreen}
+            fullScreen={ui.isFullScreen || isMobile}
             maxWidth={false}
             PaperProps={{
                 sx: {
-                    borderRadius: ui.isFullScreen ? 0 : { xs: 0, sm: "24px" },
+                    borderRadius: (ui.isFullScreen || isMobile) ? 0 : { xs: 0, sm: "24px" },
                     overflow: "hidden",
                     boxShadow: "0 32px 80px rgba(0, 0, 0, 0.6), 0 0 50px rgba(99, 102, 241, 0.05)",
-                    border: ui.isFullScreen ? "none" : { xs: "none", sm: "1px solid rgba(255, 255, 255, 0.08)" },
+                    border: (ui.isFullScreen || isMobile) ? "none" : { xs: "none", sm: "1px solid rgba(255, 255, 255, 0.08)" },
                     bgcolor: "#07080e",
-                    width: ui.isFullScreen ? "100vw" : { xs: "100vw", sm: 840 },
-                    height: ui.isFullScreen ? "100vh" : { xs: "100dvh", sm: 560 },
-                    minWidth: ui.isFullScreen ? "100vw" : { xs: "100vw", sm: 480 },
-                    minHeight: ui.isFullScreen ? "100vh" : { xs: "100dvh", sm: 360 },
+                    width: (ui.isFullScreen || isMobile) ? "100vw" : { xs: "100vw", sm: 840 },
+                    height: (ui.isFullScreen || isMobile) ? "100vh" : { xs: "100dvh", sm: 560 },
+                    minWidth: (ui.isFullScreen || isMobile) ? "100vw" : { xs: "100vw", sm: 480 },
+                    minHeight: (ui.isFullScreen || isMobile) ? "100vh" : { xs: "100dvh", sm: 360 },
                     maxWidth: "100vw",
                     maxHeight: "100dvh",
-                    resize: ui.isFullScreen ? "none" : "both",
+                    resize: (ui.isFullScreen || isMobile) ? "none" : "both",
                     transition: "all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)",
                 },
             }}
@@ -241,7 +245,7 @@ export const VideoCallModal = ({
                 {/* Top Header / Bar (Cyberpunk overlay bar) */}
                 <Box
                     sx={{
-                        p: 3,
+                        p: { xs: 2, sm: 3 },
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -252,26 +256,26 @@ export const VideoCallModal = ({
                     }}
                 >
                     {/* User Status details */}
-                    <Stack direction="row" spacing={1.75} alignItems="center">
+                    <Stack direction="row" spacing={{ xs: 1.25, sm: 1.75 }} alignItems="center">
                         <Avatar
                             src={userData?.avatar}
                             sx={{
-                                width: 44,
-                                height: 44,
+                                width: { xs: 36, sm: 44 },
+                                height: { xs: 36, sm: 44 },
                                 border: "2px solid rgba(99, 102, 241, 0.3)",
                                 boxShadow: "0 4px 12px rgba(99, 102, 241, 0.15)",
                             }}
                         />
                         <Box>
-                            <Stack direction="row" spacing={1} alignItems="center">
+                            <Stack direction="row" spacing={0.75} alignItems="center">
                                 <Typography
-                                    sx={{ color: "#ffffff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.01em" }}
+                                    sx={{ color: "#ffffff", fontWeight: 700, fontSize: { xs: 14, sm: 16 }, letterSpacing: "-0.01em" }}
                                 >
                                     {displayName}
                                 </Typography>
                                 {ui.isRemoteAudioMuted && (
                                     <Tooltip title="Muted">
-                                        <MicOffRoundedIcon sx={{ color: "#ef4444", fontSize: 16 }} />
+                                        <MicOffRoundedIcon sx={{ color: "#ef4444", fontSize: { xs: 14, sm: 16 } }} />
                                     </Tooltip>
                                 )}
                             </Stack>
@@ -280,10 +284,10 @@ export const VideoCallModal = ({
                                 sx={{
                                     color: ui.isAccepted ? "#10b981" : "#f59e0b",
                                     fontWeight: 700,
-                                    fontSize: 11,
+                                    fontSize: { xs: 9, sm: 11 },
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 1,
+                                    gap: 0.75,
                                     letterSpacing: "0.08em",
                                     textTransform: "uppercase",
                                     mt: 0.25,
@@ -292,8 +296,8 @@ export const VideoCallModal = ({
                                 <Box
                                     component="span"
                                     sx={{
-                                        width: 6,
-                                        height: 6,
+                                        width: 5,
+                                        height: 5,
                                         borderRadius: "50%",
                                         bgcolor: ui.isAccepted ? "#10b981" : "#f59e0b",
                                         boxShadow: ui.isAccepted ? "0 0 10px #10b981" : "0 0 10px #f59e0b",
@@ -304,34 +308,36 @@ export const VideoCallModal = ({
                                         }
                                     }}
                                 />
-                                {ui.isAccepted ? `Connected • ${formatDuration(ui.callDuration)}` : "Calling..."}
+                                {ui.isAccepted ? `${isMobile ? "" : "Connected • "}${formatDuration(ui.callDuration)}` : "Calling..."}
                             </Typography>
                         </Box>
                     </Stack>
 
                     {/* Top Actions */}
-                    <Stack direction="row" spacing={1.5}>
-                        <Tooltip title="Fullscreen">
-                            <IconButton
-                                onClick={() => handler.setIsFullScreen((prev) => !prev)}
-                                sx={{
-                                    color: "rgba(255, 255, 255, 0.7)",
-                                    bgcolor: "rgba(255, 255, 255, 0.05)",
-                                    border: "1px solid rgba(255, 255, 255, 0.05)",
-                                    "&:hover": {
-                                        color: "#ffffff",
-                                        bgcolor: "rgba(255, 255, 255, 0.12)",
-                                        transform: "scale(1.05)",
-                                    },
-                                }}
-                            >
-                                {ui.isFullScreen ? (
-                                    <FullscreenExitRoundedIcon />
-                                ) : (
-                                    <FullscreenRoundedIcon />
-                                )}
-                            </IconButton>
-                        </Tooltip>
+                    <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }}>
+                        {!isMobile && (
+                            <Tooltip title="Fullscreen">
+                                <IconButton
+                                    onClick={() => handler.setIsFullScreen((prev) => !prev)}
+                                    sx={{
+                                        color: "rgba(255, 255, 255, 0.7)",
+                                        bgcolor: "rgba(255, 255, 255, 0.05)",
+                                        border: "1px solid rgba(255, 255, 255, 0.05)",
+                                        "&:hover": {
+                                            color: "#ffffff",
+                                            bgcolor: "rgba(255, 255, 255, 0.12)",
+                                            transform: "scale(1.05)",
+                                        },
+                                    }}
+                                >
+                                    {ui.isFullScreen ? (
+                                        <FullscreenExitRoundedIcon />
+                                    ) : (
+                                        <FullscreenRoundedIcon />
+                                    )}
+                                </IconButton>
+                            </Tooltip>
+                        )}
                         <Tooltip title="Close View">
                             <IconButton
                                 onClick={handleClose}
@@ -339,6 +345,7 @@ export const VideoCallModal = ({
                                     color: "#ef4444",
                                     bgcolor: "rgba(239, 68, 68, 0.1)",
                                     border: "1px solid rgba(239, 68, 68, 0.15)",
+                                    p: { xs: 1, sm: 1.5 },
                                     "&:hover": {
                                         color: "#ffffff",
                                         bgcolor: "#ef4444",
@@ -346,7 +353,7 @@ export const VideoCallModal = ({
                                     },
                                 }}
                             >
-                                <CloseRoundedIcon />
+                                <CloseRoundedIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
                             </IconButton>
                         </Tooltip>
                     </Stack>
@@ -397,6 +404,7 @@ export const VideoCallModal = ({
                                     el.srcObject = data.remoteStream;
                                 }
                             }}
+                            onContextMenu={(e) => e.preventDefault()}
                             style={{
                                 width: "100%",
                                 height: "100%",
@@ -405,6 +413,7 @@ export const VideoCallModal = ({
                                 inset: 0,
                                 zIndex: 1,
                                 filter: "blur(30px) brightness(0.4)",
+                                pointerEvents: "none",
                             }}
                         />
                     )}
@@ -422,6 +431,7 @@ export const VideoCallModal = ({
                             onLoadedMetadata={(e) => {
                                 e.currentTarget.play().catch(err => console.warn(err));
                             }}
+                            onContextMenu={(e) => e.preventDefault()}
                             style={{
                                 width: "100%",
                                 height: "100%",
@@ -429,6 +439,7 @@ export const VideoCallModal = ({
                                 position: "absolute",
                                 inset: 0,
                                 zIndex: 2,
+                                pointerEvents: "none",
                             }}
                         />
                     )}
@@ -615,11 +626,11 @@ export const VideoCallModal = ({
                     <Box
                         sx={{
                             position: "absolute",
-                            bottom: 16,
-                            right: 16,
-                            width: { xs: 110, sm: ui.isFullScreen ? 220 : 180, md: ui.isFullScreen ? 260 : 180 },
-                            height: { xs: 165, sm: ui.isFullScreen ? 165 : 135, md: ui.isFullScreen ? 195 : 135 },
-                            borderRadius: "16px",
+                            bottom: { xs: 12, sm: 16 },
+                            right: { xs: 12, sm: 16 },
+                            width: { xs: 90, sm: ui.isFullScreen ? 200 : 160, md: ui.isFullScreen ? 240 : 180 },
+                            height: { xs: 135, sm: ui.isFullScreen ? 150 : 120, md: ui.isFullScreen ? 180 : 135 },
+                            borderRadius: { xs: "12px", sm: "16px" },
                             overflow: "hidden",
                             boxShadow: "0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.1)",
                             border: "2px solid rgba(255, 255, 255, 0.12)",
@@ -673,12 +684,14 @@ export const VideoCallModal = ({
                             autoPlay
                             playsInline
                             muted
+                            onContextMenu={(e) => e.preventDefault()}
                             style={{
                                 width: "100%",
                                 height: "100%",
                                 objectFit: "cover",
                                 transform: "scaleX(-1)", // Mirror effect for webcam
                                 display: ui.isVideoStopped ? "none" : "block",
+                                pointerEvents: "none",
                             }}
                         />
                         {/* PIP Badge tag */}
@@ -712,7 +725,7 @@ export const VideoCallModal = ({
                 {/* Bottom Glassmorphic Actions Capsule Control Panel */}
                 <Box
                     sx={{
-                        p: { xs: 2.5, sm: 4 },
+                        p: { xs: 2, sm: 4 },
                         display: "flex",
                         justifyContent: "center",
                         background: "linear-gradient(to top, rgba(7, 8, 14, 0.95) 0%, rgba(7, 8, 14, 0) 100%)",
@@ -721,11 +734,11 @@ export const VideoCallModal = ({
                 >
                     <Stack
                         direction="row"
-                        spacing={{ xs: 1, sm: 2.5 }}
+                        spacing={{ xs: 0.75, sm: 1.5, md: 2.5 }}
                         alignItems="center"
                         sx={{
-                            px: { xs: 1.5, sm: 3.5 },
-                            py: 1.75,
+                            px: { xs: 1.25, sm: 2.5, md: 3.5 },
+                            py: { xs: 1.25, sm: 1.75 },
                             borderRadius: "32px",
                             bgcolor: "rgba(15, 18, 30, 0.75)",
                             border: "1px solid rgba(255, 255, 255, 0.05)",

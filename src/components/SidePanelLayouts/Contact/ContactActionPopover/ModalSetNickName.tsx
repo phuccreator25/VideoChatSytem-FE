@@ -24,79 +24,88 @@ export function SetNicknameModal({
     const [nickname, setNickname] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const dispatch = useDispatch<AppDispatch>()
+    const dispatch = useDispatch<AppDispatch>();
 
     useEffect(() => {
-      setNickname(selectedContact?.nickname ?? "");
+        setNickname(selectedContact?.nickname ?? "");
     }, [selectedContact]);
 
     const handleConfirm = async () => {
         try {
             if (!selectedContact) return;
-            setIsSubmitting(true)
+            setIsSubmitting(true);
             const result = await onConfirm?.({ ...selectedContact, nickname });
             
-            if(result){
+            if (result) {
                 enqueueSnackbar("Đã cập nhật biệt danh thành công", {
                     variant: 'success'
-                })
+                });
                 onClose();
-                dispatch(onGetDataContact())
+                dispatch(onGetDataContact());
             }
         } catch (error) {
             console.log(error);
         } finally {
-            setIsSubmitting(false)
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <>
-            <Dialog
+        <Dialog
             open={open}
             onClose={onClose}
             maxWidth="xs"
             fullWidth
             hideBackdrop
             TransitionComponent={Zoom}
-            transitionDuration={220}
+            transitionDuration={250}
             PaperProps={{
                 sx: {
-                borderRadius: 3,
-                backgroundColor: "#ffffff",
-                border: "1px solid #ede9fe",
-                boxShadow: "none",
-                overflow: "hidden",
-                m: 0
+                    borderRadius: "24px",
+                    backgroundColor: "#ffffff",
+                    border: "1px solid rgba(148, 163, 184, 0.15)",
+                    boxShadow: "none",
+                    overflow: "hidden",
+                    m: 0,
                 },
             }}
+        >
+            <DialogTitle
+                sx={{
+                    px: 3.5,
+                    pt: 3.5,
+                    pb: 2,
+                    fontSize: 20,
+                    fontWeight: 800,
+                    background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    borderBottom: "1px solid rgba(148, 163, 184, 0.08)",
+                }}
             >
-                <DialogTitle
-                    sx={{
-                        px: 3,
-                        py: 2,
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: "#6f63f6",
-                        borderBottom: "1px solid #f3e8ff",
-                        backgroundColor: "#ffffff"
-                    }}
-                >
-                    Give it a memorable name
-                </DialogTitle>
+                Give it a memorable name
+            </DialogTitle>
 
-                <DialogContent sx={{
-                    px: 3,
+            <DialogContent
+                sx={{
+                    px: 3.5,
                     pt: 3,
                     pb: 2.5,
-                    backgroundColor: "#ffffff"
-                }}>
+                    backgroundColor: "transparent",
+                }}
+            >
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
+                    }}
+                >
                     <Box
                         sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            textAlign: "center",
+                            position: "relative",
+                            mb: 2.5,
                         }}
                     >
                         <Avatar
@@ -105,138 +114,149 @@ export function SetNicknameModal({
                             sx={{
                                 width: 84,
                                 height: 84,
-                                mb: 2.5,
-                                mt: 2,
                                 fontSize: 30,
-                                fontWeight: 700,
-                                bgcolor: selectedContact?.avatar ? undefined : "#ede9fe",
-                                color: "#6f63f6",
-                                border: "2px solid #e9d5ff",
+                                fontWeight: 800,
+                                bgcolor: selectedContact?.avatar ? undefined : "linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%)",
+                                color: "#4f46e5",
+                                border: "3px solid #ffffff",
+                                boxShadow: "0 8px 24px rgba(79, 70, 229, 0.12)",
                             }}
                         >
-                            {selectedContact?.fullname}
+                            {selectedContact?.fullname?.charAt(0).toUpperCase()}
                         </Avatar>
-
-                        <Typography
-                            sx={{
-                                fontSize: 14,
-                                color: "#1f2430",
-                                lineHeight: 1.5,
-                                mb: 0.5,
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                            }}
-                        >
-                            Set a memorable name for{" "}
-                            <Box
-                                component="span"
-                                sx={{
-                                    fontWeight: 550,
-                                    fontSize: 14,
-                                }}
-                            >
-                                {selectedContact?.nickname ?? selectedContact?.fullname}
-                            </Box>
-                        </Typography>
-
-                        <Typography
-                            sx={{
-                                fontSize: 14,
-                                color: "#1f2430",
-                                lineHeight: 1.5,
-                                mb: 2.5,
-                                maxWidth: 320,
-                            }}
-                        >
-                            Note: This nickname will only be visible to you.
-                        </Typography>
-
-                        <TextField
-                            fullWidth
-                            placeholder={selectedContact?.fullname}
-                            value={nickname}
-                            onChange={(event) => setNickname(event.target.value)}
-                            autoFocus
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    borderRadius: 2,
-                                    backgroundColor: "#ffffff",
-                                    color: "#1f2430",
-                                    "& fieldset": {
-                                        borderColor: "#d8b4fe",
-                                    },
-                                    "&:hover fieldset": {
-                                        borderColor: "#a78bfa",
-                                    },
-                                    "&.Mui-focused fieldset": {
-                                        borderColor: "#6f63f6",
-                                    },
-                                },
-                                "& .MuiInputBase-input": {
-                                    fontSize: 16,
-                                    py: 1.6,
-                                },
-                            }}
-                        />
                     </Box>
-                </DialogContent>
 
-                <DialogActions
+                    <Typography
+                        sx={{
+                            fontSize: 14.5,
+                            color: "#334155",
+                            lineHeight: 1.5,
+                            mb: 0.5,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            width: "100%",
+                        }}
+                    >
+                        Set a memorable name for{" "}
+                        <Box
+                            component="span"
+                            sx={{
+                                fontWeight: 700,
+                                color: "#0f172a",
+                            }}
+                        >
+                            {selectedContact?.nickname ?? selectedContact?.fullname}
+                        </Box>
+                    </Typography>
+
+                    <Typography
+                        sx={{
+                            fontSize: 13.5,
+                            color: "#64748b",
+                            lineHeight: 1.5,
+                            mb: 3,
+                            maxWidth: 320,
+                        }}
+                    >
+                        Note: This nickname will only be visible to you.
+                    </Typography>
+
+                    <TextField
+                        fullWidth
+                        placeholder={selectedContact?.fullname}
+                        value={nickname}
+                        onChange={(event) => setNickname(event.target.value)}
+                        autoFocus
+                        sx={{
+                            "& .MuiOutlinedInput-root": {
+                                borderRadius: "14px",
+                                backgroundColor: "rgba(248, 250, 252, 0.8)",
+                                color: "#0f172a",
+                                transition: "all 0.2s ease",
+                                "& fieldset": {
+                                    borderColor: "rgba(148, 163, 184, 0.2)",
+                                },
+                                "&:hover fieldset": {
+                                    borderColor: "rgba(111, 99, 246, 0.4)",
+                                },
+                                "&.Mui-focused fieldset": {
+                                    borderColor: "#4f46e5",
+                                    borderWidth: "2px",
+                                },
+                            },
+                            "& .MuiInputBase-input": {
+                                fontSize: 15.5,
+                                py: 1.6,
+                                px: 2,
+                                fontWeight: 600,
+                            },
+                        }}
+                    />
+                </Box>
+            </DialogContent>
+
+            <DialogActions
+                sx={{
+                    px: 3.5,
+                    pb: 3,
+                    pt: 1,
+                    justifyContent: "flex-end",
+                    gap: 2,
+                    borderTop: "1px solid rgba(148, 163, 184, 0.08)",
+                    bgcolor: "rgba(248, 250, 252, 0.4)",
+                }}
+            >
+                <Button
+                    onClick={onClose}
+                    variant="contained"
                     sx={{
-                        px: 3,
-                        pb: 2.5,
-                        pt: 0.5,
-                        justifyContent: "flex-end",
-                        gap: 1.5,
+                        minWidth: 92,
+                        height: 38,
+                        textTransform: "none",
+                        fontSize: 14.5,
+                        fontWeight: 700,
+                        color: "#475569",
+                        backgroundColor: "#f1f5f9",
+                        boxShadow: "none",
+                        borderRadius: "12px",
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                            backgroundColor: "#e2e8f0",
+                            color: "#1e293b",
+                            boxShadow: "none",
+                            transform: "translateY(-1px)",
+                        },
                     }}
                 >
-                    <Button
-                        onClick={onClose}
-                        variant="contained"
-                        sx={{
-                            minWidth: 96,
-                            height: 44,
-                            textTransform: "none",
-                            fontSize: 16,
-                            fontWeight: 600,
-                            color: "#5b647a",
-                            backgroundColor: "#eef2f7",
-                            boxShadow: "none",
-                            borderRadius: 2,
-                            "&:hover": {
-                                backgroundColor: "#e2e8f0",
-                                boxShadow: "none",
-                            },
-                        }}
-                    >
-                        Cancel
-                    </Button>
+                    Cancel
+                </Button>
 
-                    <Button
-                        onClick={handleConfirm}
-                        variant="contained"
-                        disabled={ !(nickname != selectedContact?.nickname) || isSubmitting}
-                        sx={{
-                            minWidth: 110,
-                            height: 44,
-                            textTransform: "none",
-                            fontSize: 16,
-                            fontWeight: 700,
-                            color: "#ffffff",
-                            backgroundColor: "#6f63f6",
-                            boxShadow: "none",
-                            borderRadius: 2,
-                            "&:hover": {
-                                backgroundColor: "#5b50eb",
-                                boxShadow: "none",
-                            },
-                        }}
-                    >
-                        {isSubmitting ? "Saving..." : "Confirm"}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </>
+                <Button
+                    onClick={handleConfirm}
+                    variant="contained"
+                    disabled={!(nickname !== selectedContact?.nickname) || isSubmitting}
+                    sx={{
+                        minWidth: 110,
+                        height: 38,
+                        textTransform: "none",
+                        fontSize: 14.5,
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                        boxShadow: "0 6px 16px rgba(79, 70, 229, 0.22)",
+                        borderRadius: "12px",
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                            background: "linear-gradient(135deg, #4338ca 0%, #6d28d9 100%)",
+                            boxShadow: "0 8px 20px rgba(79, 70, 229, 0.32)",
+                            transform: "translateY(-1px)",
+                        },
+                    }}
+                >
+                    {isSubmitting ? "Saving..." : "Confirm"}
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }

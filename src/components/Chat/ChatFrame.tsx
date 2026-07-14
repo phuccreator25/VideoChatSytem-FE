@@ -71,7 +71,6 @@ export default function ChatFrame() {
       </Paper>
     );
   }
-
   return (
     <Paper
       elevation={0}
@@ -87,6 +86,7 @@ export default function ChatFrame() {
         flexDirection: "column",
         minHeight: 0,
         position: "relative",
+        textAlign: "left",
         "&::before": {
           content: '""',
           position: "absolute",

@@ -24,6 +24,7 @@ import type {
 import type { AddContactModalGroup } from "../../../../types/invitation/invitation.ui.type";
 import type { RelationStatus } from "../../../../types/invitation/invitation.model.type";
 import UserSearchOptions from "./UserSearchOptions.contact.tsx";
+import Zoom from "@mui/material/Zoom";
 
 type AddContactModalProps = {
   addContactModal: AddContactModalGroup;
@@ -70,7 +71,7 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
       try {
         setLoading(true);
 
-        const mappedOptions = await handlers.handleSearchUser(searchValue)
+        const mappedOptions = await handlers.handleSearchUser(searchValue);
 
         setOptions(mappedOptions);
       } catch (error) {
@@ -150,7 +151,7 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
       invitationMessage: data.invitationMessage,
     });
 
-    if(res) handleClose();
+    if (res) handleClose();
   };
 
   return (
@@ -159,9 +160,15 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      TransitionComponent={Zoom}
+      transitionDuration={250}
       PaperProps={{
         sx: {
-          borderRadius: 3,
+          borderRadius: "24px",
+          backgroundColor: "#ffffff",
+          border: "1px solid rgba(148, 163, 184, 0.15)",
+          boxShadow: "none",
+          overflow: "hidden",
           width: 560,
           maxWidth: "95vw",
         },
@@ -169,12 +176,15 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
     >
       <DialogTitle
         sx={{
-          px: 3,
-          py: 2,
-          fontSize: 17,
-          fontWeight: 700,
-          color: "#1f2430",
-          borderBottom: "1px solid #ececf3",
+          px: 3.5,
+          pt: 3.5,
+          pb: 2,
+          fontSize: 20,
+          fontWeight: 800,
+          background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          borderBottom: "1px solid rgba(148, 163, 184, 0.08)",
           position: "relative",
         }}
       >
@@ -184,9 +194,15 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
           size="small"
           sx={{
             position: "absolute",
-            right: 12,
-            top: 12,
-            color: "#7d8291",
+            right: 16,
+            top: 20,
+            color: "#64748b",
+            bgcolor: "rgba(148, 163, 184, 0.08)",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              bgcolor: "rgba(148, 163, 184, 0.16)",
+              transform: "rotate(90deg)",
+            },
           }}
         >
           <CloseIcon fontSize="small" />
@@ -194,15 +210,17 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
       </DialogTitle>
 
       <form onSubmit={handleSubmit(onAddContact)}>
-        <DialogContent sx={{ px: 3, py: 3 }}>
-          <Stack spacing={3}>
+        <DialogContent sx={{ px: 3.5, py: 3.5 }}>
+          <Stack spacing={3.5}>
             <Box>
               <Typography
                 sx={{
-                  mb: 1,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "#4b5160",
+                  mb: 1.2,
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  color: "#475569",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
                 }}
               >
                 Find user
@@ -236,7 +254,10 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
                       sx: {
                         maxHeight: 320,
                         overflowY: "auto",
-                        p: 0.75,
+                        p: 1,
+                        borderRadius: "14px",
+                        border: "1px solid rgba(148, 163, 184, 0.12)",
+                        boxShadow: "0 12px 32px rgba(15, 23, 42, 0.08)",
                       },
                     }}
                     renderOption={(props, option) => {
@@ -254,7 +275,8 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
                             py: 1.2,
                             px: 1.2,
                             maxWidth: "100%",
-                            borderRadius: 2,
+                            borderRadius: "10px",
+                            transition: "all 0.18s ease",
                             "&:not(:last-child)": {
                               mb: 0.5,
                             },
@@ -284,9 +306,21 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
                           ),
                           sx: {
                             minHeight: 46,
-                            borderRadius: 2,
-                            backgroundColor: "#fff",
-                            fontSize: 14,
+                            borderRadius: "14px",
+                            backgroundColor: "rgba(248, 250, 252, 0.8)",
+                            fontSize: 14.5,
+                            px: 2,
+                            transition: "all 0.2s ease",
+                            "& fieldset": {
+                              borderColor: "rgba(148, 163, 184, 0.2)",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "rgba(111, 99, 246, 0.4)",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#4f46e5",
+                              borderWidth: "2px",
+                            },
                           },
                         }}
                       />
@@ -299,10 +333,12 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
             <Box>
               <Typography
                 sx={{
-                  mb: 1,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "#4b5160",
+                  mb: 1.2,
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  color: "#475569",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
                 }}
               >
                 Invitation message
@@ -325,10 +361,22 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
                     disabled={selectedStatus !== "none"}
                     InputProps={{
                       sx: {
-                        borderRadius: 2,
-                        backgroundColor: "#fff",
-                        fontSize: 14,
+                        borderRadius: "14px",
+                        backgroundColor: "rgba(248, 250, 252, 0.8)",
+                        fontSize: 14.5,
                         alignItems: "flex-start",
+                        p: 2,
+                        transition: "all 0.2s ease",
+                        "& fieldset": {
+                          borderColor: "rgba(148, 163, 184, 0.2)",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "rgba(111, 99, 246, 0.4)",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#4f46e5",
+                          borderWidth: "2px",
+                        },
                       },
                     }}
                   />
@@ -339,17 +387,19 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
             {selectedUser && (
               <Box
                 sx={{
-                  px: 1.5,
-                  py: 1.25,
-                  borderRadius: 2,
-                  bgcolor: "#f8f9fd",
-                  border: "1px solid #edf0f5",
+                  px: 2,
+                  py: 1.6,
+                  borderRadius: "14px",
+                  bgcolor: "rgba(111, 99, 246, 0.04)",
+                  border: "1px solid rgba(111, 99, 246, 0.1)",
                 }}
               >
                 <Typography
                   sx={{
-                    fontSize: 13,
-                    color: "#667085",
+                    fontSize: 13.5,
+                    color: "#4f46e5",
+                    fontWeight: 500,
+                    lineHeight: 1.5,
                   }}
                 >
                   {selectedStatus === "none" &&
@@ -368,15 +418,37 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
 
         <Box
           sx={{
-            px: 3,
-            py: 2,
-            borderTop: "1px solid #ececf3",
+            px: 3.5,
+            py: 2.5,
+            borderTop: "1px solid rgba(148, 163, 184, 0.08)",
             display: "flex",
             justifyContent: "flex-end",
-            gap: 1.5,
+            gap: 2,
+            bgcolor: "rgba(248, 250, 252, 0.4)",
           }}
         >
-          <Button onClick={handleClose} variant="text">
+          <Button
+            onClick={handleClose}
+            variant="contained"
+            sx={{
+              minWidth: 92,
+              height: 38,
+              textTransform: "none",
+              fontSize: 14.5,
+              fontWeight: 700,
+              color: "#475569",
+              backgroundColor: "#f1f5f9",
+              boxShadow: "none",
+              borderRadius: "12px",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                backgroundColor: "#e2e8f0",
+                color: "#1e293b",
+                boxShadow: "none",
+                transform: "translateY(-1px)",
+              },
+            }}
+          >
             Close
           </Button>
 
@@ -385,10 +457,21 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
             variant="contained"
             disabled={isSubmitDisabled()}
             sx={{
+              minWidth: 120,
+              height: 38,
               textTransform: "none",
-              fontWeight: 600,
-              borderRadius: 2,
-              boxShadow: "none",
+              fontSize: 14.5,
+              fontWeight: 700,
+              color: "#ffffff",
+              background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+              boxShadow: "0 6px 16px rgba(79, 70, 229, 0.22)",
+              borderRadius: "12px",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                background: "linear-gradient(135deg, #4338ca 0%, #6d28d9 100%)",
+                boxShadow: "0 8px 20px rgba(79, 70, 229, 0.32)",
+                transform: "translateY(-1px)",
+              },
             }}
           >
             {submitLabel()}

@@ -127,17 +127,19 @@ export function SearchDrawer({
   return (
     <Box
       sx={{
-        width: { xs: 280, sm: 330, md: 360 },
+        width: { xs: "100%", sm: 330, md: 360 },
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        bgcolor: "rgba(255, 255, 255, 0.78)",
+        bgcolor: { xs: "#ffffff", md: "rgba(255, 255, 255, 0.78)" },
         backdropFilter: "blur(20px)",
         borderLeft: "1px solid rgba(148, 163, 184, 0.18)",
-        position: "relative",
-        zIndex: 10,
-        boxShadow: "-10px 0 30px rgba(15, 23, 42, 0.04)",
-        transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        position: { xs: "absolute", md: "relative" },
+        right: { xs: 0, md: "auto" },
+        top: { xs: 0, md: "auto" },
+        zIndex: 50,
+        boxShadow: "-10px 0 30px rgba(15, 23, 42, 0.08)",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
       {/* Header */}

@@ -8,9 +8,10 @@ import AttachFileOutlinedIcon from "@mui/icons-material/AttachFileOutlined";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import MicNoneRoundedIcon from "@mui/icons-material/MicNoneRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { SelectedImagesPreview } from "./SelectedFilesPreview.chat";
 import { ACCEPTED_NON_IMAGE_FILE_TYPES } from "../../../data/FilesType.data";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useRef } from "react";
 import { CONFIG } from "../../../config/appConfig";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import type { IGif } from "@giphy/js-types";
@@ -21,7 +22,8 @@ import { GifPopover } from "./gifPopover.chat";
 import { ReplyPreview } from "./ReplyPreview.chat";
 import { SelectedLinkPreview } from "./SelectedLinkPreview.chat";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
-import { Tooltip } from "@mui/material";
+import { Tooltip, Popover } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import type { LinkPreviewData } from "../../../types/chat/chat.payload.type";
@@ -94,6 +96,12 @@ export function InputBar({
   const [gifSearch, setGifSearch] = useState("");
   const isGifOpen = Boolean(gifAnchorEl);
 
+  const [utilityAnchorEl, setUtilityAnchorEl] = useState<HTMLElement | null>(null);
+  const isUtilityOpen = Boolean(utilityAnchorEl);
+
+  const isMobile = useMediaQuery('(max-width:600px)');
+  const inputBarRef = useRef<HTMLDivElement | null>(null);
+
   const giphyFetch = useMemo(() => {
     const apiKey = CONFIG.VITE_GIPHY_API_KEY;
     if (!apiKey) console.error("VITE_GIPHY_API_KEY chưa được cấu hình");
@@ -111,10 +119,16 @@ export function InputBar({
     [gifSearch, giphyFetch],
   );
 
+  const handleMobileFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onChangeFile(event);
+    setUtilityAnchorEl(null);
+  };
+
   return (
     <Box
+      ref={inputBarRef}
       sx={{
-        p: 2.4,
+        p: { xs: 1.5, sm: 2.4 },
         bgcolor: "rgba(255,255,255,0.84)",
         borderTop: "1px solid rgba(148, 163, 184, 0.22)",
         backdropFilter: "blur(10px)",
@@ -212,14 +226,14 @@ export function InputBar({
 
       <Stack
         direction="row"
-        spacing={{ xs: 1.2, sm: 2 }}
+        spacing={{ xs: 1, sm: 2 }}
         alignItems="flex-end"
-        sx={{ flexWrap: { xs: "wrap", sm: "nowrap" }, rowGap: 1.2 }}
+        sx={{ flexWrap: "nowrap" }}
       >
         <Box
           sx={{
             flex: 1,
-            minWidth: { xs: "100%", sm: 0 },
+            minWidth: 0,
             minHeight: 58,
             pl: { xs: 1.8, sm: 2.2 },
             pr: { xs: 6.5, sm: 7 },
@@ -390,65 +404,84 @@ export function InputBar({
           direction="row"
           spacing={1}
           alignItems="center"
-          sx={{ height: 58, flex: { xs: 1, sm: "0 0 auto" } }}
+          sx={{ height: 58, flexShrink: 0 }}
         >
-          <IconButton
-            onClick={(event) => setGifAnchorEl(event.currentTarget)}
-            sx={{
-              width: 40,
-              height: 40,
-              color: "#475569",
-              bgcolor: "rgba(255,255,255,0.72)",
-              border: "1px solid rgba(148, 163, 184, 0.2)",
-              transition: "background-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
-              boxShadow: isGifOpen ? "0 8px 18px rgba(67, 56, 202, 0.14)" : "none",
-              "&:hover": { bgcolor: "rgba(255,255,255,0.94)", color: "#4338ca", transform: "translateY(-1px)" },
-            }}
-          >
-            <Box component="span" sx={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1 }}>
-              GIF
-            </Box>
-          </IconButton>
+          {isMobile ? (
+            <IconButton
+              onClick={(event) => setUtilityAnchorEl(event.currentTarget)}
+              sx={{
+                width: 40,
+                height: 40,
+                color: "#475569",
+                bgcolor: "rgba(255,255,255,0.72)",
+                border: "1px solid rgba(148, 163, 184, 0.2)",
+                transition: "all 180ms ease",
+                boxShadow: isUtilityOpen ? "0 8px 18px rgba(67, 56, 202, 0.14)" : "none",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.94)", color: "#4338ca", transform: "translateY(-1px)" },
+              }}
+            >
+              <AddRoundedIcon />
+            </IconButton>
+          ) : (
+            <>
+              <IconButton
+                onClick={(event) => setGifAnchorEl(event.currentTarget)}
+                sx={{
+                  width: 40,
+                  height: 40,
+                  color: "#475569",
+                  bgcolor: "rgba(255,255,255,0.72)",
+                  border: "1px solid rgba(148, 163, 184, 0.2)",
+                  transition: "background-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
+                  boxShadow: isGifOpen ? "0 8px 18px rgba(67, 56, 202, 0.14)" : "none",
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.94)", color: "#4338ca", transform: "translateY(-1px)" },
+                }}
+              >
+                <Box component="span" sx={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1 }}>
+                  GIF
+                </Box>
+              </IconButton>
 
-          <IconButton
-            onClick={(event) => setEmojiAnchorEl(event.currentTarget)}
-            sx={{
-              color: "#475569",
-              bgcolor: "rgba(255,255,255,0.72)",
-              border: "1px solid rgba(148, 163, 184, 0.2)",
-              transition: "background-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
-              boxShadow: isEmojiOpen ? "0 8px 18px rgba(67, 56, 202, 0.14)" : "none",
-              "&:hover": { bgcolor: "rgba(255,255,255,0.94)", color: "#4338ca", transform: "translateY(-1px)" },
-            }}
-          >
-            <SentimentSatisfiedAltOutlinedIcon />
-          </IconButton>
+              <IconButton
+                onClick={(event) => setEmojiAnchorEl(event.currentTarget)}
+                sx={{
+                  color: "#475569",
+                  bgcolor: "rgba(255,255,255,0.72)",
+                  border: "1px solid rgba(148, 163, 184, 0.2)",
+                  transition: "background-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
+                  boxShadow: isEmojiOpen ? "0 8px 18px rgba(67, 56, 202, 0.14)" : "none",
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.94)", color: "#4338ca", transform: "translateY(-1px)" },
+                }}
+              >
+                <SentimentSatisfiedAltOutlinedIcon />
+              </IconButton>
 
-          <IconButton
-            component="label"
-            sx={{ color: "#475569", bgcolor: "rgba(255,255,255,0.72)", border: "1px solid rgba(148, 163, 184, 0.2)" }}
-          >
-            <AttachFileOutlinedIcon />
-            <input hidden type="file" accept={ACCEPTED_NON_IMAGE_FILE_TYPES} multiple onChange={onChangeFile} />
-          </IconButton>
+              <IconButton
+                component="label"
+                sx={{ color: "#475569", bgcolor: "rgba(255,255,255,0.72)", border: "1px solid rgba(148, 163, 184, 0.2)" }}
+              >
+                <AttachFileOutlinedIcon />
+                <input hidden type="file" accept={ACCEPTED_NON_IMAGE_FILE_TYPES} multiple onChange={onChangeFile} />
+              </IconButton>
 
-          <IconButton
-            component="label"
-            sx={{
-              color: "#475569",
-              bgcolor: "rgba(255,255,255,0.72)",
-              border: "1px solid rgba(148, 163, 184, 0.2)",
-              "&:hover": { bgcolor: "rgba(241,245,249,0.95)", color: "#2563eb" },
-            }}
-          >
-            <ImageOutlinedIcon />
-            <input hidden type="file" accept="image/*" multiple onChange={onChangeFile} />
-          </IconButton>
+              <IconButton
+                component="label"
+                sx={{
+                  color: "#475569",
+                  bgcolor: "rgba(255,255,255,0.72)",
+                  border: "1px solid rgba(148, 163, 184, 0.2)",
+                  "&:hover": { bgcolor: "rgba(241,245,249,0.95)", color: "#2563eb" },
+                }}
+              >
+                <ImageOutlinedIcon />
+                <input hidden type="file" accept="image/*" multiple onChange={onChangeFile} />
+              </IconButton>
+            </>
+          )}
         </Stack>
 
         <IconButton
           onClick={() => {
-
             if (!hasText && files.length < 1 && !hasGif && !voiceData.recordedFile) return;
             console.log('1');
             onSend();
@@ -460,6 +493,7 @@ export function InputBar({
             borderRadius: 3,
             bgcolor: "#4338ca",
             color: "#fff",
+            flexShrink: 0,
             boxShadow: hasText ? "0 12px 24px rgba(67, 56, 202, 0.34)" : "none",
             "&:hover": { bgcolor: "#3730a3" },
             "&.Mui-disabled": { bgcolor: "#cbd5e1", color: "#94a3b8" },
@@ -487,6 +521,108 @@ export function InputBar({
         fetchGifs={fetchGifs}
         onSelectGif={onSelectGif}
       />
+
+      {/* ── Mobile Utilities Popover ── */}
+      <Popover
+        open={isUtilityOpen}
+        anchorEl={utilityAnchorEl}
+        onClose={() => setUtilityAnchorEl(null)}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        slotProps={{
+          paper: {
+            sx: {
+              p: 1.25,
+              borderRadius: "16px",
+              boxShadow: "0 8px 32px rgba(15, 23, 42, 0.12)",
+              border: "1px solid rgba(148, 163, 184, 0.2)",
+              bgcolor: "#ffffff",
+            }
+          }
+        }}
+      >
+        <Stack direction="row" spacing={1.25}>
+          {/* GIF Button */}
+          <IconButton
+            onClick={() => {
+              if (inputBarRef.current) {
+                setGifAnchorEl(inputBarRef.current);
+              }
+              setUtilityAnchorEl(null);
+            }}
+            sx={{
+              width: 40,
+              height: 40,
+              color: "#475569",
+              bgcolor: "rgba(241, 245, 249, 0.8)",
+              border: "1px solid rgba(148, 163, 184, 0.2)",
+              "&:hover": { bgcolor: "#f1f5f9", color: "#4338ca" },
+            }}
+          >
+            <Box component="span" sx={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.4, lineHeight: 1 }}>
+              GIF
+            </Box>
+          </IconButton>
+
+          {/* Emoji Button */}
+          <IconButton
+            onClick={() => {
+              if (inputBarRef.current) {
+                setEmojiAnchorEl(inputBarRef.current);
+              }
+              setUtilityAnchorEl(null);
+            }}
+            sx={{
+              width: 40,
+              height: 40,
+              color: "#475569",
+              bgcolor: "rgba(241, 245, 249, 0.8)",
+              border: "1px solid rgba(148, 163, 184, 0.2)",
+              "&:hover": { bgcolor: "#f1f5f9", color: "#4338ca" },
+            }}
+          >
+            <SentimentSatisfiedAltOutlinedIcon />
+          </IconButton>
+
+          {/* File Button */}
+          <IconButton
+            component="label"
+            sx={{
+              width: 40,
+              height: 40,
+              color: "#475569",
+              bgcolor: "rgba(241, 245, 249, 0.8)",
+              border: "1px solid rgba(148, 163, 184, 0.2)",
+              "&:hover": { bgcolor: "#f1f5f9", color: "#2563eb" },
+            }}
+          >
+            <AttachFileOutlinedIcon />
+            <input hidden type="file" accept={ACCEPTED_NON_IMAGE_FILE_TYPES} multiple onChange={handleMobileFileChange} />
+          </IconButton>
+
+          {/* Image Button */}
+          <IconButton
+            component="label"
+            sx={{
+              width: 40,
+              height: 40,
+              color: "#475569",
+              bgcolor: "rgba(241, 245, 249, 0.8)",
+              border: "1px solid rgba(148, 163, 184, 0.2)",
+              "&:hover": { bgcolor: "#f1f5f9", color: "#2563eb" },
+            }}
+          >
+            <ImageOutlinedIcon />
+            <input hidden type="file" accept="image/*" multiple onChange={handleMobileFileChange} />
+          </IconButton>
+        </Stack>
+      </Popover>
     </Box>
   );
 }

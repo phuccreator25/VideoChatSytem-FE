@@ -1,7 +1,4 @@
-import { useState, type SyntheticEvent } from "react";
-import Accordion from "@mui/material/Accordion";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionSummary from "@mui/material/AccordionSummary";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -13,7 +10,6 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -28,20 +24,18 @@ import { useForm } from "react-hook-form";
 type AboutSectionProps = {
     profile: ProfileData | null;
     expanded: boolean;
-    onChange: (_event: SyntheticEvent, isExpanded: boolean) => void;
-    onUpdate: (payload: object) => void
+    onChange: (_event: any, isExpanded: boolean) => void;
+    onUpdate: (payload: object) => void;
 };
 
 type ChangePasswordForm = {
-    currentPass: string
-    password: string
-    confirmPass: string
-}
+    currentPass: string;
+    password: string;
+    confirmPass: string;
+};
 
 export function AboutSection({
     profile,
-    expanded,
-    onChange,
     onUpdate
 }: AboutSectionProps) {
     const [editingField, setEditingField] = useState<EditableFieldKey | null>(null);
@@ -61,9 +55,9 @@ export function AboutSection({
             password: "",
             confirmPass: ""
         }
-    })
+    });
 
-    const password = watch("password")
+    const password = watch("password");
 
     const handleStartEdit = (field: EditableFieldKey, value: string) => {
         setEditingField(field);
@@ -81,9 +75,9 @@ export function AboutSection({
 
             const payload = {
                 [editingField]: editValue
-            }
+            };
 
-            await onUpdate(payload)
+            await onUpdate(payload);
 
             setEditingField(null);
             setEditValue("");
@@ -91,78 +85,71 @@ export function AboutSection({
             console.log(
                 "Error update profile data:",
                 error?.response?.data?.message || error?.message
-            )
+            );
         }
     };
 
     const handleClosePasswordModal = () => {
         setOpenPasswordModal(false);
-        reset()
+        reset();
     };
 
     const handleSubmitPassword = async (payload: ChangePasswordForm) => {
         try {
-            setLoading(true)
-            await onUpdate(payload)
-            handleClosePasswordModal()
+            setLoading(true);
+            await onUpdate(payload);
+            handleClosePasswordModal();
         } catch (error: any) {
             console.log(
                 "Error update profile data:",
                 error?.response?.data?.message || error?.message
-            )
+            );
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     return (
         <>
-            <Accordion
-                expanded={expanded}
-                onChange={onChange}
-                elevation={0}
-                disableGutters
+            <Box
                 sx={{
                     mb: 1.5,
-                    border: "1px solid #ebecef",
-                    borderRadius: "12px !important",
+                    border: "1px solid rgba(148, 163, 184, 0.15)",
+                    borderRadius: "16px",
                     overflow: "hidden",
                     bgcolor: "#ffffff",
-                    "&:before": {
-                        display: "none",
-                    },
+                    boxShadow: "0 8px 32px rgba(15, 23, 42, 0.02)",
                 }}
             >
-                <AccordionSummary
-                    expandIcon={<ExpandMoreRoundedIcon sx={{ color: "#1f2430" }} />}
+                <Box
                     sx={{
-                        minHeight: 56,
-                        px: 2,
-                        bgcolor: "#ffffff",
-                        "& .MuiAccordionSummary-content": {
-                            my: 0,
-                        },
+                        minHeight: 52,
+                        px: 2.5,
+                        display: "flex",
+                        alignItems: "center",
+                        borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
+                        bgcolor: "rgba(248, 250, 252, 0.5)",
                     }}
                 >
-                    <Stack direction="row" alignItems="center" sx={{ margin: "auto" }} spacing={1.25}>
-                        <PersonOutlineRoundedIcon sx={{ fontSize: 20, color: "#1f2430" }} />
+                    <Stack direction="row" alignItems="center" spacing={1.25}>
+                        <PersonOutlineRoundedIcon sx={{ fontSize: 20, color: "#4f46e5" }} />
                         <Typography
                             sx={{
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: 700,
-                                color: "#1f2430",
+                                color: "#0f172a",
                             }}
                         >
                             About
                         </Typography>
                     </Stack>
-                </AccordionSummary>
+                </Box>
 
-                <AccordionDetails
+                <Box
                     sx={{
-                        px: 2,
-                        pb: 2,
-                        pt: 0.5,
+                        px: 2.5,
+                        pb: 2.5,
+                        pt: 1.5,
                         bgcolor: "#ffffff",
                     }}
                 >
@@ -204,24 +191,24 @@ export function AboutSection({
                             startIcon={<LockResetRoundedIcon />}
                             variant="outlined"
                             sx={{
-                                borderRadius: 2.5,
+                                borderRadius: "10px",
                                 px: 2,
                                 py: 1,
                                 textTransform: "none",
                                 fontWeight: 700,
-                                borderColor: "rgba(111, 99, 246, 0.32)",
-                                color: "#6f63f6",
+                                borderColor: "rgba(79, 70, 229, 0.25)",
+                                color: "#4f46e5",
                                 "&:hover": {
-                                    borderColor: "#6f63f6",
-                                    bgcolor: "rgba(111, 99, 246, 0.06)",
+                                    borderColor: "#4f46e5",
+                                    bgcolor: "rgba(79, 70, 229, 0.06)",
                                 },
                             }}
                         >
                             Change Password
                         </Button>
                     </Box>
-                </AccordionDetails>
-            </Accordion>
+                </Box>
+            </Box>
 
             <Dialog
                 open={openPasswordModal}
@@ -230,7 +217,7 @@ export function AboutSection({
                 maxWidth="xs"
                 PaperProps={{
                     sx: {
-                        borderRadius: 3,
+                        borderRadius: "16px",
                         p: 0.5,
                     },
                 }}
@@ -239,7 +226,7 @@ export function AboutSection({
                     sx={{
                         fontSize: 20,
                         fontWeight: 700,
-                        color: "#1f2430",
+                        color: "#0f172a",
                         pr: 6,
                     }}
                 >
@@ -250,75 +237,70 @@ export function AboutSection({
                             position: "absolute",
                             right: 12,
                             top: 12,
-                            color: "#7d84a0",
+                            color: "#64748b",
                         }}
                     >
                         <CloseRoundedIcon />
                     </IconButton>
                 </DialogTitle>
 
-                <form
-                    onSubmit={handleSubmit(handleSubmitPassword)}
-                >
+                <form onSubmit={handleSubmit(handleSubmitPassword)}>
                     <DialogContent sx={{ pt: '8px !important' }}>
                         <Stack spacing={2}>
                             <TextField
-                                label="Mật khẩu hiện tại"
+                                label="Current password"
                                 type="password"
                                 fullWidth
                                 {...register("currentPass", {
-                                    required: "Vui lòng nhập vào mật khẩu hiện tại",
-                                },
-                                )}
+                                    required: "Please enter your current password",
+                                })}
                                 error={!!errors.currentPass}
                                 helperText={errors.currentPass?.message}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: 2.5,
+                                        borderRadius: "10px",
                                     },
                                 }}
                             />
 
                             <TextField
-                                label="Mật khẩu mới"
+                                label="New password"
                                 type="password"
                                 fullWidth
                                 {...register("password", {
-                                    required: "Vui lòng nhập vào mật khẩu",
+                                    required: "Please enter a new password",
                                     minLength: {
                                         value: 8,
-                                        message: "Mật khẩu phải có ít nhất 8 ký tự",
+                                        message: "Password must be at least 8 characters",
                                     },
                                     pattern: {
-                                        value:
-                                            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/,
-                                        message:
-                                            "Mật khẩu phải gồm ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt",
+                                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/,
+                                        message: "Password must include uppercase, lowercase, numbers, and special characters",
                                     },
                                 })}
                                 error={!!errors.password}
                                 helperText={errors.password?.message}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: 2.5,
+                                        borderRadius: "10px",
                                     },
                                 }}
                             />
 
                             <TextField
-                                label="Xác nhận mật khẩu mới"
+                                label="Confirm new password"
                                 type="password"
                                 fullWidth
                                 {...register("confirmPass", {
-                                    required: "Vui lòng xác nhận mật khẩu",
+                                    required: "Please confirm your password",
                                     validate: (value) =>
-                                        value === password || "Mật khẩu xác nhận không khớp",
+                                        value === password || "Passwords do not match",
                                 })}
                                 error={!!errors.confirmPass}
                                 helperText={errors.confirmPass?.message}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
-                                        borderRadius: 2.5,
+                                        borderRadius: "10px",
                                     },
                                 }}
                             />
@@ -332,7 +314,7 @@ export function AboutSection({
                             sx={{
                                 textTransform: 'none',
                                 fontWeight: 700,
-                                color: '#7b8190',
+                                color: '#64748b',
                             }}
                         >
                             Cancel
@@ -343,15 +325,15 @@ export function AboutSection({
                             variant="contained"
                             disabled={loading}
                             sx={{
-                                borderRadius: 2.5,
+                                borderRadius: "10px",
                                 px: 2,
                                 textTransform: 'none',
                                 fontWeight: 700,
                                 boxShadow: 'none',
-                                bgcolor: '#6f63f6',
+                                bgcolor: '#4f46e5',
                                 '&:hover': {
                                     boxShadow: 'none',
-                                    bgcolor: '#5f53eb',
+                                    bgcolor: '#4338ca',
                                 },
                             }}
                         >
