@@ -96,6 +96,7 @@ import {
 } from "../../socket/callSocket.socket";
 import type { CallEndPayload } from "../../types/call/call.type";
 import type { CallOfferSuccessPayload } from "../../types/call/callSocket.type";
+import { showTabNotification } from "../../helpers/tabNotification";
 
 export default function useChatLayout(activeRail: RailKey) {
   const dispatch = useDispatch<AppDispatch>();
@@ -176,6 +177,31 @@ export default function useChatLayout(activeRail: RailKey) {
             openingConversationId: conversationId,
           }),
         );
+      }
+
+      // Play sound, show tab notification and red dot favicon badge for incoming messages
+      const isMyMessage = String(payload.senderId) === String(currentUserId);
+      if (!isMyMessage) {
+        const isActiveConversation = String(conversationId) === String(payload.conversationId);
+        const isTabActive = document.hasFocus() && document.visibilityState === "visible";
+
+        if (!isActiveConversation || !isTabActive) {
+          const conversation = conversations.find(
+            (c) => String(c.id) === String(payload.conversationId)
+          );
+          const senderName = conversation?.name || "Người dùng";
+          
+          let messageContent = "Đã gửi một tin nhắn";
+          if (payload.type === "text" && payload.content) {
+            messageContent = payload.content;
+          } else if (payload.type === "file") {
+            messageContent = "Đã gửi một tệp đính kèm";
+          } else if (payload.type === "gif") {
+            messageContent = "Đã gửi một ảnh GIF";
+          }
+
+          showTabNotification(senderName, messageContent);
+        }
       }
     };
 
