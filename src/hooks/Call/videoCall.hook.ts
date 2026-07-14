@@ -80,7 +80,11 @@ export const useVideoCall = () => {
 
       // Cấu hình ban đầu dựa theo mong muốn của user
       const constraints: MediaStreamConstraints = {
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
         video:
           callType === "video"
             ? {
@@ -341,7 +345,6 @@ export const useVideoCall = () => {
 
       const pc = new RTCPeerConnection({
         iceServers: res.data.data.iceServers,
-        iceTransportPolicy: "relay", // 🔥 BẮT BUỘC: Ép trình duyệt bỏ qua P2P, đi thẳng qua TURN Server
       });
       peerConnectionRef.current = pc;
 
