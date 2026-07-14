@@ -258,7 +258,7 @@ export const useVideoCall = () => {
       const res = await callApi.onGetTurnCredentials();
       console.log("res", res.data);
 
-      const configuration = { iceServers: res.data.iceServers };
+      const configuration = { iceServers: res.data.data.iceServers };
 
       // Lưu trữ instance kết nối vào Ref để bảo toàn bộ nhớ
       const pc = new RTCPeerConnection(configuration);
