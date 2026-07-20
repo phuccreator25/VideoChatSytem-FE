@@ -60,6 +60,11 @@ export const useVideoCall = () => {
     setIsFullScreen(false);
   };
 
+  const isCallModalOpen = useSelector(
+    (state: RootState) => state.call.isCallModalOpen,
+  );
+  const activeCallType = isCallModalOpen.type || incomingCall.type || "video";
+
   const startCallSession = async (
     stream: MediaStream | null,
     targetCalleeId?: string,
@@ -78,6 +83,7 @@ export const useVideoCall = () => {
         ortherUserId,
         conversationId,
         currentUserId,
+        callType: activeCallType,
       });
     }
   };
@@ -92,6 +98,7 @@ export const useVideoCall = () => {
       ortherUserId,
       conversationId,
       currentUserId,
+      callType: activeCallType,
     });
   };
 
@@ -99,15 +106,13 @@ export const useVideoCall = () => {
     try {
       if (!callInfo) return;
 
-      const callId =
-        typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
-      if (!callId) {
+      if (!callInfo) {
         console.error("Không tìm thấy callId hợp lệ để cúp máy:", callInfo);
         closeUserMedia();
         return;
       }
 
-      await dispatch(onEndCallAction(callId));
+      await dispatch(onEndCallAction(callInfo));
       closeUserMedia();
     } catch (error) {
       closeUserMedia();
@@ -154,7 +159,10 @@ export const useVideoCall = () => {
 
   // Đăng ký các sự kiện socket lắng nghe từ đối phương dùng cho Caller
   useEffect(() => {
-    const handleCallAnswer = async (payload: any) => {
+    const handleCallAnswer = async (payload: {
+      answer: RTCSessionDescriptionInit;
+      conversationId: string;
+    }) => {
       if (!payload.answer || !webrtc.peerConnectionRef.current) return;
       const remoteDesc = new RTCSessionDescription(payload.answer);
       await webrtc.peerConnectionRef.current.setRemoteDescription(remoteDesc);
@@ -167,18 +175,14 @@ export const useVideoCall = () => {
     };
 
     const handleCallOffline = (payload: { callId: string }) => {
-      const callId =
-        typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
-      if (callId === payload.callId) {
+      if (callInfo === payload.callId) {
         closeUserMedia();
       }
       console.log("Đối phương offline");
     };
 
     const handleCallRinging = (payload: { callId: string }) => {
-      const callId =
-        typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
-      if (callId === payload.callId) {
+      if (callInfo === payload.callId) {
         webrtc.setIsRinging(true);
       }
       console.log("Cuộc gọi đang đổ chuông");
@@ -190,10 +194,8 @@ export const useVideoCall = () => {
       mediaType: "audio" | "video" | "screen";
       enabled: boolean;
     }) => {
-      const callId =
-        typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
       if (
-        callId !== payload.callId ||
+        callInfo !== payload.callId ||
         payload.userIdWhoToggled === currentUserId
       ) {
         return;
@@ -280,13 +282,13 @@ export const useVideoCall = () => {
     handler: {
       openUserMedia: media.openUserMedia,
       closeUserMedia,
-      toggleAudio: () => media.toggleAudio(callInfo, currentUserId),
-      toggleVideo: () => media.toggleVideo(callInfo, currentUserId),
+      toggleAudio: () => media.toggleAudio(callInfo!, currentUserId),
+      toggleVideo: () => media.toggleVideo(callInfo!, currentUserId),
       toggleShareScreen: () =>
         screen.toggleShareScreen(
           webrtc.peerConnectionRef,
           media.localStreamRef,
-          callInfo,
+          callInfo!,
           currentUserId,
         ),
       makeCall,

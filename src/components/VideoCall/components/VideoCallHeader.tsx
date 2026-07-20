@@ -17,14 +17,24 @@ export const VideoCallHeader = ({
   isMobile,
   isRingingState,
   onToggleFullScreen,
+  callType,
 }: {
   userData?: ConversationUserInfo | null;
   displayName: string;
-  ui: any;
+  ui: {
+    isRemoteAudioMuted: boolean;
+    isReconnecting: boolean;
+    isAccepted: boolean;
+    callDuration: number;
+    isFullScreen: boolean;
+  };
   isMobile: boolean;
   isRingingState: boolean;
   onToggleFullScreen: () => void;
+  callType?: string;
 }) => {
+  const isAudioCall = callType === "voice";
+
   return (
     <Box
       sx={{
@@ -45,8 +55,8 @@ export const VideoCallHeader = ({
           sx={{
             width: { xs: 36, sm: 44 },
             height: { xs: 36, sm: 44 },
-            border: "2px solid rgba(99, 102, 241, 0.3)",
-            boxShadow: "0 4px 12px rgba(99, 102, 241, 0.15)",
+            border: isAudioCall ? "2px solid rgba(16, 185, 129, 0.4)" : "2px solid rgba(99, 102, 241, 0.3)",
+            boxShadow: isAudioCall ? "0 4px 12px rgba(16, 185, 129, 0.2)" : "0 4px 12px rgba(99, 102, 241, 0.15)",
           }}
         />
         <Box>
@@ -56,6 +66,22 @@ export const VideoCallHeader = ({
             >
               {displayName}
             </Typography>
+            <Box
+              sx={{
+                px: 1,
+                py: 0.2,
+                borderRadius: "10px",
+                bgcolor: isAudioCall ? "rgba(16, 185, 129, 0.15)" : "rgba(99, 102, 241, 0.15)",
+                border: isAudioCall ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(99, 102, 241, 0.3)",
+                color: isAudioCall ? "#34d399" : "#818cf8",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+              }}
+            >
+              {isAudioCall ? "Voice Call" : "Video Call"}
+            </Box>
             {ui.isRemoteAudioMuted && (
               <Tooltip title="Muted">
                 <MicOffRoundedIcon sx={{ color: "#ef4444", fontSize: { xs: 14, sm: 16 } }} />

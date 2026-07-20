@@ -20,7 +20,7 @@ export default function ChatLayout({ middlePanel, activeRail, onRailChange, cont
   const { conversationId } = useParams();
   const location = useLocation();
   const isMobile = useMediaQuery('(max-width:600px)');
-  
+
   const isChatActive = !!conversationId || location.pathname.includes('/invitation');
 
   return (
@@ -87,11 +87,12 @@ export default function ChatLayout({ middlePanel, activeRail, onRailChange, cont
         userData={ui.incomingCall.userData}
         onDecline={() => handler.declineCall()}
         onAccept={() => handler.acceptCall()}
-        callType={ui.incomingCall.type ?? "audio"}
+        callType={ui.incomingCall.type ?? "voice"}
       />
 
       <VideoCallModal
-        isOpen={ui.isCallModalOpen}
+        isOpen={ui.isCallModalOpen.isOpen}
+        type={ui.isCallModalOpen.type}
         handleClose={handler.closeCallModal}
         userData={ui.incomingCall.userData || ui.userData}
       />

@@ -41,10 +41,10 @@ export const useMediaStream = () => {
 
       try {
         stream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (firstError: any) {
+      } catch (error: any) {
         if (
-          (firstError.name === "NotFoundError" ||
-            firstError.name === "DevicesNotFoundError") &&
+          (error.name === "NotFoundError" ||
+            error.name === "DevicesNotFoundError") &&
           callType === "video"
         ) {
           console.warn(
@@ -61,8 +61,14 @@ export const useMediaStream = () => {
           constraints.video = false;
           stream = await navigator.mediaDevices.getUserMedia(constraints);
         } else {
-          throw firstError;
+          throw error;
         }
+      }
+
+      if (callType !== "video") {
+        setIsVideoStopped(true);
+      } else {
+        setIsVideoStopped(false);
       }
 
       setLocalStream(stream);
@@ -115,18 +121,16 @@ export const useMediaStream = () => {
     }
   };
 
-  const toggleAudio = (callInfo: any, currentUserId?: string) => {
+  const toggleAudio = (callInfo: string, currentUserId?: string) => {
     const activeStream = localStreamRef.current || localStream;
     if (activeStream) {
       activeStream.getAudioTracks().forEach((track) => {
         track.enabled = !track.enabled;
         setIsAudioMuted(!track.enabled);
 
-        const callId =
-          typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
-        if (callId && currentUserId) {
+        if (callInfo && currentUserId) {
           emitToggleMedia({
-            callId,
+            callId: callInfo,
             currentUserId,
             mediaType: "audio",
             enabled: track.enabled,
@@ -136,18 +140,16 @@ export const useMediaStream = () => {
     }
   };
 
-  const toggleVideo = (callInfo: any, currentUserId?: string) => {
+  const toggleVideo = (callInfo: string, currentUserId?: string) => {
     const activeStream = localStreamRef.current || localStream;
     if (activeStream) {
       activeStream.getVideoTracks().forEach((track) => {
         track.enabled = !track.enabled;
         setIsVideoStopped(!track.enabled);
 
-        const callId =
-          typeof callInfo === "string" ? callInfo : (callInfo as any)?._id;
-        if (callId && currentUserId) {
+        if (callInfo && currentUserId) {
           emitToggleMedia({
-            callId,
+            callId: callInfo,
             currentUserId,
             mediaType: "video",
             enabled: track.enabled,

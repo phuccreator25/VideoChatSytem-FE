@@ -19,7 +19,7 @@ import type { ConversationUserInfo } from "../../types/chat/chat.conversation.ty
 interface RingingCallViewProps {
     isOpen: boolean;
     userData?: ConversationUserInfo | null;
-    callType?: "video" | "audio";
+    callType?: "video" | "voice";
     onAccept?: () => void;
     onDecline?: () => void;
 }
@@ -27,7 +27,7 @@ interface RingingCallViewProps {
 export const RingingCallView = ({
     isOpen,
     userData,
-    callType = "audio",
+    callType = "voice",
     onAccept,
     onDecline,
 }: RingingCallViewProps) => {

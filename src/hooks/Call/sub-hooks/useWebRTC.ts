@@ -1,7 +1,12 @@
 import { useState, useRef } from "react";
 import { enqueueSnackbar } from "notistack";
 import callApi from "../../../api/Call.api";
-import { emitCallAnswer, emitCallOffer, emitIceCandidate } from "../../../socket/callSocket.socket";
+import {
+  emitCallAnswer,
+  emitCallOffer,
+  emitIceCandidate,
+} from "../../../socket/callSocket.socket";
+import type { incomingType } from "../../../types/call/call.type";
 
 export const useWebRTC = () => {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -11,7 +16,9 @@ export const useWebRTC = () => {
   const [isRemoteAudioMuted, setIsRemoteAudioMuted] = useState(false);
   const [isRemoteDescSet, setIsRemoteDescSet] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
-  const [connectionStatusText, setConnectionStatusText] = useState<string | null>(null);
+  const [connectionStatusText, setConnectionStatusText] = useState<
+    string | null
+  >(null);
 
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -22,12 +29,14 @@ export const useWebRTC = () => {
     ortherUserId,
     conversationId,
     currentUserId,
+    callType,
   }: {
     localStream: MediaStream | null;
     targetCalleeId?: string;
     ortherUserId?: string;
     conversationId?: string;
     currentUserId?: string;
+    callType?: string;
   }) => {
     const activeStream = localStream;
     const calleeId = targetCalleeId || ortherUserId;
@@ -154,7 +163,7 @@ export const useWebRTC = () => {
         conversationId,
         callerId: currentUserId,
         calleeId,
-        type: "video",
+        type: callType || "video",
         offer,
       };
 
@@ -171,7 +180,7 @@ export const useWebRTC = () => {
     currentUserId,
   }: {
     stream: MediaStream | null;
-    incomingCall: any;
+    incomingCall: incomingType;
     conversationId?: string;
     currentUserId?: string;
   }) => {
@@ -277,11 +286,7 @@ export const useWebRTC = () => {
       console.log("remoteStream: ", remoteStream);
       console.log("Đã có remoteStream chưa?", !!remoteStream);
 
-      emitCallAnswer(
-        activeConversationId,
-        incomingCall.callerId || "",
-        answer,
-      );
+      emitCallAnswer(activeConversationId, incomingCall.callerId || "", answer);
     } catch (error) {
       console.error("Lỗi trong quá trình trả lời cuộc gọi:", error);
     }

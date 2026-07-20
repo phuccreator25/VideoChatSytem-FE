@@ -19,16 +19,34 @@ export const VideoCallMediaView = ({
   myAvatar,
   localVideoRef,
   isRingingState,
+  callType,
 }: {
-  ui: any;
-  data: any;
-  handler: any;
+  ui: {
+    isRemoteVideoMuted: boolean,
+    isSharingScreen: boolean,
+    isRemoteScreenSharing: boolean,
+    isRemoteAudioMuted: boolean,
+    isReconnecting: boolean,
+    connectionStatusText: string | null,
+    isAccepted: boolean,
+    callDuration: number,
+    isScreenSharing: boolean
+  };
+  data: {
+    remoteStream: MediaStream | null;
+  };
+  handler: {
+    toggleShareScreen: () => void;
+  };
   userData?: ConversationUserInfo | null;
   displayName: string;
   myAvatar: string;
   localVideoRef: React.RefObject<HTMLVideoElement | null>;
   isRingingState: boolean;
+  callType?: string;
 }) => {
+  const isAudioCall = callType === "voice";
+
   return (
     <Box
       sx={{
@@ -44,14 +62,13 @@ export const VideoCallMediaView = ({
       {data.remoteStream && (
         <audio
           autoPlay
-          muted={!ui.isSpeakerOn}
           ref={(el) => {
             if (el) {
               console.log(
                 "🔊 Thẻ Audio đã mount. Stream ID:",
                 data?.remoteStream?.id,
                 "Tracks:",
-                data?.remoteStream?.getTracks().map((t: any) => `${t.kind}: readyState=${t.readyState}, enabled=${t.enabled}`)
+                data?.remoteStream?.getTracks().map((t: MediaStreamTrack) => `${t.kind}: readyState=${t.readyState}, enabled=${t.enabled}`)
               );
               if (el.srcObject !== data.remoteStream) {
                 el.srcObject = data.remoteStream;
@@ -67,8 +84,8 @@ export const VideoCallMediaView = ({
           }}
         />
       )}
-      {/* 2. Video nền làm mờ viền */}
-      {data.remoteStream && !ui.isRemoteVideoMuted && (
+      {/* 2. Video nền làm mờ viền (Chỉ khi Video call) */}
+      {!isAudioCall && data.remoteStream && !ui.isRemoteVideoMuted && (
         <video
           autoPlay
           playsInline
@@ -91,8 +108,8 @@ export const VideoCallMediaView = ({
           }}
         />
       )}
-      {/* 3. Video chính hiển thị hình ảnh */}
-      {data.remoteStream && !ui.isRemoteVideoMuted && (
+      {/* 3. Video chính hiển thị hình ảnh (Chỉ khi Video call) */}
+      {!isAudioCall && data.remoteStream && !ui.isRemoteVideoMuted && (
         <video
           autoPlay
           playsInline
@@ -112,8 +129,8 @@ export const VideoCallMediaView = ({
             objectFit: ui.isSharingScreen
               ? "contain"
               : /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-              ? "cover"
-              : "contain",
+                ? "cover"
+                : "contain",
             position: "absolute",
             inset: 0,
             zIndex: 2,
@@ -123,7 +140,7 @@ export const VideoCallMediaView = ({
       )}
 
       {/* Floating remote mic-muted indicator on top of video */}
-      {data.remoteStream && !ui.isRemoteVideoMuted && ui.isRemoteAudioMuted && (
+      {!isAudioCall && data.remoteStream && !ui.isRemoteVideoMuted && ui.isRemoteAudioMuted && (
         <Box
           sx={{
             position: "absolute",
@@ -267,8 +284,8 @@ export const VideoCallMediaView = ({
         </Box>
       )}
 
-      {/* HIỂN THỊ GIAO DIỆN CONCEPT 1 (GLASSMORPHISM HOLOGRAM) KHI TẮT CAMERA HOẶC CHƯA KẾT NỐI */}
-      {(!data.remoteStream || ui.isRemoteVideoMuted) && (
+      {/* HIỂN THỊ GIAO DIỆN CONCEPT 1 (GLASSMORPHISM HOLOGRAM) KHI TẮT CAMERA, LÀ VOICE CALL HOẶC CHƯA KẾT NỐI */}
+      {(isAudioCall || !data.remoteStream || ui.isRemoteVideoMuted) && (
         <Box
           sx={{
             display: "flex",
@@ -402,7 +419,7 @@ export const VideoCallMediaView = ({
                   ? isRingingState
                     ? "Ringing..."
                     : "Connecting to the callee..."
-                  : ui.isRemoteVideoMuted
+                  : ui.isRemoteVideoMuted && !isAudioCall
                     ? `Video Paused (${formatDuration(ui.callDuration)})`
                     : formatDuration(ui.callDuration)}
               </Typography>
@@ -411,8 +428,10 @@ export const VideoCallMediaView = ({
         </Box>
       )}
 
-      {/* Local Video Preview */}
-      <LocalVideoPreview ui={ui} myAvatar={myAvatar} localVideoRef={localVideoRef} />
+      {/* Local Video Preview (Chỉ hiển thị khi là Video Call) */}
+      {!isAudioCall && (
+        <LocalVideoPreview ui={ui} myAvatar={myAvatar} localVideoRef={localVideoRef} />
+      )}
     </Box>
   );
 };

@@ -51,6 +51,7 @@ export const VideoCallControls = ({
   ui,
   handler,
   handleClose,
+  callType,
 }: {
   ui: {
     isAudioMuted: boolean;
@@ -65,7 +66,9 @@ export const VideoCallControls = ({
     endCall: () => void;
   };
   handleClose: () => void;
+  callType?: string;
 }) => {
+  const isAudioCall = callType === "voice";
   return (
     <Box
       sx={{
@@ -100,33 +103,37 @@ export const VideoCallControls = ({
           </IconButton>
         </Tooltip>
 
-        {/* Video Camera Toggle button */}
-        <Tooltip title={ui.isVideoStopped ? "Turn Cam On" : "Turn Cam Off"}>
-          <IconButton
-            onClick={handler.toggleVideo}
-            sx={controlButtonSx(ui.isVideoStopped)}
-          >
-            {ui.isVideoStopped ? <VideocamOffRoundedIcon /> : <VideocamRoundedIcon />}
-          </IconButton>
-        </Tooltip>
+        {/* Video Camera Toggle button (Chỉ hiển thị khi Video call) */}
+        {!isAudioCall && (
+          <Tooltip title={ui.isVideoStopped ? "Turn Cam On" : "Turn Cam Off"}>
+            <IconButton
+              onClick={handler.toggleVideo}
+              sx={controlButtonSx(ui.isVideoStopped)}
+            >
+              {ui.isVideoStopped ? <VideocamOffRoundedIcon /> : <VideocamRoundedIcon />}
+            </IconButton>
+          </Tooltip>
+        )}
 
-        {/* Screen Share toggle button */}
-        <Tooltip title={ui.isScreenSharing ? "Stop sharing" : "Share screen"}>
-          <IconButton
-            onClick={handler.toggleShareScreen}
-            sx={{
-              ...controlButtonSx(ui.isScreenSharing),
-              ...(ui.isScreenSharing && {
-                bgcolor: "rgba(168, 85, 247, 0.95)",
-                color: "#ffffff",
-                borderColor: "#a855f7",
-                boxShadow: "0 0 20px rgba(168, 85, 247, 0.5)",
-              }),
-            }}
-          >
-            <ScreenShareRoundedIcon />
-          </IconButton>
-        </Tooltip>
+        {/* Screen Share toggle button (Chỉ hiển thị khi Video call) */}
+        {!isAudioCall && (
+          <Tooltip title={ui.isScreenSharing ? "Stop sharing" : "Share screen"}>
+            <IconButton
+              onClick={handler.toggleShareScreen}
+              sx={{
+                ...controlButtonSx(ui.isScreenSharing),
+                ...(ui.isScreenSharing && {
+                  bgcolor: "rgba(168, 85, 247, 0.95)",
+                  color: "#ffffff",
+                  borderColor: "#a855f7",
+                  boxShadow: "0 0 20px rgba(168, 85, 247, 0.5)",
+                }),
+              }}
+            >
+              <ScreenShareRoundedIcon />
+            </IconButton>
+          </Tooltip>
+        )}
 
         {/* Settings button */}
         <Tooltip title="Device Settings">

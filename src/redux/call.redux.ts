@@ -1,5 +1,24 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import callApi from "../api/Call.api";
+import type { initialType } from "../types/call/call.type";
+
+const initialState: initialType = {
+  incomingCall: {
+    isOpen: false,
+    userData: null,
+    type: null,
+    callId: null,
+    callerId: null,
+    offer: null,
+    conversationId: null,
+  },
+  callInfo: null,
+  isCallModalOpen: {
+    isOpen: false,
+    type: "video", // Giá trị mặc định thực tế (ví dụ: "video" hoặc "voice")
+  },
+  iceCandidates: [],
+};
 
 // 1. Thunk chỉ làm nhiệm vụ giao tiếp API và trả về Data
 export const onEndCallAction = createAsyncThunk(
@@ -17,21 +36,6 @@ export const onAcceptCallAction = createAsyncThunk(
     return res.data.data || null;
   },
 );
-
-const initialState = {
-  incomingCall: {
-    isOpen: false,
-    userData: null,
-    type: null,
-    callId: null,
-    callerId: null,
-    offer: null,
-    conversationId: null,
-  },
-  callInfo: null as string | null,
-  isCallModalOpen: false,
-  iceCandidates: [] as RTCIceCandidate[],
-};
 
 const callSlice = createSlice({
   name: "call",
@@ -58,20 +62,23 @@ const callSlice = createSlice({
       state.incomingCall.conversationId = null;
       state.iceCandidates = [];
     },
-    openCallModal: (state) => {
-      state.isCallModalOpen = true;
+    openCallModal: (state, action) => {
+      state.isCallModalOpen.isOpen = true;
+      state.isCallModalOpen.type = action.payload.type;
     },
     closeCallModal: (state) => {
-      state.isCallModalOpen = false;
+      state.isCallModalOpen.isOpen = false;
+      state.isCallModalOpen.type = "video";
       state.iceCandidates = [];
     },
     setCallInfo: (state, action) => {
       state.callInfo = action.payload;
-      state.isCallModalOpen = true;
+      state.isCallModalOpen.isOpen = true;
     },
     clearCallInfo: (state) => {
       state.callInfo = null;
-      state.isCallModalOpen = false;
+      state.isCallModalOpen.isOpen = false;
+      state.isCallModalOpen.type = "video";
       state.iceCandidates = [];
     },
     addIceCandidate: (state, action) => {
@@ -88,12 +95,14 @@ const callSlice = createSlice({
           ? action.payload
           : action.payload?._id || action.meta.arg;
       state.incomingCall.isOpen = false;
-      state.isCallModalOpen = true;
+      state.isCallModalOpen.isOpen = true;
+      state.isCallModalOpen.type = state.incomingCall.type || "video";
     });
 
     builder.addCase(onEndCallAction.fulfilled, (state) => {
       state.callInfo = null;
-      state.isCallModalOpen = false;
+      state.isCallModalOpen.isOpen = false;
+      state.isCallModalOpen.type = "video";
       state.incomingCall.isOpen = false;
       state.incomingCall.userData = null;
       state.incomingCall.type = null;

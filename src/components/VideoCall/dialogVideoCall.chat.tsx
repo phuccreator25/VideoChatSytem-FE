@@ -13,8 +13,10 @@ export const VideoCallModal = ({
     isOpen,
     handleClose,
     userData,
+    type,
 }: {
     isOpen: boolean;
+    type: "video" | "voice";
     handleClose: () => void;
     userData?: ConversationUserInfo | null;
 }) => {
@@ -30,7 +32,7 @@ export const VideoCallModal = ({
                 let localStream: MediaStream | null = null;
 
                 try {
-                    localStream = await handler.openUserMedia("video");
+                    localStream = await handler.openUserMedia(type);
                 } catch (err) {
                     console.warn("Không lấy được media cá nhân (vẫn tiếp tục kết nối để nhận từ đối phương):", err);
                 }
@@ -180,6 +182,7 @@ export const VideoCallModal = ({
                     isMobile={isMobile}
                     isRingingState={isRingingState}
                     onToggleFullScreen={() => handler.setIsFullScreen((prev: boolean) => !prev)}
+                    callType={type}
                 />
 
                 {/* Central Display Area & PIP Preview */}
@@ -192,6 +195,7 @@ export const VideoCallModal = ({
                     myAvatar={myAvatar}
                     localVideoRef={localVideoRef}
                     isRingingState={isRingingState}
+                    callType={type}
                 />
 
                 {/* Bottom Control Panel */}
@@ -199,6 +203,7 @@ export const VideoCallModal = ({
                     ui={ui}
                     handler={handler}
                     handleClose={handleClose}
+                    callType={type}
                 />
             </Box>
         </Dialog>

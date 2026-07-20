@@ -183,13 +183,13 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
             </Tooltip>
 
             <Tooltip title="Video call">
-              <IconButton sx={actionButtonSx} onClick={() => dispatch(openCallModal())}>
+              <IconButton sx={actionButtonSx} onClick={() => dispatch(openCallModal({ type: "video" }))}>
                 <VideocamOutlinedIcon />
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Voice call">
-              <IconButton sx={actionButtonSx}>
+              <IconButton sx={actionButtonSx} onClick={() => dispatch(openCallModal({ type: "voice" }))}>
                 <CallOutlinedIcon />
               </IconButton>
             </Tooltip>
