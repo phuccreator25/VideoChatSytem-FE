@@ -20,6 +20,7 @@ import { EmotionDetailPopover } from "../Emotion/emotionDetailsPopover.chat";
 import { PopoverShare } from "./PopoverShare.chat";
 import renderMessageContent from "../../../helpers/renderMessageUrl.helper";
 import { ReplyQuoteBubble } from "./ReplyBubble.chat";
+import { CallBubble } from "./CallBubble.chat";
 
 type TempPreviewFile = {
   tempAttachmentId?: string;
@@ -172,6 +173,7 @@ export const MessageItem = memo(function MessageItem({
 
   const isText = msg.type === "text";
   const isGif = msg.type === "gif";
+  const isCall = (msg.type as string) === "call" || msg.messageType === "call" || Boolean(msg.callInfo);
   const shouldShowStatus = !isLeft;
 
   const URL_REGEX = /(https?:\/\/[^\s]+)/g;
@@ -269,6 +271,29 @@ export const MessageItem = memo(function MessageItem({
           </Box>
         )}
 
+        {/* ── CALL BUBBLE ── */}
+        {isCall && !msg.isRevoked && (
+          <Box
+            onMouseEnter={() => setShowEmotionTrigger(true)}
+            onMouseLeave={() => setShowEmotionTrigger(false)}
+            sx={{
+              position: "relative",
+              maxWidth: { xs: "90%", sm: "75%" },
+              mb: (msg.reactions?.length ?? 0) > 0 ? "18px" : 0,
+            }}
+          >
+            <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant="text" />
+            <CallBubble msg={msg} isLeft={isLeft} shouldShowStatus={shouldShowStatus} />
+            <EmotionPicker
+              reactions={msg.reactions || []}
+              isLeft={isLeft}
+              showTrigger={showEmotionTrigger}
+              onReact={onReact}
+              onOpenDetail={(el) => setPopoverAnchor(el)}
+              msg={msg}
+            />
+          </Box>
+        )}
 
         {/* ── TEXT BUBBLE ── */}
         {(isText && !msg.isRevoked) && (

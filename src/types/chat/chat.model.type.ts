@@ -2,6 +2,7 @@ export const ChatItemTypes = {
   TEXT: "text",
   FILE: "file",
   GIF: "gif",
+  CALL: "call",
 } as const;
 
 export type ChatItemType = (typeof ChatItemTypes)[keyof typeof ChatItemTypes];
@@ -60,6 +61,24 @@ export type PreviewType = {
   domain?: string;
 };
 
+export const callStatuses = {
+  RINGING: "ringing",
+  COMPLETED: "completed",
+  REJECTED: "rejected",
+  ACTIVE: "active",
+  MISSED: "missed",
+  CANCELLED: "cancelled",
+} as const;
+
+export type CallStatus = (typeof callStatuses)[keyof typeof callStatuses];
+
+export type CallInfoType = {
+  callId?: string;
+  callType?: "video" | "audio" | string;
+  status?: CallStatus | string;
+  duration?: number | null;
+};
+
 export type MessageType = {
   id: string;
   tempMessageId?: string;
@@ -67,6 +86,8 @@ export type MessageType = {
   senderId: string;
   status?: MessageStatus;
   type: ChatItemType;
+  messageType?: string;
+  callInfo?: CallInfoType;
   content?: string | null;
   attachments?: MessageAttachment[];
   preview?: PreviewType;

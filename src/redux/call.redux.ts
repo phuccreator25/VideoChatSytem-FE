@@ -28,9 +28,9 @@ const initialState = {
     offer: null,
     conversationId: null,
   },
-  callInfo: null,
+  callInfo: null as string | null,
   isCallModalOpen: false,
-  iceCandidates: [] as any[],
+  iceCandidates: [] as RTCIceCandidate[],
 };
 
 const callSlice = createSlice({
@@ -56,6 +56,7 @@ const callSlice = createSlice({
       state.incomingCall.callerId = null;
       state.incomingCall.offer = null;
       state.incomingCall.conversationId = null;
+      state.iceCandidates = [];
     },
     openCallModal: (state) => {
       state.isCallModalOpen = true;

@@ -63,30 +63,19 @@ export const emitCallAnswer = (
   });
 };
 
-export const emitCloseVideoCall = (callId: string, currentUserId: string) => {
+export const emitToggleMedia = (payload: {
+  callId: string;
+  currentUserId: string;
+  mediaType: "audio" | "video" | "screen";
+  enabled: boolean;
+}) => {
   const socket = getSocket();
 
   if (!socket.connected) {
     socket.connect();
   }
 
-  socket.emit("call:close-video", {
-    callId,
-    currentUserId,
-  });
-};
-
-export const emitCloseAudioCall = (callId: string, currentUserId: string) => {
-  const socket = getSocket();
-
-  if (!socket.connected) {
-    socket.connect();
-  }
-
-  socket.emit("call:close-audio", {
-    callId,
-    currentUserId,
-  });
+  socket.emit("call:toggle-media", payload);
 };
 
 // ==========================================
@@ -162,38 +151,6 @@ export const unbindAcceptCall = (
   socket.off("call:accept", callback);
 };
 
-// --- 2. Thay đổi trạng thái thiết bị (Audio / Video) ---
-
-export const bindCloseVideoCall = (
-  callback: (payload: { callId: string; userIdWhoClose: string }) => void,
-) => {
-  const socket = getSocket();
-  socket.off("call:close-video", callback);
-  socket.on("call:close-video", callback);
-};
-
-export const unbindCloseVideoCall = (
-  callback: (payload: { callId: string; userIdWhoClose: string }) => void,
-) => {
-  const socket = getSocket();
-  socket.off("call:close-video", callback);
-};
-
-export const bindCloseAudioCall = (
-  callback: (payload: { callId: string; userIdWhoClose: string }) => void,
-) => {
-  const socket = getSocket();
-  socket.off("call:close-audio", callback);
-  socket.on("call:close-audio", callback);
-};
-
-export const unbindCloseAudioCall = (
-  callback: (payload: { callId: string; userIdWhoClose: string }) => void,
-) => {
-  const socket = getSocket();
-  socket.off("call:close-audio", callback);
-};
-
 // --- 3. Kết thúc cuộc gọi ---
 
 export const bindCallEnd = (callback: (payload: CallEndPayload) => void) => {
@@ -205,4 +162,76 @@ export const bindCallEnd = (callback: (payload: CallEndPayload) => void) => {
 export const unbindCallEnd = (callback: (payload: CallEndPayload) => void) => {
   const socket = getSocket();
   socket.off("call:end", callback);
+};
+
+// --- 4.Người dùng ngoại tuyến ---
+export const bindCallOffline = (
+  callback: (payload: { callId: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:offline", callback);
+  socket.on("call:offline", callback);
+};
+
+export const unbindCallOffline = (
+  callback: (payload: { callId: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:offline", callback);
+};
+
+// --- 5. Cuộc gọi đang đổ chuông ---
+export const bindCallRinging = (
+  callback: (payload: { callId: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:ringing", callback);
+  socket.on("call:ringing", callback);
+};
+
+export const unbindCallRinging = (
+  callback: (payload: { callId: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:ringing", callback);
+};
+
+export const bindCallToggleMedia = (
+  callback: (payload: {
+    callId: string;
+    userIdWhoToggled: string;
+    mediaType: "audio" | "video" | "screen";
+    enabled: boolean;
+  }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:toggle-media", callback);
+  socket.on("call:toggle-media", callback);
+};
+
+export const unbindCallToggleMedia = (
+  callback: (payload: {
+    callId: string;
+    userIdWhoToggled: string;
+    mediaType: "audio" | "video" | "screen";
+    enabled: boolean;
+  }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:toggle-media", callback);
+};
+
+export const bindCallToggleMediaError = (
+  callback: (payload: { message: string; mediaType?: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:toggle-media:error", callback);
+  socket.on("call:toggle-media:error", callback);
+};
+
+export const unbindCallToggleMediaError = (
+  callback: (payload: { message: string; mediaType?: string }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:toggle-media:error", callback);
 };

@@ -1,39 +1,13 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect } from "react";
 import { useVideoCall } from "../../hooks/Call/videoCall.hook";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
-import {
-    Dialog,
-    Box,
-    Typography,
-    Avatar,
-    IconButton,
-    Stack,
-    Tooltip,
-    useTheme,
-    useMediaQuery,
-} from "@mui/material";
-
-// Icons
-import MicRoundedIcon from "@mui/icons-material/MicRounded";
-import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
-import VideocamRoundedIcon from "@mui/icons-material/VideocamRounded";
-import VideocamOffRoundedIcon from "@mui/icons-material/VideocamOffRounded";
-import ScreenShareRoundedIcon from "@mui/icons-material/ScreenShareRounded";
-import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
-import FullscreenExitRoundedIcon from "@mui/icons-material/FullscreenExitRounded";
-import CallEndRoundedIcon from "@mui/icons-material/CallEndRounded";
-import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
-import VolumeOffRoundedIcon from "@mui/icons-material/VolumeOffRounded";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { Dialog, Box, useTheme, useMediaQuery } from "@mui/material";
 import type { ConversationUserInfo } from "../../types/chat/chat.conversation.type";
-
-const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-};
+import { VideoCallHeader } from "./components/VideoCallHeader";
+import { VideoCallMediaView } from "./components/VideoCallMediaView";
+import { VideoCallControls } from "./components/VideoCallControls";
+import { useCallAudioTones } from "./components/useCallAudioTones";
 
 export const VideoCallModal = ({
     isOpen,
@@ -44,19 +18,11 @@ export const VideoCallModal = ({
     handleClose: () => void;
     userData?: ConversationUserInfo | null;
 }) => {
-    const { ui, data, handler, refs: { localVideoRef, remoteVideoRef } } = useVideoCall();
+    const { ui, data, handler, refs: { localVideoRef } } = useVideoCall();
     const currentUser = useSelector((state: RootState) => state.user.currentUser);
     const myAvatar = currentUser?.avatar || "";
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-    const remoteBgVideoRef = useRef<HTMLVideoElement | null>(null);
-    const setRemoteBgVideoEl = useCallback((el: HTMLVideoElement | null) => {
-        remoteBgVideoRef.current = el;
-        if (el && el.srcObject !== data.remoteStream) {
-            el.srcObject = data.remoteStream;
-        }
-    }, [data.remoteStream]);
 
     useEffect(() => {
         const initCall = async () => {
@@ -64,17 +30,13 @@ export const VideoCallModal = ({
                 let localStream: MediaStream | null = null;
 
                 try {
-                    // 1. Cố gắng lấy stream của chính mình
                     localStream = await handler.openUserMedia("video");
                 } catch (err) {
-                    // Nếu lỗi thiết bị local, chỉ log ra chứ KHÔNG chặn đứng cuộc gọi
                     console.warn("Không lấy được media cá nhân (vẫn tiếp tục kết nối để nhận từ đối phương):", err);
                 }
 
-                // 2. LUÔN LUÔN khởi tạo session kết nối WebRTC (dù localStream có hay không)
                 try {
-                    // Chúng ta truyền localStream qua (có thể là stream xịn, hoặc là null)
-                    await handler.startCallSession(localStream);
+                    await handler.startCallSession(localStream, userData?.userId);
                 } catch (sessionErr) {
                     console.error("Lỗi nghiêm trọng khi thiết lập session cuộc gọi:", sessionErr);
                 }
@@ -87,48 +49,16 @@ export const VideoCallModal = ({
         initCall();
     }, [isOpen]);
 
-    const displayName = userData?.nickname ?? userData?.fullname ?? "User";
+    const isTargetOnline = userData?.isOnline === "online";
+    const isRingingState = ui.isRinging || isTargetOnline;
 
-    // Common Control Button Styling (Futuristic cyber pill button style)
-    const controlButtonSx = (active: boolean, isEnd: boolean = false) => ({
-        width: { xs: 44, sm: 52 },
-        height: { xs: 44, sm: 52 },
-        borderRadius: "50%",
-        bgcolor: isEnd
-            ? "rgba(239, 68, 68, 0.15)"
-            : active
-                ? "rgba(255, 255, 255, 0.95)"
-                : "rgba(255, 255, 255, 0.05)",
-        color: isEnd ? "#ef4444" : active ? "#0b0c14" : "#ffffff",
-        border: isEnd
-            ? "1px solid rgba(239, 68, 68, 0.3)"
-            : active
-                ? "1px solid #ffffff"
-                : "1px solid rgba(255, 255, 255, 0.08)",
-        backdropFilter: "blur(12px)",
-        transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
-        "& .MuiSvgIcon-root": {
-            fontSize: { xs: 20, sm: 24 },
-        },
-        "&:hover": {
-            bgcolor: isEnd
-                ? "#ef4444"
-                : active
-                    ? "#ffffff"
-                    : "rgba(255, 255, 255, 0.15)",
-            color: isEnd ? "#ffffff" : active ? "#0b0c14" : "#ffffff",
-            transform: "scale(1.1) translateY(-2px)",
-            boxShadow: isEnd
-                ? "0 8px 24px rgba(239, 68, 68, 0.35)"
-                : active
-                    ? "0 8px 24px rgba(255, 255, 255, 0.2)"
-                    : "0 8px 24px rgba(99, 102, 241, 0.15)",
-            borderColor: isEnd ? "#ef4444" : active ? "#ffffff" : "rgba(99, 102, 241, 0.4)",
-        },
-        "&:active": {
-            transform: "scale(0.95)",
-        }
+    useCallAudioTones({
+        isOpen,
+        isAccepted: ui.isAccepted,
+        isRingingState,
     });
+
+    const displayName = userData?.nickname ?? userData?.fullname ?? "User";
 
     return (
         <Dialog
@@ -242,571 +172,34 @@ export const VideoCallModal = ({
                     />
                 </Box>
 
-                {/* Top Header / Bar (Cyberpunk overlay bar) */}
-                <Box
-                    sx={{
-                        p: { xs: 2, sm: 3 },
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        background: "linear-gradient(to bottom, rgba(7, 8, 14, 0.95) 0%, rgba(7, 8, 14, 0) 100%)",
-                        borderBottom: "1px solid rgba(255, 255, 255, 0.03)",
-                        backdropFilter: "blur(4px)",
-                        zIndex: 2,
-                    }}
-                >
-                    {/* User Status details */}
-                    <Stack direction="row" spacing={{ xs: 1.25, sm: 1.75 }} alignItems="center">
-                        <Avatar
-                            src={userData?.avatar}
-                            sx={{
-                                width: { xs: 36, sm: 44 },
-                                height: { xs: 36, sm: 44 },
-                                border: "2px solid rgba(99, 102, 241, 0.3)",
-                                boxShadow: "0 4px 12px rgba(99, 102, 241, 0.15)",
-                            }}
-                        />
-                        <Box>
-                            <Stack direction="row" spacing={0.75} alignItems="center">
-                                <Typography
-                                    sx={{ color: "#ffffff", fontWeight: 700, fontSize: { xs: 14, sm: 16 }, letterSpacing: "-0.01em" }}
-                                >
-                                    {displayName}
-                                </Typography>
-                                {ui.isRemoteAudioMuted && (
-                                    <Tooltip title="Muted">
-                                        <MicOffRoundedIcon sx={{ color: "#ef4444", fontSize: { xs: 14, sm: 16 } }} />
-                                    </Tooltip>
-                                )}
-                            </Stack>
-                            <Typography
-                                component="div"
-                                sx={{
-                                    color: ui.isAccepted ? "#10b981" : "#f59e0b",
-                                    fontWeight: 700,
-                                    fontSize: { xs: 9, sm: 11 },
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.75,
-                                    letterSpacing: "0.08em",
-                                    textTransform: "uppercase",
-                                    mt: 0.25,
-                                }}
-                            >
-                                <Box
-                                    component="span"
-                                    sx={{
-                                        width: 5,
-                                        height: 5,
-                                        borderRadius: "50%",
-                                        bgcolor: ui.isAccepted ? "#10b981" : "#f59e0b",
-                                        boxShadow: ui.isAccepted ? "0 0 10px #10b981" : "0 0 10px #f59e0b",
-                                        animation: "blinkDot 1.5s infinite ease-in-out",
-                                        "@keyframes blinkDot": {
-                                            "0%, 100%": { opacity: 0.4 },
-                                            "50%": { opacity: 1 },
-                                        }
-                                    }}
-                                />
-                                {ui.isAccepted ? `${isMobile ? "" : "Connected • "}${formatDuration(ui.callDuration)}` : "Calling..."}
-                            </Typography>
-                        </Box>
-                    </Stack>
+                {/* Top Header */}
+                <VideoCallHeader
+                    userData={userData}
+                    displayName={displayName}
+                    ui={ui}
+                    isMobile={isMobile}
+                    isRingingState={isRingingState}
+                    onToggleFullScreen={() => handler.setIsFullScreen((prev: boolean) => !prev)}
+                />
 
-                    {/* Top Actions */}
-                    <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }}>
-                        {!isMobile && (
-                            <Tooltip title="Fullscreen">
-                                <IconButton
-                                    onClick={() => handler.setIsFullScreen((prev) => !prev)}
-                                    sx={{
-                                        color: "rgba(255, 255, 255, 0.7)",
-                                        bgcolor: "rgba(255, 255, 255, 0.05)",
-                                        border: "1px solid rgba(255, 255, 255, 0.05)",
-                                        "&:hover": {
-                                            color: "#ffffff",
-                                            bgcolor: "rgba(255, 255, 255, 0.12)",
-                                            transform: "scale(1.05)",
-                                        },
-                                    }}
-                                >
-                                    {ui.isFullScreen ? (
-                                        <FullscreenExitRoundedIcon />
-                                    ) : (
-                                        <FullscreenRoundedIcon />
-                                    )}
-                                </IconButton>
-                            </Tooltip>
-                        )}
-                        <Tooltip title="Close View">
-                            <IconButton
-                                onClick={handleClose}
-                                sx={{
-                                    color: "#ef4444",
-                                    bgcolor: "rgba(239, 68, 68, 0.1)",
-                                    border: "1px solid rgba(239, 68, 68, 0.15)",
-                                    p: { xs: 1, sm: 1.5 },
-                                    "&:hover": {
-                                        color: "#ffffff",
-                                        bgcolor: "#ef4444",
-                                        transform: "scale(1.05)",
-                                    },
-                                }}
-                            >
-                                <CloseRoundedIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
-                            </IconButton>
-                        </Tooltip>
-                    </Stack>
-                </Box>
+                {/* Central Display Area & PIP Preview */}
+                <VideoCallMediaView
+                    ui={ui}
+                    data={data}
+                    handler={handler}
+                    userData={userData}
+                    displayName={displayName}
+                    myAvatar={myAvatar}
+                    localVideoRef={localVideoRef}
+                    isRingingState={isRingingState}
+                />
 
-                {/* Central Display Area */}
-                <Box
-                    sx={{
-                        flex: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        position: "relative",
-                        zIndex: 1,
-                    }}
-                >
-                    {/* 1. Thẻ Audio phát tiếng */}
-                    {data.remoteStream && (
-                        <audio
-                            autoPlay
-                            muted={!ui.isSpeakerOn}
-                            ref={(el) => {
-                                if (el) {
-                                    console.log("🔊 Thẻ Audio đã mount. Stream ID:", data?.remoteStream?.id, "Tracks:", data?.remoteStream?.getTracks().map(t => `${t.kind}: readyState=${t.readyState}, enabled=${t.enabled}`));
-                                    if (el.srcObject !== data.remoteStream) {
-                                        el.srcObject = data.remoteStream;
-                                    }
-                                    // Ép trình duyệt phát âm thanh
-                                    el.play()
-                                        .then(() => console.log("🔊 Phát audio từ xa thành công!"))
-                                        .catch((err) =>
-                                            console.warn("Trình duyệt chặn phát âm thanh tự động:", err)
-                                        );
-                                } else {
-                                    console.log("🔊 Thẻ Audio bị unmount");
-                                }
-                            }}
-                        />
-                    )}
-                    {/* 2. Video nền làm mờ viền */}
-                    {data.remoteStream && !ui.isRemoteVideoMuted && (
-                        <video
-                            autoPlay
-                            playsInline
-                            muted
-                            ref={(el) => {
-                                if (el && el.srcObject !== data.remoteStream) {
-                                    el.srcObject = data.remoteStream;
-                                }
-                            }}
-                            onContextMenu={(e) => e.preventDefault()}
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                position: "absolute",
-                                inset: 0,
-                                zIndex: 1,
-                                filter: "blur(30px) brightness(0.4)",
-                                pointerEvents: "none",
-                            }}
-                        />
-                    )}
-                    {/* 3. Video chính hiển thị hình ảnh */}
-                    {data.remoteStream && !ui.isRemoteVideoMuted && (
-                        <video
-                            autoPlay
-                            playsInline
-                            muted
-                            ref={(el) => {
-                                if (el && el.srcObject !== data.remoteStream) {
-                                    el.srcObject = data.remoteStream;
-                                }
-                            }}
-                            onLoadedMetadata={(e) => {
-                                e.currentTarget.play().catch(err => console.warn(err));
-                            }}
-                            onContextMenu={(e) => e.preventDefault()}
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "cover" : "contain",
-                                position: "absolute",
-                                inset: 0,
-                                zIndex: 2,
-                                pointerEvents: "none",
-                            }}
-                        />
-                    )}
-
-                    {/* Floating remote mic-muted indicator on top of video */}
-                    {data.remoteStream && !ui.isRemoteVideoMuted && ui.isRemoteAudioMuted && (
-                        <Box
-                            sx={{
-                                position: "absolute",
-                                top: 20,
-                                left: 20,
-                                zIndex: 10,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                px: 2,
-                                py: 1,
-                                borderRadius: "12px",
-                                bgcolor: "rgba(239, 68, 68, 0.25)",
-                                border: "1px solid rgba(239, 68, 68, 0.4)",
-                                backdropFilter: "blur(8px)",
-                                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-                            }}
-                        >
-                            <MicOffRoundedIcon sx={{ color: "#ef4444", fontSize: 18 }} />
-                            <Typography sx={{ color: "#ffffff", fontSize: 12, fontWeight: 600 }}>
-                                {displayName} is muted
-                            </Typography>
-                        </Box>
-                    )}
-
-                    {/* HIỂN THỊ GIAO DIỆN CONCEPT 1 (GLASSMORPHISM HOLOGRAM) KHI TẮT CAMERA HOẶC CHƯA KẾT NỐI */}
-                    {(!data.remoteStream || ui.isRemoteVideoMuted) && (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                gap: { xs: 2, sm: 3 }, // Khoảng cách co giãn theo màn hình (2 đơn vị cho mobile, 3 đơn vị cho desktop)
-                                zIndex: 2,
-                                width: "100%",
-                                px: 3,
-                            }}
-                        >
-                            <Box sx={{ position: "relative" }}>
-                                {/* Vòng tròn Neon màu Cyan phát sáng xoay tròn mờ ảo phía ngoài cùng */}
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        inset: { xs: -15, sm: -25 }, // Khoảng cách co giãn so với tâm avatar
-                                        borderRadius: "50%",
-                                        border: "1.5px dashed rgba(6, 182, 212, 0.4)", // Viền nét đứt màu cyan neon
-                                        boxShadow: "0 0 15px rgba(6, 182, 212, 0.2)", // Hiệu ứng tỏa sáng nhẹ
-                                        animation: "spinRadar 25s linear infinite", // Xoay tròn liên tục
-                                        "@keyframes spinRadar": {
-                                            "100%": { transform: "rotate(360deg)" },
-                                        },
-                                    }}
-                                />
-
-                                {/* Vòng tròn Neon màu Purple co giãn (Pulsing) tạo hiệu ứng sóng âm ảo */}
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        inset: { xs: -10, sm: -15 }, // Khoảng cách co giãn so với tâm avatar
-                                        borderRadius: "50%",
-                                        border: "2px solid rgba(99, 102, 241, 0.4)", // Viền màu purple neon
-                                        boxShadow: "0 0 20px rgba(99, 102, 241, 0.3)",
-                                        animation: "pulseGlow 2s ease-in-out infinite", // Hiệu ứng đập theo nhịp thở
-                                        "@keyframes pulseGlow": {
-                                            "0%, 100%": { transform: "scale(0.95)", opacity: 0.6 },
-                                            "50%": { transform: "scale(1.05)", opacity: 1 },
-                                        },
-                                    }}
-                                />
-
-                                {/* Avatar của User đặt ở chính giữa */}
-                                <Avatar
-                                    src={userData?.avatar}
-                                    alt={displayName}
-                                    sx={{
-                                        width: { xs: 96, sm: 140 }, // Chiều rộng co giãn: 96px trên Mobile, 140px trên Desktop
-                                        height: { xs: 96, sm: 140 }, // Chiều cao co giãn
-                                        border: "3px solid rgba(255, 255, 255, 0.15)", // Viền trắng mờ tinh tế
-                                        boxShadow: "0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(99, 102, 241, 0.2)", // Bóng đổ có chiều sâu
-                                        position: "relative",
-                                        zIndex: 1,
-                                    }}
-                                />
-
-                                {/* Nhãn Mic tắt (Muted badge) màu đỏ hiển thị đè lên góc dưới bên phải Avatar */}
-                                {ui.isRemoteAudioMuted && (
-                                    <Box
-                                        sx={{
-                                            position: "absolute",
-                                            bottom: 0,
-                                            right: 0,
-                                            width: { xs: 28, sm: 36 }, // Kích thước vòng tròn nhỏ
-                                            height: { xs: 28, sm: 36 },
-                                            borderRadius: "50%",
-                                            bgcolor: "#ef4444", // Màu nền đỏ neon cảnh báo tắt mic
-                                            border: "2px solid #07080e", // Đường viền tối để tách biệt với avatar chính
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            boxShadow: "0 0 10px rgba(239, 68, 68, 0.6)", // Tỏa sáng đỏ nhẹ
-                                            zIndex: 2,
-                                        }}
-                                    >
-                                        <MicOffRoundedIcon sx={{ color: "#ffffff", fontSize: { xs: 16, sm: 20 } }} />
-                                    </Box>
-                                )}
-                            </Box>
-
-                            {/* Tên hiển thị và Nhãn Trạng thái dưới Avatar */}
-                            <Box sx={{ textAlign: "center", mt: 1 }}>
-                                <Typography
-                                    sx={{
-                                        color: "#ffffff",
-                                        fontSize: { xs: 20, sm: 24 }, // Co giãn tiêu đề: 20px trên mobile, 24px trên desktop
-                                        fontWeight: 800,
-                                        letterSpacing: "-0.02em",
-                                        textShadow: "0 4px 12px rgba(0,0,0,0.8)", // Đổ bóng tạo độ nổi cho chữ
-                                        mb: 1
-                                    }}
-                                >
-                                    {displayName}
-                                </Typography>
-
-                                {/* Badge trạng thái gương mờ (Glassmorphism status card) */}
-                                <Box
-                                    sx={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                        px: 2,
-                                        py: 0.5,
-                                        borderRadius: "20px",
-                                        bgcolor: "rgba(255, 255, 255, 0.03)", // Nền gương siêu mỏng xuyên thấu
-                                        border: "1px solid rgba(255, 255, 255, 0.08)", // Đường viền mảnh màu kính mờ
-                                        backdropFilter: "blur(8px)", // Tạo hiệu ứng mờ kính
-                                    }}
-                                >
-                                    {/* Chấm tròn trạng thái hoạt động */}
-                                    <Box
-                                        sx={{
-                                            width: 6,
-                                            height: 6,
-                                            borderRadius: "50%",
-                                            // Chấm màu cam khi tắt mic/chưa accept, màu xanh lá cây khi đang kết nối và bật mic
-                                            bgcolor: !ui.isAccepted
-                                                ? "#f97316"
-                                                : ui.isRemoteAudioMuted
-                                                    ? "#f97316"
-                                                    : "#10b981",
-                                            boxShadow: !ui.isAccepted
-                                                ? "0 0 8px #f97316"
-                                                : ui.isRemoteAudioMuted
-                                                    ? "0 0 8px #f97316"
-                                                    : "0 0 8px #10b981",
-                                        }}
-                                    />
-                                    {/* Text thông báo trạng thái */}
-                                    <Typography
-                                        sx={{
-                                            color: "rgba(255, 255, 255, 0.7)",
-                                            fontSize: { xs: 11, sm: 12 },
-                                            fontWeight: 600,
-                                            letterSpacing: "0.05em",
-                                        }}
-                                    >
-                                        {!ui.isAccepted
-                                            ? "Ringing..."
-                                            : ui.isRemoteVideoMuted
-                                                ? `Video Paused (${formatDuration(ui.callDuration)})`
-                                                : formatDuration(ui.callDuration)}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </Box>
-                    )}
-
-                    {/* Local Video Preview - Floating PIP Container (Futuristic sharp edge PIP) */}
-                    <Box
-                        sx={{
-                            position: "absolute",
-                            bottom: { xs: 12, sm: 16 },
-                            right: { xs: 12, sm: 16 },
-                            width: { xs: 90, sm: ui.isFullScreen ? 200 : 160, md: ui.isFullScreen ? 240 : 180 },
-                            height: { xs: 135, sm: ui.isFullScreen ? 150 : 120, md: ui.isFullScreen ? 180 : 135 },
-                            borderRadius: { xs: "12px", sm: "16px" },
-                            overflow: "hidden",
-                            boxShadow: "0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.1)",
-                            border: "2px solid rgba(255, 255, 255, 0.12)",
-                            bgcolor: "#0d0f19",
-                            transition: "all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)",
-                            zIndex: 3,
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                width: "100%",
-                                height: "100%",
-                                display: ui.isVideoStopped ? "flex" : "none",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                bgcolor: "#06070a",
-                                position: "relative",
-                            }}
-                        >
-                            <Avatar
-                                src={myAvatar}
-                                alt="You"
-                                sx={{
-                                    width: { xs: 48, sm: 64 },
-                                    height: { xs: 48, sm: 64 },
-                                    border: "2px solid rgba(255, 255, 255, 0.15)",
-                                    boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-                                }}
-                            />
-                            <Box
-                                sx={{
-                                    position: "absolute",
-                                    bottom: 6,
-                                    right: 6,
-                                    width: 20,
-                                    height: 20,
-                                    borderRadius: "50%",
-                                    bgcolor: "rgba(239, 68, 68, 0.95)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
-                                }}
-                            >
-                                <VideocamOffRoundedIcon sx={{ color: "#ffffff", fontSize: 13 }} />
-                            </Box>
-                        </Box>
-                        <video
-                            ref={localVideoRef}
-                            autoPlay
-                            playsInline
-                            muted
-                            onContextMenu={(e) => e.preventDefault()}
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                transform: "scaleX(-1)", // Mirror effect for webcam
-                                display: ui.isVideoStopped ? "none" : "block",
-                                pointerEvents: "none",
-                            }}
-                        />
-                        {/* PIP Badge tag */}
-                        <Box
-                            sx={{
-                                position: "absolute",
-                                bottom: 8,
-                                left: 8,
-                                px: 1.5,
-                                py: 0.5,
-                                bgcolor: "rgba(10, 12, 22, 0.75)",
-                                borderRadius: "8px",
-                                backdropFilter: "blur(8px)",
-                                border: "1px solid rgba(255,255,255,0.08)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 0.75
-                            }}
-                        >
-                            <Box sx={{ width: 5, height: 5, borderRadius: "50%", bgcolor: ui.isVideoStopped ? "#ef4444" : "#10b981" }} />
-                            <Typography sx={{ color: "#ffffff", fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                                You
-                            </Typography>
-                            {ui.isAudioMuted && (
-                                <MicOffRoundedIcon sx={{ color: "#ef4444", fontSize: 12 }} />
-                            )}
-                        </Box>
-                    </Box>
-                </Box>
-
-                {/* Bottom Glassmorphic Actions Capsule Control Panel */}
-                <Box
-                    sx={{
-                        p: { xs: 2, sm: 4 },
-                        display: "flex",
-                        justifyContent: "center",
-                        background: "linear-gradient(to top, rgba(7, 8, 14, 0.95) 0%, rgba(7, 8, 14, 0) 100%)",
-                        zIndex: 2,
-                    }}
-                >
-                    <Stack
-                        direction="row"
-                        spacing={{ xs: 0.75, sm: 1.5, md: 2.5 }}
-                        alignItems="center"
-                        sx={{
-                            px: { xs: 1.25, sm: 2.5, md: 3.5 },
-                            py: { xs: 1.25, sm: 1.75 },
-                            borderRadius: "32px",
-                            bgcolor: "rgba(15, 18, 30, 0.75)",
-                            border: "1px solid rgba(255, 255, 255, 0.05)",
-                            backdropFilter: "blur(30px)",
-                            boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
-                        }}
-                    >
-                        {/* Audio Toggle button */}
-                        <Tooltip title={ui.isAudioMuted ? "Unmute Mic" : "Mute Mic"}>
-                            <IconButton
-                                onClick={handler.toggleAudio}
-                                sx={controlButtonSx(ui.isAudioMuted)}
-                            >
-                                {ui.isAudioMuted ? <MicOffRoundedIcon /> : <MicRoundedIcon />}
-                            </IconButton>
-                        </Tooltip>
-
-                        {/* Video Camera Toggle button */}
-                        <Tooltip title={ui.isVideoStopped ? "Turn Cam On" : "Turn Cam Off"}>
-                            <IconButton
-                                onClick={handler.toggleVideo}
-                                sx={controlButtonSx(ui.isVideoStopped)}
-                            >
-                                {ui.isVideoStopped ? <VideocamOffRoundedIcon /> : <VideocamRoundedIcon />}
-                            </IconButton>
-                        </Tooltip>
-
-                        {/* Speaker Toggle button */}
-                        <Tooltip title={ui.isSpeakerOn ? "Mute Speaker" : "Unmute Speaker"}>
-                            <IconButton
-                                onClick={() => handler.setIsSpeakerOn((prev) => !prev)}
-                                sx={controlButtonSx(!ui.isSpeakerOn)}
-                            >
-                                {ui.isSpeakerOn ? <VolumeUpRoundedIcon /> : <VolumeOffRoundedIcon />}
-                            </IconButton>
-                        </Tooltip>
-
-                        {/* Screen Share toggle button */}
-                        <Tooltip title={ui.isScreenSharing ? "Stop sharing" : "Share screen"}>
-                            <IconButton
-                                onClick={() => handler.setIsScreenSharing((prev) => !prev)}
-                                sx={controlButtonSx(ui.isScreenSharing)}
-                            >
-                                <ScreenShareRoundedIcon />
-                            </IconButton>
-                        </Tooltip>
-
-                        {/* Settings button */}
-                        <Tooltip title="Device Settings">
-                            <IconButton sx={controlButtonSx(false)}>
-                                <SettingsRoundedIcon />
-                            </IconButton>
-                        </Tooltip>
-
-                        {/* End Call / Cup may */}
-                        <Tooltip title="End Call">
-                            <IconButton
-                                onClick={() => {
-                                    handler.endCall()
-                                    handleClose()
-                                }}
-                                sx={controlButtonSx(false, true)}
-                            >
-                                <CallEndRoundedIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </Stack>
-                </Box>
+                {/* Bottom Control Panel */}
+                <VideoCallControls
+                    ui={ui}
+                    handler={handler}
+                    handleClose={handleClose}
+                />
             </Box>
         </Dialog>
     );

@@ -118,6 +118,7 @@ export default function useChatLayout(activeRail: RailKey) {
 
   const [searchParams] = useSearchParams();
 
+  //VideoCall
   const incomingCall = useSelector(
     (state: RootState) => state.call.incomingCall,
   );
@@ -182,15 +183,17 @@ export default function useChatLayout(activeRail: RailKey) {
       // Play sound, show tab notification and red dot favicon badge for incoming messages
       const isMyMessage = String(payload.senderId) === String(currentUserId);
       if (!isMyMessage) {
-        const isActiveConversation = String(conversationId) === String(payload.conversationId);
-        const isTabActive = document.hasFocus() && document.visibilityState === "visible";
+        const isActiveConversation =
+          String(conversationId) === String(payload.conversationId);
+        const isTabActive =
+          document.hasFocus() && document.visibilityState === "visible";
 
         if (!isActiveConversation || !isTabActive) {
           const conversation = conversations.find(
-            (c) => String(c.id) === String(payload.conversationId)
+            (c) => String(c.id) === String(payload.conversationId),
           );
           const senderName = conversation?.name || "Người dùng";
-          
+
           let messageContent = "Đã gửi một tin nhắn";
           if (payload.type === "text" && payload.content) {
             messageContent = payload.content;
@@ -387,6 +390,8 @@ export default function useChatLayout(activeRail: RailKey) {
     };
 
     const handleCallEndEvent = (payload: CallEndPayload) => {
+      console.log("CallEndPayload: ", payload);
+
       if (payload.shouldCloseUI) {
         // Hiển thị thông báo tương ứng dựa trên lý do kết thúc cuộc gọi
         if (payload.userIdWhoLeft !== currentUserId) {
@@ -407,7 +412,10 @@ export default function useChatLayout(activeRail: RailKey) {
       }
     };
 
-    const handleCallCandidateEvent = (payload: any) => {
+    const handleCallCandidateEvent = (payload: {
+      candidate: RTCIceCandidate;
+      conversationId: string;
+    }) => {
       if (payload.candidate) {
         dispatch(addIceCandidate(payload.candidate));
       }
