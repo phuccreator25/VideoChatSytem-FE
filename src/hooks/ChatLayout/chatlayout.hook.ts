@@ -27,7 +27,12 @@ import {
   updateNickNameConversation,
   updateStatusUsers,
 } from "../../redux/conversation.redux";
-import { onGetDataContact } from "../../redux/contact.redux";
+import {
+  onGetDataContact,
+  onGetUserOnlines,
+  setOnlineUsers,
+  updateUserPresence,
+} from "../../redux/contact.redux";
 import type {
   ContactRemoveSocket,
   ContactUpdateNickNameSocket,
@@ -72,6 +77,7 @@ import {
   bindUserPresenceChanged,
   unbindOnlineUsers,
   unbindUserPresenceChanged,
+  type OnlineUserSocket,
 } from "../../socket/authSocket.socket";
 import type { TypingSocket } from "../../types/chat/chat.socket.type";
 import {
@@ -148,6 +154,7 @@ export default function useChatLayout(activeRail: RailKey) {
     if (!currentUser) return;
     connectSocket();
     dispatch(onGetCountReceivedInvitation());
+    dispatch(onGetUserOnlines());
   }, [currentUser, dispatch]);
 
   useEffect(() => {
@@ -390,8 +397,6 @@ export default function useChatLayout(activeRail: RailKey) {
     };
 
     const handleCallEndEvent = (payload: CallEndPayload) => {
-      console.log("CallEndPayload: ", payload);
-
       if (payload.shouldCloseUI) {
         // Hiển thị thông báo tương ứng dựa trên lý do kết thúc cuộc gọi
         if (payload.userIdWhoLeft !== currentUserId) {
@@ -476,10 +481,12 @@ export default function useChatLayout(activeRail: RailKey) {
   useEffect(() => {
     if (!currentUser) return;
 
-    const handleOnlineUsers = (userIds: string[]) => {
+    const handleOnlineUsers = (users: OnlineUserSocket[]) => {
+      dispatch(setOnlineUsers(users));
+
       if (!userData?.userId) return;
 
-      const isUserOnline = userIds.includes(userData.userId);
+      const isUserOnline = users.some((u) => u.userId === userData.userId);
 
       dispatch(
         updateStatusUser({
@@ -501,6 +508,8 @@ export default function useChatLayout(activeRail: RailKey) {
       userId: string;
       isOnline: boolean;
       lastSeenAt?: string | null;
+      name: string;
+      avatar: string;
     }) => {
       dispatch(
         updateStatusUser({
@@ -513,6 +522,15 @@ export default function useChatLayout(activeRail: RailKey) {
       dispatch(
         updateStatusUsers({
           userId: payload.userId,
+          isOnline: payload.isOnline,
+        }),
+      );
+
+      dispatch(
+        updateUserPresence({
+          userId: payload.userId,
+          name: payload.name,
+          avatar: payload.avatar,
           isOnline: payload.isOnline,
         }),
       );

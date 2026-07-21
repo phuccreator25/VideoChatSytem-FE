@@ -4,11 +4,20 @@ export type PresencePayload = {
   userId: string;
   isOnline: boolean;
   lastSeenAt?: string | null;
+  name: string;
+  avatar: string;
+};
+
+export type OnlineUserSocket = {
+  userId: string;
+  name: string;
+  avatar: string;
+  isOnline: boolean;
 };
 
 const onlineUsersHandlers = new WeakMap<
-  (userIds: string[]) => void,
-  (userIds: string[]) => void
+  (users: OnlineUserSocket[]) => void,
+  (users: OnlineUserSocket[]) => void
 >();
 
 const presenceChangedHandlers = new WeakMap<
@@ -16,7 +25,9 @@ const presenceChangedHandlers = new WeakMap<
   (payload: PresencePayload) => void
 >();
 
-export const bindOnlineUsers = (callback: (userIds: string[]) => void) => {
+export const bindOnlineUsers = (
+  callback: (users: OnlineUserSocket[]) => void,
+) => {
   const socket = getSocket();
 
   const oldHandler = onlineUsersHandlers.get(callback);
@@ -24,15 +35,17 @@ export const bindOnlineUsers = (callback: (userIds: string[]) => void) => {
     socket.off("presence:online_users", oldHandler);
   }
 
-  const handler = (userIds: string[]) => {
-    callback(userIds);
+  const handler = (users: OnlineUserSocket[]) => {
+    callback(users);
   };
 
   onlineUsersHandlers.set(callback, handler);
   socket.on("presence:online_users", handler);
 };
 
-export const unbindOnlineUsers = (callback: (userIds: string[]) => void) => {
+export const unbindOnlineUsers = (
+  callback: (users: OnlineUserSocket[]) => void,
+) => {
   const socket = getSocket();
   const handler = onlineUsersHandlers.get(callback);
   if (!handler) return;
@@ -42,7 +55,7 @@ export const unbindOnlineUsers = (callback: (userIds: string[]) => void) => {
 };
 
 export const bindUserPresenceChanged = (
-  callback: (payload: PresencePayload) => void
+  callback: (payload: PresencePayload) => void,
 ) => {
   const socket = getSocket();
 
@@ -60,7 +73,7 @@ export const bindUserPresenceChanged = (
 };
 
 export const unbindUserPresenceChanged = (
-  callback: (payload: PresencePayload) => void
+  callback: (payload: PresencePayload) => void,
 ) => {
   const socket = getSocket();
   const handler = presenceChangedHandlers.get(callback);

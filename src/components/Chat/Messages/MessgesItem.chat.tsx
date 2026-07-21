@@ -138,7 +138,8 @@ export const MessageItem = memo(function MessageItem({
   onHandleShare,
   onResend,
   onDeleteFailed,
-  onGoToMessage
+  onGoToMessage,
+  onReCall,
 }: {
   msg: MessageType;
   isLeft: boolean;
@@ -151,6 +152,7 @@ export const MessageItem = memo(function MessageItem({
   onResend?: (msg: MessageType) => void;
   onDeleteFailed?: (msgId: string) => void;
   onGoToMessage?: (msg: MessageType) => void;
+  onReCall?: (type: "video" | "voice") => void;
 }) {
   const attachments = getAttachments(msg);
   const imageItems = parseImageItems(msg);
@@ -283,7 +285,7 @@ export const MessageItem = memo(function MessageItem({
             }}
           >
             <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant="text" />
-            <CallBubble msg={msg} isLeft={isLeft} shouldShowStatus={shouldShowStatus} />
+            <CallBubble msg={msg} isLeft={isLeft} shouldShowStatus={shouldShowStatus} onReCall={onReCall} />
             <EmotionPicker
               reactions={msg.reactions || []}
               isLeft={isLeft}

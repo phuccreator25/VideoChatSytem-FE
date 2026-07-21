@@ -208,6 +208,7 @@ export default function ChatFrame() {
                         onResend={handler.handleResend}
                         onDeleteFailed={handler.handleDeleteFailedMessage}
                         onGoToMessage={handler.navigateToMessage}
+                        onReCall={handler.handleReCall}
                       />
                     </Box>
                   ),

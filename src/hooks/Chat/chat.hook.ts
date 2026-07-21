@@ -11,6 +11,7 @@ import {
   onDeletePinMessageConversation,
   setAllPinnedMessagesByConversation,
 } from "../../redux/conversation.redux";
+import { openCallModal } from "../../redux/call.redux";
 import { useVoiceChat } from "../Voice/voiceChat.hook";
 import { enqueueSnackbar } from "notistack";
 
@@ -327,6 +328,7 @@ export function useChatFrame() {
       openProfileDrawer,
       closeProfileDrawer,
       setLinkPreview,
+      handleReCall: (type: "video" | "voice") => dispatch(openCallModal({ type })),
     },
 
     ref: {

@@ -77,6 +77,13 @@ export type CallInfoType = {
   callType?: "video" | "audio" | string;
   status?: CallStatus | string;
   duration?: number | null;
+  hasTranscript?: boolean;
+  aiSummary?: {
+    summary?: string;
+    keyPoints?: string[];
+    actionItems?: string[];
+    createdAt?: string;
+  } | null;
 };
 
 export type MessageType = {

@@ -53,3 +53,9 @@ export type initialType = {
   };
   iceCandidates: RTCIceCandidate[];
 };
+
+export type SpeechTranscriptItem = {
+  speaker: string; // Tên người nói (VD: "Bạn" hoặc "Đối phương")
+  text: string; // Nội dung nói
+  timestamp: string; // Thời gian (VD: "10:15")
+};

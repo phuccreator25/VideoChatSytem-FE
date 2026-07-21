@@ -10,7 +10,6 @@ import { customScrollbarSx } from "../../../utils/CustomScroll";
 import SidePanelLayout from "../SidePanelLayout";
 import type {
   Conversation,
-  QuickUser,
 } from "../../../types/conversation/conversation.preview.type";
 import { COLORS } from "../../../utils/Colors";
 import { ActiveList } from "./ActiveList/ActiveList.conversation";
@@ -18,47 +17,22 @@ import { ConversationItem } from "./ConversationItem/ConversaationItem.conversat
 import { useConversation } from "../../../hooks/Conversation/ConversationList.hook";
 import { useParams } from "react-router-dom";
 import { ConversationItemSkeleton } from "./Skeleton/Skeleton.conversation";
-
-const quickUsers: QuickUser[] = [
-  {
-    id: 1,
-    name: 'Patrick',
-    avatar:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80&auto=format&fit=crop',
-    online: true,
-  },
-  {
-    id: 2,
-    name: 'Doris',
-    avatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop',
-    online: true,
-  },
-  {
-    id: 3,
-    name: 'Emily',
-    avatar:
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80&auto=format&fit=crop',
-    online: true,
-  },
-  {
-    id: 4,
-    name: 'Michael',
-    avatar:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80&auto=format&fit=crop',
-    online: true,
-  },
-];
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../redux/store";
+import useOpenConversation from "../../../helpers/openConversation.helper";
 
 export default function ConversationList() {
   const { data } = useConversation();
   const { conversationId } = useParams();
 
+  const { handleOpenConversation } = useOpenConversation();
   const conversations = Array.isArray(data.conversations) ? data.conversations : [];
   const conversationsWithActive = conversations.map((item: Conversation) => ({
     ...item,
     active: String(item.id) === String(conversationId),
   }));
+
+  const onlineUsers = useSelector((state: RootState) => state.contact.onlineUsers);
 
   return (
     <SidePanelLayout
@@ -117,19 +91,47 @@ export default function ConversationList() {
           </Box>
 
           {/* Online Active Users List */}
-          <Typography
-            sx={{
-              fontSize: 12.5,
-              fontWeight: 750,
-              color: COLORS.textMuted,
-              mb: 1.5,
-              textTransform: "uppercase",
-              letterSpacing: 0.8,
-              fontFamily: "'Outfit', 'Inter', sans-serif"
-            }}
-          >
-            Online Now
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+            <Typography
+              sx={{
+                fontSize: 12,
+                fontWeight: 800,
+                color: COLORS.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                fontFamily: "'Outfit', 'Inter', sans-serif",
+              }}
+            >
+              Online Now
+            </Typography>
+            {onlineUsers.length > 0 && (
+              <Box
+                sx={{
+                  px: 1,
+                  py: 0.2,
+                  borderRadius: "10px",
+                  bgcolor: "rgba(16, 185, 129, 0.12)",
+                  color: "#10B981",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    bgcolor: "#10B981",
+                    boxShadow: "0 0 6px #10B981",
+                  }}
+                />
+                {onlineUsers.length}
+              </Box>
+            )}
+          </Stack>
 
           <Box
             sx={{
@@ -137,15 +139,34 @@ export default function ConversationList() {
               overflowX: "auto",
               mx: -1,
               px: 1,
+              py: 0.5,
               "&::-webkit-scrollbar": { display: "none" },
-              scrollbarWidth: "none"
+              scrollbarWidth: "none",
             }}
           >
-            <Stack direction="row" spacing={1.5}>
-              {quickUsers.map((user) => (
-                <ActiveList key={user.id} user={user} />
-              ))}
-            </Stack>
+            {onlineUsers.length > 0 ? (
+              <Stack direction="row" spacing={1.5}>
+                {onlineUsers.map((user) => (
+                  <ActiveList
+                    key={user.userId}
+                    user={{ ...user }}
+                    onClick={() => handleOpenConversation(user.userId)}
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <Typography
+                sx={{
+                  fontSize: 12,
+                  color: "#94A3B8",
+                  fontStyle: "italic",
+                  px: 1,
+                  py: 0.5,
+                }}
+              >
+                No active contacts online
+              </Typography>
+            )}
           </Box>
 
           <Typography

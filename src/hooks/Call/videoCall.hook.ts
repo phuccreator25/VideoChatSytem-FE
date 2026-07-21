@@ -3,12 +3,14 @@ import { useParams } from "react-router-dom";
 import {
   bindAcceptCall,
   bindCallAnswer,
+  bindCallEnd,
   bindCallOffline,
   bindCallRinging,
   bindCallToggleMedia,
   bindCallToggleMediaError,
   unbindAcceptCall,
   unbindCallAnswer,
+  unbindCallEnd,
   unbindCallOffline,
   unbindCallRinging,
   unbindCallToggleMedia,
@@ -21,15 +23,15 @@ import { enqueueSnackbar } from "notistack";
 import { useMediaStream } from "./sub-hooks/useMediaStream";
 import { useScreenShare } from "./sub-hooks/useScreenShare";
 import { useWebRTC } from "./sub-hooks/useWebRTC";
+import { useCallSpeechToText } from "./sub-hooks/useSpeedToText";
+import callApi from "../../api/Call.api";
 
 export const useVideoCall = () => {
   // 1. Redux & Router Parameters
   const { conversationId } = useParams<{ conversationId: string }>();
   const dispatch = useDispatch<AppDispatch>();
 
-  const currentUserId = useSelector(
-    (state: RootState) => state.user.currentUser?._id,
-  );
+  const currentUser = useSelector((state: RootState) => state.user.currentUser);
   const ortherUserId = useSelector(
     (state: RootState) => state.chat.userData?.userId,
   );
@@ -46,6 +48,22 @@ export const useVideoCall = () => {
   const media = useMediaStream();
   const screen = useScreenShare();
   const webrtc = useWebRTC();
+
+  const {
+    getLatestTranscript,
+    startListening,
+    stopListening,
+    clearTranscript,
+  } = useCallSpeechToText();
+
+  // Tự động bật ghi âm giọng nói khi cuộc gọi đã kết nối thành công
+  useEffect(() => {
+    if (webrtc.isAccepted) {
+      startListening(currentUser?.fullname || "Người dùng");
+    } else {
+      stopListening();
+    }
+  }, [webrtc.isAccepted, currentUser?.fullname, startListening, stopListening]);
 
   // 3. UI States (Duration, FullScreen, Speaker)
   const [callDuration, setCallDuration] = useState(0);
@@ -74,7 +92,7 @@ export const useVideoCall = () => {
         stream,
         incomingCall,
         conversationId,
-        currentUserId,
+        currentUserId: currentUser?._id,
       });
     } else {
       await webrtc.makeCall({
@@ -82,7 +100,7 @@ export const useVideoCall = () => {
         targetCalleeId,
         ortherUserId,
         conversationId,
-        currentUserId,
+        currentUserId: currentUser?._id,
         callType: activeCallType,
       });
     }
@@ -97,7 +115,7 @@ export const useVideoCall = () => {
       targetCalleeId,
       ortherUserId,
       conversationId,
-      currentUserId,
+      currentUserId: currentUser?._id,
       callType: activeCallType,
     });
   };
@@ -106,13 +124,16 @@ export const useVideoCall = () => {
     try {
       if (!callInfo) return;
 
-      if (!callInfo) {
-        console.error("Không tìm thấy callId hợp lệ để cúp máy:", callInfo);
-        closeUserMedia();
-        return;
+      stopListening();
+      const latestTranscript = getLatestTranscript();
+
+      if (latestTranscript.length > 0) {
+        await callApi.onSpeedToTextCall(callInfo, latestTranscript);
       }
 
       await dispatch(onEndCallAction(callInfo));
+
+      clearTranscript();
       closeUserMedia();
     } catch (error) {
       closeUserMedia();
@@ -196,7 +217,7 @@ export const useVideoCall = () => {
     }) => {
       if (
         callInfo !== payload.callId ||
-        payload.userIdWhoToggled === currentUserId
+        payload.userIdWhoToggled === currentUser?._id
       ) {
         return;
       }
@@ -217,6 +238,25 @@ export const useVideoCall = () => {
       screen.restoreCameraTrack(webrtc.peerConnectionRef, media.localStreamRef);
     };
 
+    const handleCallEndFromOpponent = async (payload: { callId: string }) => {
+      if (callInfo === payload.callId) {
+        stopListening();
+        const latestTranscript = getLatestTranscript();
+
+        if (latestTranscript.length > 0) {
+          try {
+            await callApi.onSpeedToTextCall(callInfo, latestTranscript);
+          } catch (err) {
+            console.error("Lỗi gửi transcript:", err);
+          }
+        }
+
+        clearTranscript();
+        closeUserMedia();
+      }
+    };
+    bindCallEnd(handleCallEndFromOpponent);
+
     bindCallAnswer(handleCallAnswer);
     bindAcceptCall(handleAcceptCall);
     bindCallOffline(handleCallOffline);
@@ -230,8 +270,9 @@ export const useVideoCall = () => {
       unbindCallRinging(handleCallRinging);
       unbindCallToggleMedia(handleCallToggleMedia);
       unbindCallToggleMediaError(handleCallToggleMediaError);
+      unbindCallEnd(handleCallEndFromOpponent);
     };
-  }, [callInfo, currentUserId, webrtc.isRemoteDescSet]);
+  }, [callInfo, currentUser, webrtc.isRemoteDescSet, webrtc.isAccepted]);
 
   // Cảnh báo chống bấm nhầm F5 hoặc tắt tab khi đang trong cuộc gọi
   useEffect(() => {
@@ -282,14 +323,14 @@ export const useVideoCall = () => {
     handler: {
       openUserMedia: media.openUserMedia,
       closeUserMedia,
-      toggleAudio: () => media.toggleAudio(callInfo!, currentUserId),
-      toggleVideo: () => media.toggleVideo(callInfo!, currentUserId),
+      toggleAudio: () => media.toggleAudio(callInfo!, currentUser?._id),
+      toggleVideo: () => media.toggleVideo(callInfo!, currentUser?._id),
       toggleShareScreen: () =>
         screen.toggleShareScreen(
           webrtc.peerConnectionRef,
           media.localStreamRef,
           callInfo!,
-          currentUserId,
+          currentUser?._id,
         ),
       makeCall,
       endCall,

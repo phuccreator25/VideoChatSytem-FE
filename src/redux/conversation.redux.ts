@@ -26,8 +26,7 @@ const getPreviewByMessage = (message: MessageType) => {
   if (message.isRevoked) return "This message has been revoked";
 
   if (message.type === "file") {
-    const resourceType =
-      message.attachments?.[0]?.resourceType;
+    const resourceType = message.attachments?.[0]?.resourceType;
 
     switch (resourceType) {
       case "audio":
@@ -226,33 +225,31 @@ const conversationSlice = createSlice({
     deletePinnedMessage(state, action) {
       const { conversationId, messageId, attachmentId } = action.payload;
 
-        const currentPinnedMessages =
-          state.pinnedMessageIdsByConversation[conversationId] || [];
+      const currentPinnedMessages =
+        state.pinnedMessageIdsByConversation[conversationId] || [];
 
-        const normalizedAttachmentId =
-          !attachmentId ||
-          attachmentId === "null" ||
-          attachmentId === "undefined"
-            ? null
-            : attachmentId;
+      const normalizedAttachmentId =
+        !attachmentId || attachmentId === "null" || attachmentId === "undefined"
+          ? null
+          : attachmentId;
 
-        state.pinnedMessageIdsByConversation[conversationId] =
-          currentPinnedMessages.filter((item) => {
-            const sameMessage = String(item.id) === String(messageId);
+      state.pinnedMessageIdsByConversation[conversationId] =
+        currentPinnedMessages.filter((item) => {
+          const sameMessage = String(item.id) === String(messageId);
 
-            const currentAttachmentId =
-              !item.attachmentId ||
-              item.attachmentId === "null" ||
-              item.attachmentId === "undefined"
-                ? null
-                : item.attachmentId;
+          const currentAttachmentId =
+            !item.attachmentId ||
+            item.attachmentId === "null" ||
+            item.attachmentId === "undefined"
+              ? null
+              : item.attachmentId;
 
-            const sameAttachment =
-              attachmentId === undefined ||
-              currentAttachmentId === normalizedAttachmentId;
+          const sameAttachment =
+            attachmentId === undefined ||
+            currentAttachmentId === normalizedAttachmentId;
 
-            return !(sameMessage && sameAttachment);
-          });
+          return !(sameMessage && sameAttachment);
+        });
     },
 
     setAllPinnedMessagesByConversation(state, action) {
@@ -300,7 +297,7 @@ export const {
   setPinnedMessage,
   deletePinnedMessage,
   setAllPinnedMessagesByConversation,
-  updateNickNameConversation
+  updateNickNameConversation,
 } = conversationSlice.actions;
 
 export const conversationReducer = conversationSlice.reducer;

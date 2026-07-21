@@ -1,8 +1,8 @@
 export type QuickUser = {
-  id: number;
+  userId: string;
   name: string;
   avatar: string;
-  online?: boolean;
+  isOnline?: boolean;
 };
 
 export type Conversation = {
