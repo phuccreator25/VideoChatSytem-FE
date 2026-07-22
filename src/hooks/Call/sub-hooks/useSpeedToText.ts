@@ -1,15 +1,24 @@
 import { enqueueSnackbar } from "notistack";
 import { useState, useRef, useCallback } from "react";
 import type { SpeechTranscriptItem } from "../../../types/call/call.type";
+import { emitSpeedToText } from "../../../socket/callSocket.socket";
 
 export function useCallSpeechToText() {
   const [isListening, setIsListening] = useState<boolean>(false);
 
-  const transcriptRef = useRef<SpeechTranscriptItem[]>([]);
+  const transcriptRef = useRef<SpeechTranscriptItem[]>([]); // Hỗ trợ show phụ đề realtime trong cuộc gọi
   const recognitionRef = useRef<any>(null);
 
   // 1. Bắt đầu ghi âm lời thoại
-  const startListening = useCallback((currentUserName: string) => {
+  const startListening = useCallback((currentUserName: string, callId: string | null) => {
+
+    if (!callId) {
+      enqueueSnackbar("Không thể ghi âm cuộc gọi. Không tìm thấy cuộc gọi.", {
+        variant: "error",
+      });
+      return;
+    }
+
     const SpeechRecognition =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
@@ -32,34 +41,46 @@ export function useCallSpeechToText() {
       recognition.lang = "vi-VN"; // Tiếng Việt mặc định
 
       recognition.onresult = (event: any) => {
-        const text = event.results[0][0]?.transcript?.trim();
+        const time = new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
 
-        if (text) {
-          const time = new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+        // 1. Duyệt từ resultIndex (vị trí kết quả mới nhất vừa được xử lý)
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const result = event.results[i];
+          
+          if (result.isFinal) {
+            
+            const text = result[0]?.transcript?.trim();
+            if (!text) continue;
 
-          const lastIndex = transcriptRef.current.length - 1;
-          const lastItem = transcriptRef.current[lastIndex]; // Lấy câu mới nhất
+            const lastIndex = transcriptRef.current.length - 1;
+            const lastItem = transcriptRef.current[lastIndex];
 
-          if (lastItem && lastItem.speaker === currentUserName) {
-            // Nếu câu mới chứa câu cũ (vd: alo ->> alo nghe không) -> Gộp chung thành 1 câu mới nhất
-            if (text.startsWith(lastItem.text) || lastItem.text === text) {
-              lastItem.text = text;
-            } else {
-              // Nối tiếp câu trước bằng dấu . để ngăn cách câu nói
+            // 3. Nếu cùng 1 người nói liên tục các câu ngắn -> Nối tiếp vào câu cũ
+            if (lastItem && lastItem.speaker === currentUserName) {
+              
               lastItem.text = `${lastItem.text}. ${text}`;
+              lastItem.timestamp = time; // Cập nhật lại thời gian mới nhất
+            
+            } else {
+              // 4. Nếu là người khác nói hoặc câu đầu tiên -> Push item mới
+              const newItem: SpeechTranscriptItem = {
+                speaker: currentUserName,
+                text: text,
+                timestamp: time,
+              };
+              transcriptRef.current.push(newItem);
             }
-            lastItem.timestamp = time;
-          } else {
-            // Ngược lại nếu khác người nói hoặc là lượt đầu -> Tạo item mới
-            const newItem: SpeechTranscriptItem = {
-              speaker: currentUserName,
-              text,
+
+            emitSpeedToText({
+              callId,
+              speakerName: currentUserName,
+              text: text,
               timestamp: time,
-            };
-            transcriptRef.current.push(newItem);
+            });
+
           }
         }
       };

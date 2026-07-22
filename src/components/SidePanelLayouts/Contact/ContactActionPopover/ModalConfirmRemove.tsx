@@ -10,9 +10,6 @@ import type { ConfirmRemoveFriendModalProps } from "../../../../types/contact/co
 import Zoom from "@mui/material/Zoom";
 import { useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../../../redux/store";
-import { onGetDataContact } from "../../../../redux/contact.redux";
 
 export function ConfirmRemoveFriendModal({
     open,
@@ -22,7 +19,6 @@ export function ConfirmRemoveFriendModal({
 }: ConfirmRemoveFriendModalProps) {
     const displayName = selectedContact?.nickname ?? selectedContact?.fullname ?? "";
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const dispatch = useDispatch<AppDispatch>();
 
     const handleConfirm = async () => {
         try {
@@ -34,7 +30,6 @@ export function ConfirmRemoveFriendModal({
                     variant: "success",
                 });
                 onClose();
-                dispatch(onGetDataContact());
             }
         } finally {
             setIsSubmitting(false);

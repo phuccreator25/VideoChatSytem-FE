@@ -24,7 +24,6 @@ import { useMediaStream } from "./sub-hooks/useMediaStream";
 import { useScreenShare } from "./sub-hooks/useScreenShare";
 import { useWebRTC } from "./sub-hooks/useWebRTC";
 import { useCallSpeechToText } from "./sub-hooks/useSpeedToText";
-import callApi from "../../api/Call.api";
 
 export const useVideoCall = () => {
   // 1. Redux & Router Parameters
@@ -50,7 +49,6 @@ export const useVideoCall = () => {
   const webrtc = useWebRTC();
 
   const {
-    getLatestTranscript,
     startListening,
     stopListening,
     clearTranscript,
@@ -59,7 +57,9 @@ export const useVideoCall = () => {
   // Tự động bật ghi âm giọng nói khi cuộc gọi đã kết nối thành công
   useEffect(() => {
     if (webrtc.isAccepted) {
-      startListening(currentUser?.fullname || "Người dùng");
+      console.log('Calll: ', callInfo);
+      
+      startListening(currentUser?.fullname || "Người dùng", callInfo || incomingCall.callId || null);
     } else {
       stopListening();
     }
@@ -76,6 +76,7 @@ export const useVideoCall = () => {
     webrtc.closeWebRTC();
     setCallDuration(0);
     setIsFullScreen(false);
+    clearTranscript();
   };
 
   const isCallModalOpen = useSelector(
@@ -125,15 +126,9 @@ export const useVideoCall = () => {
       if (!callInfo) return;
 
       stopListening();
-      const latestTranscript = getLatestTranscript();
-
-      if (latestTranscript.length > 0) {
-        await callApi.onSpeedToTextCall(callInfo, latestTranscript);
-      }
 
       await dispatch(onEndCallAction(callInfo));
 
-      clearTranscript();
       closeUserMedia();
     } catch (error) {
       closeUserMedia();
@@ -241,18 +236,7 @@ export const useVideoCall = () => {
     const handleCallEndFromOpponent = async (payload: { callId: string }) => {
       if (callInfo === payload.callId) {
         stopListening();
-        const latestTranscript = getLatestTranscript();
-
-        if (latestTranscript.length > 0) {
-          try {
-            await callApi.onSpeedToTextCall(callInfo, latestTranscript);
-          } catch (err) {
-            console.error("Lỗi gửi transcript:", err);
-          }
-        }
-
-        clearTranscript();
-        closeUserMedia();
+        closeUserMedia(); 
       }
     };
     bindCallEnd(handleCallEndFromOpponent);

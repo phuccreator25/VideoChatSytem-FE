@@ -147,7 +147,8 @@ export function GifPopover({
             },
           }}
         >
-          <Grid
+          {isGifOpen && (
+            <Grid
             key={gifSearch}
             width={350}
             columns={2}
@@ -162,6 +163,7 @@ export function GifPopover({
               setGifSearch("");
             }}
           />
+          )}
         </Box>
       </Box>
     </Popover>

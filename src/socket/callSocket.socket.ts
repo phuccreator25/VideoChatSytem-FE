@@ -1,5 +1,5 @@
 import { getSocket } from "./socket";
-import type { CallEndPayload } from "../types/call/call.type";
+import type { CallEndPayload, CallTranscriptSocketPayload } from "../types/call/call.type";
 import type {
   AcceptCallPayload,
   CallOfferSuccessPayload,
@@ -77,6 +77,16 @@ export const emitToggleMedia = (payload: {
 
   socket.emit("call:toggle-media", payload);
 };
+
+export const emitSpeedToText = (payload: CallTranscriptSocketPayload) => {
+  const socket = getSocket();
+
+  if (!socket.connected) {
+    socket.connect();
+  }
+  
+  socket.emit("call:speed-to-text", payload);
+}
 
 // ==========================================
 // II. BINDERS & UNBINDERS (TÍN HIỆU LẮNG NGHE)

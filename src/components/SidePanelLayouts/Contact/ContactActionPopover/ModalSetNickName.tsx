@@ -9,9 +9,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { SetNicknameModalProps } from "../../../../types/contact/contact.ui.type";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../../../redux/store";
-import { onGetDataContact } from "../../../../redux/contact.redux";
 import { enqueueSnackbar } from "notistack";
 import Zoom from "@mui/material/Zoom";
 
@@ -23,8 +20,6 @@ export function SetNicknameModal({
 }: SetNicknameModalProps) {
     const [nickname, setNickname] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const dispatch = useDispatch<AppDispatch>();
 
     useEffect(() => {
         setNickname(selectedContact?.nickname ?? "");
@@ -41,7 +36,6 @@ export function SetNicknameModal({
                     variant: 'success'
                 });
                 onClose();
-                dispatch(onGetDataContact());
             }
         } catch (error) {
             console.log(error);

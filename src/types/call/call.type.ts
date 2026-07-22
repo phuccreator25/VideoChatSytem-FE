@@ -59,3 +59,10 @@ export type SpeechTranscriptItem = {
   text: string; // Nội dung nói
   timestamp: string; // Thời gian (VD: "10:15")
 };
+
+export type CallTranscriptSocketPayload = {
+  callId: string;
+  speakerName: string;
+  text: string;
+  timestamp: string;
+};

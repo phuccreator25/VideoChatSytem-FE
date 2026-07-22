@@ -121,6 +121,9 @@ export default function useChatLayout(activeRail: RailKey) {
   const currentUserId = currentUser?._id || "";
   const { conversationId } = useParams();
   const userData = useSelector((state: RootState) => state.chat.userData); // DATA đang được chọn ở conversation
+  const isFetchCountReceive = useSelector(
+    (state: RootState) => state.invitation.isFetchCountReceive
+  );
 
   const [searchParams] = useSearchParams();
 
@@ -152,9 +155,13 @@ export default function useChatLayout(activeRail: RailKey) {
   //Connect socket and fetch initial invitation count once on user load
   useEffect(() => {
     if (!currentUser) return;
+    
     connectSocket();
-    dispatch(onGetCountReceivedInvitation());
-    dispatch(onGetUserOnlines());
+    
+    if(location.pathname !== "/invitation" && isFetchCountReceive === false) dispatch(onGetCountReceivedInvitation());    
+   
+    if(activeRail === "messages") dispatch(onGetUserOnlines());
+  
   }, [currentUser, dispatch]);
 
   useEffect(() => {
@@ -364,7 +371,11 @@ export default function useChatLayout(activeRail: RailKey) {
     const handleContactUpdateNickNameEvent = (
       payload: ContactUpdateNickNameSocket,
     ) => {
-      dispatch(onGetDataContact());
+      if(activeRail !== "messages") {
+        dispatch(onGetDataContact());
+      }
+
+      if(activeRail !== "messages") return;
 
       dispatch(
         updateNickNameUser({

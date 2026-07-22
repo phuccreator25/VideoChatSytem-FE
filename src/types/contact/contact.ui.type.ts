@@ -36,7 +36,7 @@ export type RowActionProps = {
 export type SetNicknameModalProps = {
   open: boolean;
   onClose: () => void;
-  onConfirm?: (data: Contact) => boolean;
+  onConfirm?: (data: Contact) => void | Promise<void>;
   selectedContact: Contact | null;
 };
 

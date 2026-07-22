@@ -9,6 +9,7 @@ import type {
 
 type InvitationState = {
   countReceived: number;
+  isFetchCountReceive: boolean;
   receivedAllInvitations: InvitationItem[];
   sentInvitations: SentInvitationItem[];
   actionStatusById: Record<string, InvitationActionStatus>;
@@ -26,6 +27,7 @@ type InvitationAddContacted = {
 
 const initialState: InvitationState = {
   countReceived: 0,
+  isFetchCountReceive: false,
   receivedAllInvitations: [],
   sentInvitations: [],
   actionStatusById: {},
@@ -141,6 +143,7 @@ const invitationSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(onGetCountReceivedInvitation.fulfilled, (state, action) => {
       state.countReceived = action.payload;
+      state.isFetchCountReceive = true;
     });
 
     builder.addCase(onGetCountSentInvitation.fulfilled, (state, action) => {
