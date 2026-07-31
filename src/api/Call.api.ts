@@ -1,4 +1,5 @@
 import axiosInterceptor from "../config/axiosInterceptor";
+import type { ChatBotPayLoad } from "../types/Chatbot.type";
 
 const callApi = {
   onGetTurnCredentials: () => axiosInterceptor.get("/calls/turn-credentials"),
@@ -11,6 +12,9 @@ const callApi = {
 
   onGenerateCallAISummary: (callId: string) =>
     axiosInterceptor.post("/calls/generate-summary", { callId }),
+
+  onChatBot: (payload: ChatBotPayLoad) =>
+    axiosInterceptor.post("/calls/query-chat", payload),
 };
 
 export default callApi;

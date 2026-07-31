@@ -88,6 +88,7 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
       >
         {!isMobile && (
           <IconButton
+            aria-label="Logo"
             sx={{
               width: { xs: 32, sm: 30, md: 38 },
               height: { xs: 32, sm: 30, md: 38 },
@@ -212,6 +213,7 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
           <Avatar
             aria-describedby={id}
             onClick={handleClick}
+            alt={user?.fullname || "User Avatar"}
             src={user?.avatar}
             sx={{
               width: { xs: 36, sm: 40, md: 44 },

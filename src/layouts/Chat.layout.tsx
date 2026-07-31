@@ -6,6 +6,7 @@ import useChatLayout from '../hooks/ChatLayout/chatlayout.hook';
 import { RingingCallView } from '../components/VideoCall/ringingCall.chat';
 import { VideoCallModal } from '../components/VideoCall/dialogVideoCall.chat';
 import { useParams, useLocation } from 'react-router-dom';
+import Chatbot from '../components/ChatBot/Chatbot';
 
 const theme = createTheme({});
 type ChatLayoutProps = {
@@ -96,6 +97,8 @@ export default function ChatLayout({ middlePanel, activeRail, onRailChange, cont
         handleClose={handler.closeCallModal}
         userData={ui.incomingCall.userData || ui.userData}
       />
+
+      <Chatbot />
     </ThemeProvider>
   );
 }

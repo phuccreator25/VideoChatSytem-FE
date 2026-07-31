@@ -88,6 +88,36 @@ export const emitSpeedToText = (payload: CallTranscriptSocketPayload) => {
   socket.emit("call:speed-to-text", payload);
 }
 
+export const emitCallReconnect = (payload: {
+  conversationId: string;
+  calleeId: string;
+  callerId: string;
+  offer: RTCSessionDescriptionInit;
+}) => {
+  const socket = getSocket();
+
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+  socket.emit("call:reconnect", payload);
+}
+
+export const emitCallReconnectAnswer = (payload: {
+  conversationId: string;
+  callerId: string;
+  calleeId: string;
+  answer: RTCSessionDescriptionInit;
+}) => {
+  const socket = getSocket();
+
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+  socket.emit("call:reconnect:answer", payload);
+}
+
 // ==========================================
 // II. BINDERS & UNBINDERS (TÍN HIỆU LẮNG NGHE)
 // ==========================================
@@ -244,4 +274,54 @@ export const unbindCallToggleMediaError = (
 ) => {
   const socket = getSocket();
   socket.off("call:toggle-media:error", callback);
+};
+
+export const bindCallReconnect = (
+  callback: (payload: {
+    conversationId: string;
+    calleeId: string;
+    callerId: string;
+    offer: RTCSessionDescriptionInit;
+  }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:reconnect", callback);
+  socket.on("call:reconnect", callback);
+};
+
+export const unbindCallReconnect = (
+  callback: (payload: {
+    conversationId: string;
+    calleeId: string;
+    callerId: string;
+    offer: RTCSessionDescriptionInit;
+  }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:reconnect", callback);
+};
+
+export const bindCallReconnectAnswer = (
+  callback: (payload: {
+    conversationId: string;
+    calleeId: string;
+    callerId: string;
+    answer: RTCSessionDescriptionInit;
+  }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:reconnect:answer", callback);
+  socket.on("call:reconnect:answer", callback);
+};
+
+export const unbindCallReconnectAnswer = (
+  callback: (payload: {
+    conversationId: string;
+    calleeId: string;
+    callerId: string;
+    answer: RTCSessionDescriptionInit;
+  }) => void,
+) => {
+  const socket = getSocket();
+  socket.off("call:reconnect:answer", callback);
 };

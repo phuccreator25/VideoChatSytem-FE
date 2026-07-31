@@ -4,6 +4,8 @@ import callApi from "../../../api/Call.api";
 import {
   emitCallAnswer,
   emitCallOffer,
+  emitCallReconnect,
+  emitCallReconnectAnswer,
   emitIceCandidate,
 } from "../../../socket/callSocket.socket";
 import type { incomingType } from "../../../types/call/call.type";
@@ -135,6 +137,12 @@ export const useWebRTC = () => {
             if (pc.signalingState === "stable") {
               const offer = await pc.createOffer({ iceRestart: true });
               await pc.setLocalDescription(offer);
+              emitCallReconnect({
+                conversationId,
+                calleeId,
+                callerId: currentUserId,
+                offer,
+              })
             }
           } catch (err) {
             console.error("Lỗi khi thực hiện ICE Restart:", err);
@@ -240,7 +248,7 @@ export const useWebRTC = () => {
         }
       };
 
-      pc.oniceconnectionstatechange = () => {
+      pc.oniceconnectionstatechange = async () => {
         const state = pc.iceConnectionState;
 
         if (state === "disconnected") {
@@ -259,6 +267,23 @@ export const useWebRTC = () => {
           enqueueSnackbar("Connection interrupted. Attempting to restore...", {
             variant: "error",
           });
+
+          try {
+            if (pc.signalingState === "stable") {
+              const offer = await pc.createOffer({ iceRestart: true });
+              await pc.setLocalDescription(offer);
+              
+              emitCallReconnect({
+                conversationId: activeConversationId,
+                calleeId: incomingCall.callerId || "", 
+                callerId: currentUserId || "",
+                offer,
+              });
+            }
+          } catch (err) {
+            console.error("Lỗi khi Callee thực hiện ICE Restart:", err);
+          }
+
         } else if (state === "connected" || state === "completed") {
           setIsReconnecting(false);
           setConnectionStatusText(null);
@@ -308,6 +333,50 @@ export const useWebRTC = () => {
     remoteVideoRef.current = null;
   };
 
+  const handleReceiveReconnect = async(payload : {
+    conversationId: string;
+    calleeId: string;
+    callerId: string;
+    offer: RTCSessionDescriptionInit;
+  }) => {
+    const pc = peerConnectionRef.current;
+   
+    if(!pc) return
+   
+    try {
+      const { conversationId, calleeId, callerId, offer } = payload;
+      
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer);
+
+      emitCallReconnectAnswer({conversationId, callerId, calleeId, answer})
+      
+    } catch (error) {
+      console.error("Error handling reconnect offer:", error);
+    }
+  }
+
+  const handleReceiveReconnectAnswer = async (payload: {
+    conversationId: string;
+    calleeId: string;
+    callerId: string;
+    answer: RTCSessionDescriptionInit;
+  }) => {
+    const pc = peerConnectionRef.current;
+    
+    if (!pc) return;
+    
+    try {
+
+      await pc.setRemoteDescription(new RTCSessionDescription(payload.answer));
+    
+    } catch (err) {
+      console.error("Lỗi khi nạp Reconnect Answer ở phía Caller:", err);
+    }
+  };
+
   return {
     remoteStream,
     setRemoteStream,
@@ -330,5 +399,7 @@ export const useWebRTC = () => {
     makeCall,
     answerCall,
     closeWebRTC,
+    handleReceiveReconnect,
+    handleReceiveReconnectAnswer
   };
 };

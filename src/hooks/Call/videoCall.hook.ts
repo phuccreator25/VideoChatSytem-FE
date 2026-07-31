@@ -5,6 +5,8 @@ import {
   bindCallAnswer,
   bindCallEnd,
   bindCallOffline,
+  bindCallReconnect,
+  bindCallReconnectAnswer,
   bindCallRinging,
   bindCallToggleMedia,
   bindCallToggleMediaError,
@@ -12,6 +14,8 @@ import {
   unbindCallAnswer,
   unbindCallEnd,
   unbindCallOffline,
+  unbindCallReconnect,
+  unbindCallReconnectAnswer,
   unbindCallRinging,
   unbindCallToggleMedia,
   unbindCallToggleMediaError,
@@ -239,8 +243,8 @@ export const useVideoCall = () => {
         closeUserMedia(); 
       }
     };
-    bindCallEnd(handleCallEndFromOpponent);
 
+    bindCallEnd(handleCallEndFromOpponent);
     bindCallAnswer(handleCallAnswer);
     bindAcceptCall(handleAcceptCall);
     bindCallOffline(handleCallOffline);
@@ -278,6 +282,33 @@ export const useVideoCall = () => {
       closeUserMedia();
     };
   }, []);
+
+  useEffect(() => {
+    const handleCallReconnectOffer = async (payload: {
+      conversationId: string;
+      calleeId: string;
+      callerId: string;
+      offer: RTCSessionDescriptionInit;
+    }) => {
+      await webrtc.handleReceiveReconnect(payload);
+    };
+
+    const handleCallReconnectAnswer = async(payload: {
+      conversationId: string;
+      calleeId: string;
+      callerId: string;
+      answer: RTCSessionDescriptionInit;
+    }) => {
+      await webrtc.handleReceiveReconnectAnswer(payload)
+    }
+
+    bindCallReconnect(handleCallReconnectOffer);
+    bindCallReconnectAnswer(handleCallReconnectAnswer)
+    return () => {
+      unbindCallReconnect(handleCallReconnectOffer);
+      unbindCallReconnectAnswer(handleCallReconnectAnswer)
+    }
+  }, [])
 
   return {
     ui: {

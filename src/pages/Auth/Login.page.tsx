@@ -87,7 +87,7 @@ export default function LoginPage() {
                 required: "Vui lòng nhập vào mật khẩu"
               })}
               error={!!errors.password}
-              helperText={errors.email?.message}
+              helperText={errors.password?.message}
             />
 
             <Box

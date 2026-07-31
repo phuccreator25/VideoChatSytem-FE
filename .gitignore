@@ -27,3 +27,20 @@ dist-ssr
 Dockerfile
 docker-compose.yml
 .dockerignore
+
+# 1. Báo cáo Coverage (BẮT BỘC NÊN BỎ)
+coverage/
+*.lcov
+
+# 2. Bỏ qua tất cả các thư mục __tests__ ở bất kỳ đâu trong dự án
+**/__tests__/
+
+# 3. Bỏ qua thư mục utilities/fixtures phục vụ testing
+**/test-utils/
+
+# 4. (Tùy chọn) Bỏ qua các file test đơn lẻ (.test.tsx, .spec.tsx) nếu không nằm trong __tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
