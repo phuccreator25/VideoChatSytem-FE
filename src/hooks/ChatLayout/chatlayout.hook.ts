@@ -103,6 +103,8 @@ import {
 import type { CallEndPayload } from "../../types/call/call.type";
 import type { CallOfferSuccessPayload } from "../../types/call/callSocket.type";
 import { showTabNotification } from "../../helpers/tabNotification";
+import { setBlockStatus } from "../../redux/block.redux";
+import { bindBlockUser, bindUnblockUser, unbindBlockUser, unbindUnblockUser } from "../../socket/blockSocket.socket";
 
 export default function useChatLayout(activeRail: RailKey) {
   const dispatch = useDispatch<AppDispatch>();
@@ -437,6 +439,21 @@ export default function useChatLayout(activeRail: RailKey) {
       }
     };
 
+    const handleBlock = (payload: {
+      userId: string,
+      isBlockedMe?: boolean,
+      isBlockedByMe?: boolean
+    }) => {
+      
+      if(payload) {
+        dispatch(setBlockStatus({
+          userId: payload.userId,
+          isBlockedMe: payload.isBlockedMe,
+          isBlockedByMe: payload.isBlockedByMe
+        }))
+      }
+    }
+    
     bindInvitationCreated(handleInvitationCreatedEvent);
     bindInvitationCancel(handleInvitationCancelEvent);
     bindInvitationAccept(handleInvitationAcceptEvent);
@@ -456,6 +473,9 @@ export default function useChatLayout(activeRail: RailKey) {
     bindCallInitiated(handleCallInitiatedEvent);
     bindCallEnd(handleCallEndEvent);
     bindCallCandidate(handleCallCandidateEvent);
+
+    bindBlockUser(handleBlock)
+    bindUnblockUser(handleBlock)
 
     return () => {
       unbindInvitationCreated(handleInvitationCreatedEvent);
@@ -477,6 +497,9 @@ export default function useChatLayout(activeRail: RailKey) {
       unbindCallInitiated(handleCallInitiatedEvent);
       unbindCallEnd(handleCallEndEvent);
       unbindCallCandidate(handleCallCandidateEvent);
+
+      unbindBlockUser(handleBlock);
+      unbindUnblockUser(handleBlock);
 
       dispatch(setIsPopoverInvitationOpen(false)); // Tránh việc mở Popo sau đó đóng tab
     };

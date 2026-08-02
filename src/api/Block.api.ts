@@ -1,8 +1,7 @@
 import axiosInterceptor from "../config/axiosInterceptor";
-import type { contacts } from "../types/contact/contact.model.type";
 
 const BlockApi = {
-    onBlock : (payload : contacts) => axiosInterceptor.post('/blocks', payload),
-    onUnblock : (payload : contacts) => axiosInterceptor.put('/blocks/unBlock', payload),
+    onBlock : (userId: string) => axiosInterceptor.post('/blocks', {userId}),
+    onUnblock : (userId: string) => axiosInterceptor.put('/blocks/unBlock', {userId}),
 }
 export default BlockApi

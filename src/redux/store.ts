@@ -17,6 +17,7 @@ import { contactReducer } from "./contact.redux";
 import { conversationReducer } from "./conversation.redux";
 import { chatReducer } from "./chat.redux";
 import { callReducer } from "./call.redux";
+import { blockReducer } from "./block.redux";
 const storage = createWebStorage("local");
 
 const persistConfig = {
@@ -32,6 +33,7 @@ const rootReducer = combineReducers({
   conversation: conversationReducer,
   chat: chatReducer,
   call: callReducer,
+  block: blockReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

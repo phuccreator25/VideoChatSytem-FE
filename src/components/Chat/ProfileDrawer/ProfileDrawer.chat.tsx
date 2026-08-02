@@ -12,7 +12,6 @@ import InputBase from "@mui/material/InputBase";
 import Dialog from "@mui/material/Dialog";
 
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
 import CallOutlinedIcon from "@mui/icons-material/CallOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
@@ -22,6 +21,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
+import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 
 import type { ConversationUserInfo } from "../../../types/chat/chat.conversation.type";
 import { customScrollbarSx } from "../../../utils/CustomScroll";
@@ -30,6 +30,10 @@ import { getLastSeenText } from "../../../helpers/formatLastSeenAt.helper";
 import { formatDate } from "../../../helpers/formatDate.helper";
 import useDownloadFile from "../../../helpers/downloadFile.helper";
 import { getFileVisualMeta } from "../../../helpers/fileType.helper";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../../../redux/store";
+import { openCallModal } from "../../../redux/call.redux";
+import { onHandleBlockUser, onHandleUnBlockUser } from "../../../redux/block.redux";
 
 type ProfileDrawerProps = {
   isOpen: boolean;
@@ -47,6 +51,10 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
   const { ui, handlers, data } = useProfileDrawer()
   const { onHandleDownloadFile } = useDownloadFile()
+
+  const dispatch = useDispatch<AppDispatch>();
+  const isBlocked = useSelector((state: RootState) => Boolean(ui.userData?.userId && state.block.blockStatusMap[ui.userData?.userId]?.isBlockedByMe === true))
+  const isMeBlocked = useSelector((state: RootState) => Boolean(ui.userData?.userId && state.block.blockStatusMap[ui.userData?.userId]?.isBlockedMe === true))
 
   useEffect(() => {
     if (isOpen) {
@@ -327,35 +335,40 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
         {/* Quick Actions Panel */}
         <Stack direction="row" spacing={1.75} justifyContent="center">
-          <Tooltip title="Send Message" arrow>
-            <IconButton sx={actionButtonSx}>
-              <ChatBubbleOutlineOutlinedIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
           <Tooltip title="Audio Call" arrow>
-            <IconButton sx={actionButtonSx}>
-              <CallOutlinedIcon sx={{ fontSize: 18 }} />
+            <IconButton disabled={isBlocked || isMeBlocked} sx={actionButtonSx} onClick={() => dispatch(openCallModal({ type: "voice" }))}>
+              <CallOutlinedIcon  sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Video Call" arrow>
-            <IconButton sx={actionButtonSx}>
+            <IconButton disabled={isBlocked || isMeBlocked} sx={actionButtonSx} onClick={() => dispatch(openCallModal({ type: "video" }))}>
               <VideocamOutlinedIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Block User" arrow>
+          <Tooltip title={isBlocked ? "Unblock User" : "Block User"} arrow>
             <IconButton
               sx={{
                 ...actionButtonSx,
                 "&:hover": {
-                  backgroundColor: "#ef4444",
+                  backgroundColor: isBlocked ? "#16a34a" : "#ef4444",
                   color: "#ffffff",
-                  borderColor: "#ef4444",
+                  borderColor: isBlocked ? "#16a34a" : "#ef4444",
                   transform: "scale(1.12) translateY(-2px)",
-                  boxShadow: "0 8px 16px rgba(239, 68, 68, 0.28)",
+                  boxShadow: isBlocked ? "0 8px 16px rgba(22, 163, 74, 0.28)" : "0 8px 16px rgba(239, 68, 68, 0.28)",
                 },
               }}
+
+              onClick={() => {
+                if (!ui.userData?.userId) return;
+                
+                if (isBlocked) {
+                  dispatch(onHandleUnBlockUser(ui.userData?.userId))
+                } else {
+                  dispatch(onHandleBlockUser(ui.userData?.userId))
+                }
+              }}
             >
-              <BlockOutlinedIcon sx={{ fontSize: 18 }} />
+              {isBlocked ? <LockOpenOutlinedIcon sx={{ fontSize: 18 }} /> : <BlockOutlinedIcon sx={{ fontSize: 18 }} />}
             </IconButton>
           </Tooltip>
         </Stack>

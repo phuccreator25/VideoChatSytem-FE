@@ -10,9 +10,6 @@ import Zoom from "@mui/material/Zoom";
 import { enqueueSnackbar } from "notistack";
 import { useState } from "react";
 import type { ConfirmBlockModalProps } from "../../../../types/contact/contact.ui.type";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../../../redux/store";
-import { updateContactBlockedStatus } from "../../../../redux/contact.redux";
 
 export function ConfirmBlockModal({
     open,
@@ -26,26 +23,17 @@ export function ConfirmBlockModal({
     const displayName =
         selectedContact?.nickname ?? selectedContact?.fullname ?? "";
 
-    const distpatch = useDispatch<AppDispatch>();
-
     const handleConfirm = async () => {
         try {
             if (!selectedContact) return;
             setIsSubmitting(true);
-            const result = await onConfirm(selectedContact);
+            await onConfirm(selectedContact);
+            
+            enqueueSnackbar("User blocked successfully", {
+                variant: "success",
+            });
 
-            if (result) {
-                enqueueSnackbar("User blocked successfully", {
-                    variant: "success",
-                });
-
-                await distpatch(updateContactBlockedStatus({
-                    contactId: selectedContact._id,
-                    isBlocked: true
-                }));
-                
-                onClose();
-            }
+            onClose();
         } catch (error) {
             console.log(error);
         } finally {
@@ -58,20 +46,13 @@ export function ConfirmBlockModal({
             if (!selectedContact) return;
             
             setIsSubmitting(true);
-            const result = await handleUnblock(selectedContact);
+            await handleUnblock(selectedContact);
 
-            if (result) {
-                enqueueSnackbar("User unblocked successfully", {
-                    variant: "success",
-                });
+            enqueueSnackbar("User unblocked successfully", {
+                variant: "success",
+            });
 
-                await distpatch(updateContactBlockedStatus({
-                    contactId: selectedContact._id,
-                    isBlocked: false
-                }));
-
-                onClose();
-            }
+            onClose();
         } catch (error) {
             console.log(error);
         } finally {

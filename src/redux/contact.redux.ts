@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { contacts } from "../types/contact/contact.model.type";
 import ContactApi from "../api/Contact.api";
+import { onHandleBlockUser, onHandleUnBlockUser, setBlockStatus } from "./block.redux";
 
 type ContactState = {
   contacts: contacts[];
@@ -44,16 +45,6 @@ const contactSlice = createSlice({
   initialState,
 
   reducers: {
-    updateContactBlockedStatus: (state, action) => {
-      const { contactId, isBlocked } = action.payload;
-
-      const contact = state.contacts.find((item) => item._id === contactId);
-
-      if (contact) {
-        contact.isBlocked = isBlocked;
-      }
-    },
-
     setOnlineUsers: (state, action) => {
       state.onlineUsers = action.payload;
     },
@@ -72,6 +63,7 @@ const contactSlice = createSlice({
       }
     },
   },
+
   extraReducers: (builder) => {
     builder.addCase(onGetDataContact.pending, (state) => {
       state.isLoading = true;
@@ -87,11 +79,40 @@ const contactSlice = createSlice({
     builder.addCase(onGetUserOnlines.fulfilled, (state, action) => {
       state.onlineUsers = action.payload;
     });
+
+    //Update trạng thái block
+    builder.addCase(onHandleBlockUser.fulfilled, (state, action) => {
+      const { userId } = action.payload;
+      const contact = state.contacts.find((item) => item.userId === userId || item._id === userId);
+      if (contact) {
+        contact.isBlocked = true;
+      }
+    })
+
+    builder.addCase(onHandleUnBlockUser.fulfilled, (state, action) => {
+      const { userId } = action.payload;
+      const contact = state.contacts.find((item) => item.userId === userId || item._id === userId);
+      if (contact) {
+        contact.isBlocked = false;
+      }
+    });
+
+    builder.addCase(setBlockStatus, (state, action) => {
+      const { userId, isBlockedByMe } = action.payload;
+      if (isBlockedByMe !== undefined) {
+        const contact = state.contacts.find(
+          (item) => item.userId === userId || item._id === userId
+        );
+        if (contact) {
+          contact.isBlocked = isBlockedByMe;
+        }
+      }
+    });
+
   },
 });
 
 export const {
-  updateContactBlockedStatus,
   setOnlineUsers,
   updateUserPresence,
 } = contactSlice.actions;

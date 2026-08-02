@@ -19,6 +19,7 @@ import { useContactAction } from "./sub-hooks/useContactAction";
 import { useSendMessage } from "./sub-hooks/useSendMessage";
 import { useMessageSearch } from "./sub-hooks/useMessageSearch";
 import { useChatMessageSocket } from "./sub-hooks/useChatMessageSocket";
+import { setBlockStatus } from "../../redux/block.redux";
 
 export function useChatFrame() {
   const { conversationId } = useParams();
@@ -163,6 +164,14 @@ export function useChatFrame() {
           updateContactRelation({
             userId: conversationRes.data.data.user?.userId,
             relation: conversationRes.data.data.user?.relationStatus,
+          }),
+        );
+
+        await dispatch(
+          setBlockStatus({
+            userId: conversationRes.data.data.conversation.block?.userId,
+            isBlockedByMe: conversationRes.data.data.conversation.block?.isBlockedByMe,
+            isBlockedMe: conversationRes.data.data.conversation.block?.isBlockedMe,
           }),
         );
 

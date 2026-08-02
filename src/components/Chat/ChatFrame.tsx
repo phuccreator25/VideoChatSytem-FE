@@ -2,6 +2,8 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
+import DoNotDisturbOnRoundedIcon from "@mui/icons-material/DoNotDisturbOnRounded";
 
 import { customScrollbarSx } from "../../utils/CustomScroll";
 import { COLORS } from "../../utils/Colors";
@@ -28,6 +30,10 @@ export default function ChatFrame() {
   } = useChatFrame();
 
   const { conversationId } = useParams()
+  const userData = useSelector((state: RootState) => state.chat.userData)
+  const isBlocked = useSelector((state: RootState) => Boolean(userData?.userId && state.block.blockStatusMap[userData?.userId]?.isBlockedByMe === true))
+  const isBlockedMe = useSelector((state: RootState) => Boolean(userData?.userId && state.block.blockStatusMap[userData?.userId]?.isBlockedMe === true))
+
   const isTyping = useSelector(
     (state: RootState) => {
       if (!conversationId) return false;
@@ -224,7 +230,119 @@ export default function ChatFrame() {
             </Stack>
           </Box>
 
-          <InputBar
+          {isBlocked ? (
+            <Box
+              sx={{
+                px: 3,
+                py: 2.25,
+                background: "linear-gradient(135deg, rgba(248, 249, 254, 0.95) 0%, rgba(243, 240, 255, 0.98) 100%)",
+                backdropFilter: "blur(12px)",
+                borderTop: "1px solid rgba(124, 58, 237, 0.14)",
+                boxShadow: "0 -6px 24px rgba(124, 58, 237, 0.05)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 2,
+                transition: "all 0.3s ease",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: "14px",
+                  display: "grid",
+                  placeItems: "center",
+                  background: "linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(109, 40, 217, 0.2) 100%)",
+                  color: "#7c3aed",
+                  boxShadow: "0 4px 14px rgba(124, 58, 237, 0.18)",
+                  flexShrink: 0,
+                }}
+              >
+                <BlockRoundedIcon sx={{ fontSize: 22 }} />
+              </Box>
+              <Box sx={{ textAlign: "left" }}>
+                <Typography
+                  sx={{
+                    fontSize: 14.5,
+                    fontWeight: 700,
+                    color: "#1e293b",
+                    lineHeight: 1.3,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  You have blocked this user.
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "#64748b",
+                    mt: 0.25,
+                  }}
+                >
+                  You cannot send or receive messages unless you unblock.
+                </Typography>
+              </Box>
+            </Box>
+          ) : isBlockedMe ? (
+            <Box
+              sx={{
+                px: 3,
+                py: 2.25,
+                background: "linear-gradient(135deg, rgba(254, 242, 242, 0.95) 0%, rgba(255, 241, 242, 0.98) 100%)",
+                backdropFilter: "blur(12px)",
+                borderTop: "1px solid rgba(239, 68, 68, 0.15)",
+                boxShadow: "0 -6px 24px rgba(239, 68, 68, 0.05)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 2,
+                transition: "all 0.3s ease",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: "14px",
+                  display: "grid",
+                  placeItems: "center",
+                  background: "linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.2) 100%)",
+                  color: "#ef4444",
+                  boxShadow: "0 4px 14px rgba(239, 68, 68, 0.18)",
+                  flexShrink: 0,
+                }}
+              >
+                <DoNotDisturbOnRoundedIcon sx={{ fontSize: 22 }} />
+              </Box>
+              <Box sx={{ textAlign: "left" }}>
+                <Typography
+                  sx={{
+                    fontSize: 14.5,
+                    fontWeight: 700,
+                    color: "#991b1b",
+                    lineHeight: 1.3,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  Cannot send messages
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "#b91c1c",
+                    opacity: 0.85,
+                    mt: 0.25,
+                  }}
+                >
+                  This user cannot receive messages from you.
+                </Typography>
+              </Box>
+            </Box>
+          ) : (
+            <InputBar
             value={data.inputText}
             onChange={handler.setInputText}
             onSend={handler.handleSend}
@@ -246,6 +364,7 @@ export default function ChatFrame() {
               handler.setLinkPreview(null);
             }}
           />
+          )}
         </Box>
 
         <SearchDrawer

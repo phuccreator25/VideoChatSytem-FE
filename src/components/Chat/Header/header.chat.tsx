@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
 import InputBase from "@mui/material/InputBase";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { openCallModal } from "../../../redux/call.redux";
 import { useNavigate } from "react-router-dom";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -22,6 +22,7 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 
 import type { ConversationUserInfo } from "../../../types/chat/chat.conversation.type";
 import { getLastSeenText } from "../../../helpers/formatLastSeenAt.helper";
+import type { RootState } from "../../../redux/store";
 
 type HeaderProps = {
   userData?: ConversationUserInfo | null;
@@ -38,6 +39,9 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
   const isMobile = useMediaQuery('(max-width:600px)');
 
   const displayName = userData?.nickname ?? userData?.fullname ?? "Unknown user";
+
+  const isBlocked = useSelector((state: RootState) => Boolean(userData?.userId && state.block.blockStatusMap[userData?.userId]?.isBlockedByMe === true))
+  const isMeBlocked = useSelector((state: RootState) => Boolean(userData?.userId && state.block.blockStatusMap[userData?.userId]?.isBlockedMe === true))
 
   const actionButtonSx = {
     width: { xs: 34, sm: 42 },
@@ -183,13 +187,13 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
             </Tooltip>
 
             <Tooltip title="Video call">
-              <IconButton sx={actionButtonSx} onClick={() => dispatch(openCallModal({ type: "video" }))}>
+              <IconButton disabled={isMeBlocked || isBlocked} sx={actionButtonSx} onClick={() => dispatch(openCallModal({ type: "video" }))}>
                 <VideocamOutlinedIcon />
               </IconButton>
             </Tooltip>
 
             <Tooltip title="Voice call">
-              <IconButton sx={actionButtonSx} onClick={() => dispatch(openCallModal({ type: "voice" }))}>
+              <IconButton disabled={isMeBlocked || isBlocked} sx={actionButtonSx} onClick={() => dispatch(openCallModal({ type: "voice" }))}>
                 <CallOutlinedIcon />
               </IconButton>
             </Tooltip>
