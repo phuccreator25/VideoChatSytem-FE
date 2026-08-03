@@ -8,5 +8,10 @@ const ContactApi = {
   onRemoveContact: (idFriend: string) =>
     axiosInterceptor.delete(`/contacts/${idFriend}`),
   onGetContactsOnlines: () => axiosInterceptor.get(`/contacts/user-online`),
+
+  onSearchContacts: (keyword: string, excludeUserIds: string[] = []) =>
+    axiosInterceptor.get(`/contacts/search-users`, {
+      params: { keyword, excludeUserIds: excludeUserIds.join(",") }
+    }),
 };
 export default ContactApi;

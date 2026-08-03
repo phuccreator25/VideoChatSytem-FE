@@ -5,6 +5,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 import { customScrollbarSx } from "../../../utils/CustomScroll";
 import SidePanelLayout from "../SidePanelLayout";
@@ -15,15 +16,17 @@ import { COLORS } from "../../../utils/Colors";
 import { ActiveList } from "./ActiveList/ActiveList.conversation";
 import { ConversationItem } from "./ConversationItem/ConversaationItem.conversation";
 import { useConversation } from "../../../hooks/Conversation/ConversationList.hook";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ConversationItemSkeleton } from "./Skeleton/Skeleton.conversation";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../redux/store";
 import useOpenConversation from "../../../helpers/openConversation.helper";
+import SearchPopover from "./SearchResult/SearchPopover";
 
 export default function ConversationList() {
-  const { data } = useConversation();
+  const { ui, data, handlers } = useConversation();
   const { conversationId } = useParams();
+  const navigate = useNavigate()
 
   const { handleOpenConversation } = useOpenConversation();
   const conversations = Array.isArray(data.conversations) ? data.conversations : [];
@@ -53,6 +56,7 @@ export default function ConversationList() {
 
           {/* Premium Glassmorphic Search Bar */}
           <Box
+            ref={(el) => handlers.setSearchAnchorEl(el as HTMLElement | null)}
             sx={{
               height: 48,
               px: 2,
@@ -71,10 +75,9 @@ export default function ConversationList() {
               }
             }}
           >
-            <IconButton size="small" sx={{ color: COLORS.textMuted, mr: 1, p: 0.25 }}>
+            <IconButton aria-label="Search" size="small" sx={{ color: COLORS.textMuted, mr: 1, p: 0.25 }}>
               <SearchOutlinedIcon sx={{ fontSize: 20 }} />
             </IconButton>
-
             <InputBase
               fullWidth
               placeholder="Search messages or users"
@@ -87,7 +90,19 @@ export default function ConversationList() {
                   opacity: 0.85,
                 },
               }}
+              value={data.searchQuery}
+              onChange={(e) => handlers.setSearchQuery(e.target.value)}
             />
+            {Boolean(data.searchQuery) && (
+              <IconButton
+                aria-label="Clear search"
+                size="small"
+                onClick={() => handlers.setSearchQuery("")}
+                sx={{ color: COLORS.textMuted, p: 0.25, ml: 0.5 }}
+              >
+                <CloseRoundedIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            )}
           </Box>
 
           {/* Online Active Users List */}
@@ -205,6 +220,21 @@ export default function ConversationList() {
           ))
         )}
       </Stack>
+      <SearchPopover
+        open={Boolean(data.searchQuery?.trim())}
+        anchorEl={ui.searchAnchorEl}
+        searchQuery={data.searchQuery}
+        isLoading={ui.isSearching}
+        recentChats={data.filteredConversations}
+        contacts={data.searchContacts}
+        messages={data.searchMessages}
+        onClose={() => handlers.setSearchQuery("")}
+        onSelectConversation={handleOpenConversation}
+        onSelectMessage={(conversationId, messageId) => {
+          navigate(`/chat/${conversationId}?targetMessageId=${messageId}`)
+        }}
+      />
     </SidePanelLayout>
+    
   );
 }

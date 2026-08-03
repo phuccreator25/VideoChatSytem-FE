@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MessageType } from "../../../types/chat/chat.model.type";
 import ChatAPI from "../../../api/Chat.api";
 import ConversationsAPI from "../../../api/Conversation.api";
+import { useSearchParams } from "react-router-dom";
 
 export const useMessageSearch = ({
   conversationId,
@@ -23,6 +24,30 @@ export const useMessageSearch = ({
   const [isHasMoreMessages, setIsHasMoreMessages] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [prevConversationId, setPrevConversationId] = useState(conversationId);
+
+  //get messageId -> scroll message
+  const [searchParams] = useSearchParams();
+  const targetMessageId = searchParams.get("targetMessageId")
+
+  useEffect(() => {
+    if (!targetMessageId || messages.length === 0) return;
+
+    const timer = setTimeout(() => {
+      const element = document.getElementById(`msg-${targetMessageId}`);
+
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        setHighlightedMessageId(targetMessageId);
+
+        setTimeout(() => setHighlightedMessageId(null), 2000);
+
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+
+  }, [targetMessageId, messages]);
 
   const navigateToMessage = async (targetMsg: MessageType) => {
     if (!targetMsg || !targetMsg.id) return;
@@ -133,7 +158,7 @@ export const useMessageSearch = ({
       currentSearchIndex === -1
         ? messagesSearch.length - 1
         : (currentSearchIndex - 1 + messagesSearch.length) %
-          messagesSearch.length;
+        messagesSearch.length;
     navigateToSearchResult(prevIndex);
   };
 
@@ -171,19 +196,9 @@ export const useMessageSearch = ({
 
         setCurrentSearchIndex(lastIndex);
 
-        setTimeout(() => {
+        setTimeout(async () => {
           const targetMsg = messages[lastIndex];
-          const element = document.getElementById(`msg-${targetMsg.id}`);
-
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
-            setHighlightedMessageId(targetMsg.id);
-            setTimeout(() => {
-              setHighlightedMessageId((prev) =>
-                prev === targetMsg.id ? null : prev,
-              );
-            }, 2000);
-          }
+          await navigateToMessage(targetMsg);
         }, 150);
       } else {
         setCurrentSearchIndex(-1);

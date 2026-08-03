@@ -9,6 +9,8 @@ export default function useOpenConversation() {
   const handleOpenConversation = useCallback(
     async (userId: string) => {
       try {
+        console.log('conver: ', userId);
+
         setIsSubmitting(true);
 
         const res = await ConversationsAPI.getOrCreateConversation(userId);
@@ -19,7 +21,7 @@ export default function useOpenConversation() {
         }
       } catch (error) {
         console.error("Get or create conversation failed:", error);
-      }finally{
+      } finally {
         setIsSubmitting(false);
       }
     },
