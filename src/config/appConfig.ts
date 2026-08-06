@@ -4,7 +4,7 @@ export const CONFIG = {
   // APP_HOST: "https://videochatsystem-fe.vercel.app",
   // API_HOST: "https://videochatsytem-be.onrender.com/api",
   APP_HOST: "http://localhost:30081",
-  API_HOST: "http://localhost:30001/api",
+  API_HOST: "http://localhost:30002/api",
   MODE: "development",
   VITE_GIPHY_API_KEY: "krTuAwfxoHwAivfT0U7QQgSY2vQ4wfhG",
 };
