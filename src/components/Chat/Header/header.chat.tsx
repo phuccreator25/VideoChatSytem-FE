@@ -160,7 +160,9 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
                 whiteSpace: "nowrap",
               }}
             >
-              {userData?.isOnline === 'online' ? "Active now" : getLastSeenText(userData?.lastSeenAt)}
+              {userData?.isOnline === 'online'
+                ? "Active now"
+                : getLastSeenText(userData?.lastSeenAt)}
             </Typography>
           </Stack>
         </Box>

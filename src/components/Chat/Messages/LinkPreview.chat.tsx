@@ -62,6 +62,7 @@ export function LinkPreview({ preview = null, isLeft }: { preview: LinkPreviewDa
             component="img"
             src={preview.image}
             alt={preview.title}
+            loading="lazy"
             sx={{
               width: "100%",
               height: "100%",

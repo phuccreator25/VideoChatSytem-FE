@@ -197,6 +197,21 @@ const conversationSlice = createSlice({
       });
     },
 
+    ConversationsPresence(state, action) {
+      if (!Array.isArray(state.conversations)) {
+        state.conversations = [];
+      }
+
+      const onlineUserIds = new Set(
+        (action.payload || []).map((u: any) => String(typeof u === "string" ? u : u.userId))
+      );
+
+      state.conversations = state.conversations.map((conversation) => ({
+        ...conversation,
+        status: onlineUserIds.has(String(conversation.userId)) ? "online" : "offline",
+      }));
+    },
+
     setPinnedMessage(state, action) {
       const pinnedMessage = action.payload;
       const conversationId = pinnedMessage.conversationId;
@@ -239,8 +254,8 @@ const conversationSlice = createSlice({
 
           const currentAttachmentId =
             !item.attachmentId ||
-            item.attachmentId === "null" ||
-            item.attachmentId === "undefined"
+              item.attachmentId === "null" ||
+              item.attachmentId === "undefined"
               ? null
               : item.attachmentId;
 
@@ -269,6 +284,14 @@ const conversationSlice = createSlice({
         };
       });
     },
+
+    deleteConversation(state, action) {
+      const { conversationId } = action.payload;
+      state.conversations = state.conversations.filter(
+        (conversation) => String(conversation.id) !== String(conversationId),
+      );
+      delete state.pinnedMessageIdsByConversation[conversationId];
+    },
   },
 
   extraReducers: (builder) => {
@@ -294,10 +317,12 @@ export const {
   updateConversationByMessage,
   resetUnread,
   updateStatusUsers,
+  ConversationsPresence,
   setPinnedMessage,
   deletePinnedMessage,
   setAllPinnedMessagesByConversation,
   updateNickNameConversation,
+  deleteConversation
 } = conversationSlice.actions;
 
 export const conversationReducer = conversationSlice.reducer;

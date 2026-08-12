@@ -33,6 +33,7 @@ function ContentPreview({ pin }: { pin: pinMessages }) {
                         component="img"
                         src={first.fileUrl}
                         alt={first.fileName}
+                        loading="lazy"
                         sx={{ width: 28, height: 28, borderRadius: 1, objectFit: "cover", flexShrink: 0 }}
                     />
                     <Typography noWrap sx={{ fontSize: 12, color: "text.primary" }}>
@@ -75,6 +76,7 @@ function ContentPreview({ pin }: { pin: pinMessages }) {
                         component="img"
                         src={first.fileUrl}
                         alt={first.fileName}
+                        loading="lazy"
                         sx={{ width: 28, height: 28, borderRadius: 1, objectFit: "cover", display: "block" }}
                     />
                     {remaining > 0 && (

@@ -68,6 +68,7 @@ export function ReplyQuoteBubble({
                                 component="img"
                                 src={String(firstImage.fileUrl || firstImage.previewUrl)}
                                 alt=""
+                                loading="lazy"
                                 sx={{ width: 36, height: 36, borderRadius: 1, objectFit: "cover", flexShrink: 0 }}
                             />
                         )}

@@ -281,7 +281,10 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
           </MenuItem>
 
           <MenuItem
-            onClick={handleClose}
+            onClick={() => {
+              onChange("settings")
+              handleClose()
+            }}
             sx={{
               px: 2,
               py: 1.5,

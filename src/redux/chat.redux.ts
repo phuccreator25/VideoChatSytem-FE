@@ -26,15 +26,13 @@ const chatSlice = createSlice({
     },
 
     setIsTyping: (state, action) => {
-      
+
       const { conversationId, isTyping } = action.payload;
 
       if (!conversationId) return;
 
       state.typingByConversation[conversationId] = isTyping;
 
-      console.log(state.typingByConversation);
-      
     },
 
     updateNickNameUser: (state, action) => {

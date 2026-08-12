@@ -60,6 +60,7 @@ export function ImageCard({
         component="img"
         src={src}
         alt="gallery"
+        loading="lazy"
         onLoad={(event) => {
           const target = event.currentTarget;
           const ratio = (target.naturalWidth || 1) / (target.naturalHeight || 1);

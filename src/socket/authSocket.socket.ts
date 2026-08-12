@@ -25,6 +25,12 @@ const presenceChangedHandlers = new WeakMap<
   (payload: PresencePayload) => void
 >();
 
+export type BanSessionPayload = {
+  currentUserId: string;
+  sessionId: string;
+  message: string
+};
+
 export const bindOnlineUsers = (
   callback: (users: OnlineUserSocket[]) => void,
 ) => {
@@ -81,4 +87,21 @@ export const unbindUserPresenceChanged = (
 
   socket.off("presence:changed", handler);
   presenceChangedHandlers.delete(callback);
+};
+
+export const bindBanSession = (
+  callback: (payload: BanSessionPayload) => void,
+) => {
+  const socket = getSocket();
+
+  socket.off("auth:session_banned", callback);
+  socket.on("auth:session_banned", callback);
+};
+
+export const unbindBanSession = (
+  callback: (payload: BanSessionPayload) => void,
+) => {
+  const socket = getSocket();
+
+  socket.off("auth:session_banned", callback);
 };

@@ -22,6 +22,7 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 
 import type { ConversationUserInfo } from "../../../types/chat/chat.conversation.type";
 import { customScrollbarSx } from "../../../utils/CustomScroll";
@@ -34,6 +35,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../redux/store";
 import { openCallModal } from "../../../redux/call.redux";
 import { onHandleBlockUser, onHandleUnBlockUser } from "../../../redux/block.redux";
+import { DialogDeleteConversation } from "../Dialog/DeleteConversation";
 
 type ProfileDrawerProps = {
   isOpen: boolean;
@@ -369,6 +371,23 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               }}
             >
               {isBlocked ? <LockOpenOutlinedIcon sx={{ fontSize: 18 }} /> : <BlockOutlinedIcon sx={{ fontSize: 18 }} />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete Conversation" arrow>
+            <IconButton
+              onClick={() => handlers.setIsDeleteDialogOpen(true)}
+              sx={{
+                ...actionButtonSx,
+                "&:hover": {
+                  backgroundColor:"#ef4444",
+                  color: "#ffffff",
+                  borderColor: "#ef4444",
+                  transform: "scale(1.12) translateY(-2px)",
+                  boxShadow: "0 8px 16px rgba(239, 68, 68, 0.28)",
+                },
+              }} 
+            >
+              <DeleteRoundedIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
         </Stack>
@@ -774,6 +793,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               component="img"
               src={ui.userData.avatar}
               alt={ui.displayName}
+              loading="lazy"
               sx={{
                 maxWidth: { xs: 280, sm: 380, md: 450 },
                 maxHeight: "75vh",
@@ -851,6 +871,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 component="img"
                 src={data.selectedMedia.fileUrl}
                 alt={data.selectedMedia.fileName}
+                loading="lazy"
                 sx={{
                   maxWidth: { xs: "90vw", sm: "80vw", md: "70vw" },
                   maxHeight: "75vh",
@@ -886,6 +907,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
           </Box>
         )}
       </Dialog>
+
+      <DialogDeleteConversation isOpen={ui.isDeleteDialogOpen} onClose={() => handlers.setIsDeleteDialogOpen(false)} userData={ui.userData} isLoading={ui.isLoadingDelete} onConfirm={handlers.onHandleDeleteConversation} />
+
     </Box>
   );
 }

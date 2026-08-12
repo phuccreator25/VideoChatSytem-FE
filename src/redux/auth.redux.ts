@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { ProfileData } from '../types/profile/profile.model.type'
-import type { RootState } from './store'
 import authApi from '../api/Auth.api'
 import type { typeLogin } from '../types/auth.type'
 import userApi from '../api/User.api'
@@ -66,5 +65,5 @@ const userSlice = createSlice({
 })
 
 export const { clearCurrentUser } = userSlice.actions
-export const SelectcurrentUser = (state: RootState) => state.user.currentUser
+
 export const userReducer = userSlice.reducer

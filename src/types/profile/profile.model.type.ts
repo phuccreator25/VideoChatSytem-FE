@@ -15,3 +15,9 @@ export type FileItem = {
   size: string;
   type: "file" | "image";
 };
+
+export type ChangePasswordForm = {
+  currentPass: string;
+  password: string;
+  confirmPass: string;
+};

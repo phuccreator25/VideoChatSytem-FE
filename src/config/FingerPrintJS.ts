@@ -1,4 +1,3 @@
-// src/config/fingerprint.ts
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
 
 const fpPromise = FingerprintJS.load({

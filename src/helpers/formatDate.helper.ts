@@ -6,6 +6,8 @@ export const formatDate = (dateInput?: string | Date | null) => {
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
   const yyyy = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
 
-  return `${mm}/${dd}/${yyyy}`;
+  return `${hours}:${minutes} • ${dd}/${mm}/${yyyy}`;
 };

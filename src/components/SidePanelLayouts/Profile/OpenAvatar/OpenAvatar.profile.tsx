@@ -1,11 +1,10 @@
-import Box from "@mui/material/Box";
-import Dialog from "@mui/material/Dialog";
-import IconButton from "@mui/material/IconButton";
+import Box from '@mui/material/Box';
+import Dialog from '@mui/material/Dialog';
+import IconButton from '@mui/material/IconButton';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import type { OpenAvatarProps } from '../../../../types/data.type';
 
-import type { OpenAvatarProps } from "../../../../types/profile/profile.ui.type";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-
-export function OpenAvatar({
+export default function OpenAvatar({
   openAvatarPreview,
   setOpenAvatarPreview,
   profile,
@@ -15,18 +14,24 @@ export function OpenAvatar({
       open={openAvatarPreview}
       onClose={() => setOpenAvatarPreview(false)}
       maxWidth="sm"
+      fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 3,
+          bgcolor: 'transparent',
+          boxShadow: 'none',
           overflow: 'hidden',
-          bgcolor: '#ffffff',
         },
       }}
     >
       <Box
         sx={{
           position: 'relative',
+          bgcolor: '#0f172a',
           p: 2,
+          borderRadius: 2,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         <IconButton
@@ -48,8 +53,9 @@ export function OpenAvatar({
 
         <Box
           component="img"
-          src={profile.avatar}
-          alt={profile.fullname}
+          src={profile?.avatar}
+          alt={profile?.fullname}
+          loading="lazy"
           sx={{
             display: 'block',
             width: '100%',

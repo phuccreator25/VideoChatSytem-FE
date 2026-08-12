@@ -6,7 +6,7 @@ import { useSnackbar } from "notistack";
 import { clearCurrentUser, onLogin } from "../../redux/auth.redux";
 import { useDispatch } from 'react-redux'
 import type { AppDispatch } from '../../redux/store'
-import {connectSocket, disconnectSocket } from "../../socket/socket";
+import { disconnectSocket } from "../../socket/socket";
 
 type ForgotPasswordPayload = {
   email: string;
@@ -62,8 +62,8 @@ function useAuth() {
     try {
       setLoading(true);
 
-      const res =  await dispatch(onLogin({ email, password, deviceId })).unwrap();
-      
+      const res = await dispatch(onLogin({ email, password, deviceId })).unwrap();
+
       if (res) {
         enqueueSnackbar("Đăng nhập thành công", {
           variant: "success",
@@ -134,7 +134,7 @@ function useAuth() {
 
       setLoading(true);
       console.log(token, payload);
-      
+
       const res = await authApi.onResetPassword(token, payload);
 
       if (res.status === 200) {

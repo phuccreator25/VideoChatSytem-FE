@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
@@ -10,97 +11,89 @@ import { useTheme } from "@mui/material/styles";
 import TextFieldsRoundedIcon from "@mui/icons-material/TextFieldsRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import AccessibilityNewRoundedIcon from "@mui/icons-material/AccessibilityNewRounded";
-import Groups2RoundedIcon from "@mui/icons-material/Groups2Rounded";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
 import { customScrollbarSx } from "../../../utils/CustomScroll";
 import type { SettingItem } from "../../../types/setting/setting.ui.type";
+import type { RailKey } from "../../../types/layout/layout.navigation.type";
 import { SettingRow } from "./SettingRow/SettingRow.setting";
+import { RestrictedAccountsModal } from "./RestrictedAccountsModal";
+import { ActiveSessionsModal } from "./ActiveSessionsModal";
+import { PrivacySecurityModal } from "./PrivacySecurityModal";
+import useAuth from "../../../hooks/Auth/auth.hook";
 
-const menuItems: SettingItem[] = [
-  {
-    key: "edit-name",
-    label: "Chỉnh sửa tên người dùng",
-    description: "Cập nhật tên hiển thị của bạn",
-    icon: <TextFieldsRoundedIcon />,
-    onClick: () => {
-      console.log("edit-name");
-    },
-  },
-  {
-    key: "restricted-account",
-    label: "Tài khoản đã hạn chế",
-    description: "Xem trạng thái và thông tin hạn chế tài khoản",
-    icon: <BlockRoundedIcon />,
-    onClick: () => {
-      console.log("restricted-account");
-    },
-  },
-  {
-    key: "privacy-security",
-    label: "Quyền riêng tư và an toàn",
-    description: "Quản lý quyền riêng tư, chặn, bảo mật",
-    icon: <ShieldOutlinedIcon />,
-    showArrow: true,
-    onClick: () => {
-      console.log("privacy-security");
-    },
-  },
-  {
-    key: "accessibility",
-    label: "Trợ năng",
-    description: "Điều chỉnh hiển thị và hỗ trợ truy cập",
-    icon: <AccessibilityNewRoundedIcon />,
-    onClick: () => {
-      console.log("accessibility");
-    },
-  },
-  {
-    key: "family-center",
-    label: "Trung tâm gia đình",
-    description: "Quản lý liên kết và giám sát gia đình",
-    icon: <Groups2RoundedIcon />,
-    onClick: () => {
-      console.log("family-center");
-    },
-  },
-  {
-    key: "help",
-    label: "Trợ giúp",
-    description: "Xem hướng dẫn, FAQ và hỗ trợ",
-    icon: <HelpOutlineRoundedIcon />,
-    onClick: () => {
-      console.log("help");
-    },
-  },
-  {
-    key: "report",
-    label: "Báo cáo sự cố",
-    description: "Gửi phản hồi hoặc báo lỗi hệ thống",
-    icon: <ReportProblemOutlinedIcon />,
-    onClick: () => {
-      console.log("report");
-    },
-  },
-  {
-    key: "logout",
-    label: "Đăng xuất",
-    description: "Thoát khỏi tài khoản trên thiết bị này",
-    icon: <LogoutRoundedIcon />,
-    danger: true,
-    badge: "Bảo mật",
-    onClick: () => {
-      console.log("logout");
-    },
-  },
-];
+type SettingProps = {
+  onRailChange?: (key: RailKey) => void;
+};
 
-export function Setting() {
+export function Setting({ onRailChange }: SettingProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [openRestrictedModal, setOpenRestrictedModal] = useState<boolean>(false);
+  const [openSessionsModal, setOpenSessionsModal] = useState<boolean>(false);
+  const [openPrivacyModal, setOpenPrivacyModal] = useState<boolean>(false);
+
+  const handleOpenRestrictedModal = async () => {
+    setOpenRestrictedModal(true);
+  };
+
+  const { handleLogOut } = useAuth()
+
+  const menuItems: SettingItem[] = [
+    {
+      key: "edit-name",
+      label: "Edit name",
+      description: "Update your display name",
+      icon: <TextFieldsRoundedIcon />,
+      onClick: () => {
+        onRailChange?.("profile");
+      },
+    },
+    {
+      key: "restricted-account",
+      label: "Accounts blocked",
+      description: "View account status and restriction information",
+      icon: <BlockRoundedIcon />,
+      onClick: handleOpenRestrictedModal,
+    },
+    {
+      key: "privacy-security",
+      label: "Privacy and security",
+      description: "Manage privacy, blocking, and security settings",
+      icon: <ShieldOutlinedIcon />,
+      showArrow: true,
+      onClick: () => setOpenPrivacyModal(true),
+    },
+    {
+      key: "help",
+      label: "Help",
+      description: "View guides, FAQs, and support resources",
+      icon: <HelpOutlineRoundedIcon />,
+      onClick: () => {
+        console.log("help");
+      },
+    },
+    {
+      key: "report",
+      label: "Report a problem",
+      description: "Submit feedback or report system errors",
+      icon: <ReportProblemOutlinedIcon />,
+      onClick: () => {
+        console.log("report");
+      },
+    },
+    {
+      key: "logout",
+      label: "Logout",
+      description: "Log out of your account on this device",
+      icon: <LogoutRoundedIcon />,
+      danger: true,
+      badge: "Security",
+      onClick: handleLogOut,
+    },
+  ];
 
   return (
     <Box
@@ -182,7 +175,7 @@ export function Setting() {
           </Typography>
 
           <List disablePadding>
-            {menuItems.slice(0, 5).map((item) => (
+            {menuItems.slice(0, 3).map((item) => (
               <SettingRow key={item.key} item={item} />
             ))}
           </List>
@@ -204,7 +197,7 @@ export function Setting() {
           </Typography>
 
           <List disablePadding>
-            {menuItems.slice(5).map((item) => (
+            {menuItems.slice(3).map((item) => (
               <SettingRow key={item.key} item={item} />
             ))}
           </List>
@@ -212,6 +205,24 @@ export function Setting() {
           {isMobile && <Box sx={{ height: 12 }} />}
         </Box>
       </Paper>
+
+      {/* Modal Privacy and Security Hub */}
+      <PrivacySecurityModal
+        open={openPrivacyModal}
+        onClose={() => setOpenPrivacyModal(false)}
+      />
+
+      {/* Modal hiển thị danh sách tài khoản đã hạn chế */}
+      <RestrictedAccountsModal
+        open={openRestrictedModal}
+        onClose={() => setOpenRestrictedModal(false)}
+      />
+
+      {/* Modal hiển thị danh sách phiên đăng nhập Active Sessions */}
+      <ActiveSessionsModal
+        open={openSessionsModal}
+        onClose={() => setOpenSessionsModal(false)}
+      />
     </Box>
   );
 }

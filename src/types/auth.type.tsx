@@ -10,3 +10,20 @@ export type typeLogin = {
     password: string,
     deviceId: string
 }
+
+export type DeviceSessionItem = {
+    _id?: string;
+    sessionId: string;
+    userId: string;
+    deviceId: string;
+    name: string;
+    userAgent: string;
+    ipAddress: string;
+    refreshToken?: string;
+    expiredAt: string;
+    revokedAt?: string | null;
+    lastSeenAt: string;
+    createdAt: string;
+    updatedAt?: string | null;
+    isCurrentSession: boolean;
+};

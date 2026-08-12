@@ -9,16 +9,15 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useSelector } from "react-redux";
 import type { ConversationUserInfo, pinMessages } from "../../../types/chat/chat.conversation.type";
-import { SelectcurrentUser } from "../../../redux/auth.redux";
 import { PinRow } from "./pinRow.chat";
+import type { RootState } from "../../../redux/store";
 
 export type PinnedMessageType = "text" | "gif" | "file";
 
-export interface PinnedMessageStripProps {
+export type PinnedMessageStripProps = {
     pinnedMessages: pinMessages[];
     otherUser: ConversationUserInfo | null;
-    onUnpin: ( messageId: string,
-        attachmentId: string | null) => void;
+    onUnpin: (messageId: string, attachmentId: string | null) => void;
     unpinningIds?: string[];
 }
 
@@ -28,7 +27,7 @@ export function PinnedMessageStrip({
     onUnpin,
     unpinningIds = [],
 }: PinnedMessageStripProps) {
-    const currentUser = useSelector(SelectcurrentUser);
+    const currentUser = useSelector((state: RootState) => state.user.currentUser);
     const [expanded, setExpanded] = useState(false);
 
     if (pinnedMessages.length === 0) return null;
@@ -101,7 +100,7 @@ export function PinnedMessageStrip({
             {rest.length > 0 && (
                 <Collapse in={expanded} timeout={180}>
                     <Box sx={{ px: 2, pb: "6px" }}>
-                        {rest.map((pin, index) => {
+                        {rest.map((pin) => {
                             const { avatar, name } = resolveSender(pin);
                             return (
                                 <Box key={pin.id && pin.attachmentId}>

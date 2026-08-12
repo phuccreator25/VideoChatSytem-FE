@@ -11,14 +11,17 @@ const ConversationsAPI = {
 
   getPinMessageByConversation: (conversationId: string) => axiosInterceptor.get(`/conversations/pin-messages/${conversationId}`),
 
-  pinMessagesConversations: (conversationId: string , messageId: string, attachmentId: string | null) =>
+  pinMessagesConversations: (conversationId: string, messageId: string, attachmentId: string | null) =>
     axiosInterceptor.post("/conversations/pin-messages", { conversationId, messageId, attachmentId }),
 
-  deletePinMessagesConversations: (conversationId: string , messageId: string, attachmentId: string | null) =>
+  deletePinMessagesConversations: (conversationId: string, messageId: string, attachmentId: string | null) =>
     axiosInterceptor.delete(`/conversations/pin-messages/${conversationId}/${messageId}/${attachmentId}`),
 
   getMoreMessagesConversations: (conversationId: string, beforeTimestamp: string) =>
     axiosInterceptor.post("/conversations/more-messages", { conversationId, beforeTimestamp }),
+
+  onDeleteConversation: (conversationId: string) =>
+    axiosInterceptor.delete(`/conversations/${conversationId}`),
 };
 
 export default ConversationsAPI;

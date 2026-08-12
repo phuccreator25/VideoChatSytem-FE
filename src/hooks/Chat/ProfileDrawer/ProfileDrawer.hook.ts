@@ -1,9 +1,12 @@
-import { useSelector } from "react-redux";
-import { type RootState } from "../../../redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { type AppDispatch, type RootState } from "../../../redux/store";
 import { useState } from "react";
 import ContactApi from "../../../api/Contact.api";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ChatAPI from "../../../api/Chat.api";
+import ConversationsAPI from "../../../api/Conversation.api";
+import { enqueueSnackbar } from "notistack";
+import { deleteConversation } from "../../../redux/conversation.redux";
 
 type AttachmentType = {
   fileUrl: string;
@@ -39,7 +42,12 @@ export const useProfileDrawer = () => {
     fileName: string;
   }>();
 
+  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const { conversationId } = useParams();
+  const navigate = useNavigate()
+  const dispatch = useDispatch<AppDispatch>()
 
   const displayName = userData?.nickname ?? userData?.fullname ?? "User";
 
@@ -135,6 +143,31 @@ export const useProfileDrawer = () => {
     return fileSize + "bytes";
   };
 
+  const onHandleDeleteConversation = async () => {
+    try {
+      if (!conversationId) return;
+
+      setIsLoadingDelete(true);
+
+      const res = await ConversationsAPI.onDeleteConversation(conversationId);
+
+      if (res.status === 200) {
+        await dispatch(deleteConversation({ conversationId }));
+        enqueueSnackbar('Delete Conversation Success', { variant: 'success' })
+        navigate('/chat')
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.log(error);
+      return false;
+    } finally {
+      setIsLoadingDelete(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
   return {
     ui: {
       isEditingNickname,
@@ -143,6 +176,8 @@ export const useProfileDrawer = () => {
       nicknameInput,
       displayName,
       userData,
+      isLoadingDelete,
+      isDeleteDialogOpen
     },
 
     data: {
@@ -163,6 +198,8 @@ export const useProfileDrawer = () => {
       onGetShareMedia,
       formatFileSize,
       setSelectedMedia,
+      onHandleDeleteConversation,
+      setIsDeleteDialogOpen
     },
   };
 };

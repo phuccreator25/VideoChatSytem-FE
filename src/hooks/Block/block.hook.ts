@@ -1,13 +1,18 @@
 import { useState } from "react";
 import type { contacts } from "../../types/contact/contact.model.type";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../../redux/store";
 import { onHandleBlockUser, onHandleUnBlockUser } from "../../redux/block.redux";
 import { enqueueSnackbar } from "notistack";
+import type { userBlocked } from "../../types/contact/contact.socket.type";
+
 
 export function useBlock() {
   const [openModalBlock, setOpenModalBlock] = useState<boolean>(false);
   const dispatch = useDispatch<AppDispatch>();
+
+  const blockUsers = useSelector((state: RootState) => state.block.blockUsers);
+  const unblockedIds = useSelector((state: RootState) => state.block.unblockedIds);
 
   const handleBlock = async (payload: contacts) => {
     try {
@@ -18,7 +23,7 @@ export function useBlock() {
     }
   };
 
-  const handleUnblock = async (payload: contacts) => {
+  const handleUnblock = async (payload: contacts | userBlocked) => {
     try {
       await dispatch(onHandleUnBlockUser(payload.userId)).unwrap()
     } catch (error) {
@@ -30,6 +35,10 @@ export function useBlock() {
   return {
     ui: {
       openModalBlock,
+    },
+    data: {
+      blockUsers,
+      unblockedIds,
     },
     handlers: {
       setOpenModalBlock,

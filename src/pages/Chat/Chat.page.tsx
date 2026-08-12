@@ -20,15 +20,15 @@ export default function ChatPages() {
   const renderMiddlePanel = () => {
     switch (activeRail) {
       case 'profile':
-        return <MyProfile />
+        return <MyProfile />;
       case 'messages':
         return <ConversationList />;
       case 'groups':
-        return <GroupsView />
+        return <GroupsView />;
       case 'contact':
-        return <ContactsView />
+        return <ContactsView />;
       case 'settings':
-        return <Setting />;
+        return <Setting onRailChange={setActiveRail} />;
       default:
         return <ConversationList />;
     }
@@ -59,6 +59,7 @@ export default function ChatPages() {
       socket.io.off("reconnect", syncConversations);
     };
   }, [dispatch]);
+
   return (
     <ChatLayout
       activeRail={activeRail}

@@ -410,6 +410,7 @@ export function ImageFrame({
                 component="img"
                 src={openedImage}
                 alt="image-preview"
+                loading="lazy"
                 draggable={false}
                 sx={{
                   width: `${previewLayout.mediaWidth * previewScale}px`,

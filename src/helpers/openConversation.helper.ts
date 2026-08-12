@@ -9,7 +9,6 @@ export default function useOpenConversation() {
   const handleOpenConversation = useCallback(
     async (userId: string) => {
       try {
-        console.log('conver: ', userId);
 
         setIsSubmitting(true);
 

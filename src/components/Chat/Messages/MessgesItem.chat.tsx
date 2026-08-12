@@ -173,6 +173,8 @@ export const MessageItem = memo(function MessageItem({
     (attachment) => attachment.status === "failed",
   ).length;
 
+  const effectiveStatus = failedAttachmentCount > 0 ? "failed" : msg.status;
+
   const isText = msg.type === "text";
   const isGif = msg.type === "gif";
   const isCall = (msg.type as string) === "call" || msg.messageType === "call" || Boolean(msg.callInfo);
@@ -311,7 +313,7 @@ export const MessageItem = memo(function MessageItem({
                 bgcolor: isLeft ? "#ffffff" : "transparent",
                 backgroundImage: isLeft
                   ? "none"
-                  : msg.status === "failed"
+                  : effectiveStatus === "failed"
                     ? "linear-gradient(135deg, #ef4444 0%, #991b1b 100%)"
                     : "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
                 border: isLeft ? "1px solid rgba(148, 163, 184, 0.22)" : "none",
@@ -320,10 +322,10 @@ export const MessageItem = memo(function MessageItem({
                 py: 1.35,
                 minWidth: 140,
                 width: "100%",
-                opacity: msg.status === "sending" ? 0.78 : 1,
+                opacity: effectiveStatus === "sending" ? 0.78 : 1,
                 boxShadow: isLeft
                   ? "0 8px 22px rgba(15, 23, 42, 0.07)"
-                  : msg.status === "failed"
+                  : effectiveStatus === "failed"
                     ? "0 12px 30px rgba(239, 68, 68, 0.25)"
                     : "0 12px 30px rgba(79, 70, 229, 0.34)",
               }}
@@ -367,7 +369,7 @@ export const MessageItem = memo(function MessageItem({
                 {shouldShowStatus && (
                   <MessageStatus
                     type="message"
-                    status={msg.status}
+                    status={effectiveStatus}
                     onResend={() => onResend?.(msg)}
                     onDeleteFailed={() => onDeleteFailed?.(msg.tempMessageId || msg.id)}
                   />
@@ -537,7 +539,7 @@ export const MessageItem = memo(function MessageItem({
               images={imageItems}
               createdAt={msg.createdAt}
               isLeft={isLeft}
-              status={msg.status}
+              status={effectiveStatus}
               showStatus={shouldShowStatus}
               onResend={() => onResend?.(msg)}
               onDeleteFailed={() => onDeleteFailed?.(msg.tempMessageId || msg.id)}
@@ -588,7 +590,7 @@ export const MessageItem = memo(function MessageItem({
                 createdAt={msg.createdAt}
                 isLeft={isLeft}
                 showStatus={shouldShowStatus}
-                status={msg.status}
+                status={effectiveStatus}
                 onResend={() => onResend?.(msg)}
                 onDeleteFailed={() => onDeleteFailed?.(msg.tempMessageId || msg.id)}
               />
@@ -640,7 +642,7 @@ export const MessageItem = memo(function MessageItem({
                 src={a.fileUrl ?? ""}
                 durationProp={a.recordDuration ?? null}
                 isLeft={isLeft}
-                status={msg.status}
+                status={effectiveStatus}
                 showStatus={shouldShowStatus}
                 createdAt={msg.createdAt}
                 onResend={() => onResend?.(msg)}

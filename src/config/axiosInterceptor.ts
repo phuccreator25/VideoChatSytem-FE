@@ -69,30 +69,30 @@ axiosInterceptor.interceptors.response.use(
 
     isRefreshing = true
 
-    try {    
-      await authApi.onRefreshToken()     
+    try {
+      await authApi.onRefreshToken()
       connectSocket() // Kết nối lại socket sau khi refresh token thành công
-      processQueue()  
+      processQueue()
       return axiosInterceptor(originalRequest)
-    
+
     } catch (refreshError: any) {
-      
+
       processQueue(refreshError)
-      
+
       enqueueSnackbar(
         refreshError?.response?.data?.message ||
-          'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+        'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
         { variant: 'error' }
       )
-      
+
       store.dispatch(clearCurrentUser())
       await persistor.purge()
       await authApi.onLogOut()
-      
+
       setTimeout(() => {
         window.location.href = '/login'
       }, 1500)
-      
+
       return Promise.reject(refreshError)
     } finally {
       isRefreshing = false
