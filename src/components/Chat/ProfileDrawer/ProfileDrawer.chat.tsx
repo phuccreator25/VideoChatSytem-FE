@@ -480,7 +480,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
           {/* Segmented Control Pill Tabs */}
           <Tabs
             value={ui.activeTab}
-            onChange={(event, newValue) => handlers.handleTabChange(newValue)}
+            onChange={(_, newValue) => handlers.handleTabChange(newValue)}
             variant="fullWidth"
             sx={{
               minHeight: 38,

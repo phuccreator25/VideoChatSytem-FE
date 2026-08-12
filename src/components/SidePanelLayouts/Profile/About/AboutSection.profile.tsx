@@ -15,7 +15,7 @@ import { InfoRow } from "./InfoRow.profile";
 import { ChangePasswordModal } from "../../Setting/ChangePasswordModal";
 
 type AboutSectionProps = {
-    profile: ProfileData | null;
+    profile: ProfileData;
     expanded: boolean;
     onChange: (_event: any, isExpanded: boolean) => void;
     onUpdate: (payload: object) => void;

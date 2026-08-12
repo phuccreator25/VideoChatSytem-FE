@@ -23,10 +23,10 @@ export function ChatTime({
   color = 'rgba(255,255,255,0.82)',
   dense = false,
 }: {
-  createdAt?: string;
-  time?: string;
-  color?: string;
-  dense?: boolean;
+  createdAt?: string | undefined;
+  time?: string | undefined;
+  color?: string | undefined;
+  dense?: boolean | undefined;
 }) {
   return (
     <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color, opacity: 0.95 }}>

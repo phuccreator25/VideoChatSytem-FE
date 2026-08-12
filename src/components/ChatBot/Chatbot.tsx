@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Drawer,
   Box,
@@ -203,8 +203,7 @@ export default function Chatbot() {
 
           <Tooltip title="Drag vertically to move | Click to open AI" placement="left" arrow>
             <Fab
-              onMouseDown={handlers.handlePointerDown}
-              onTouchStart={handlers.handlePointerDown}
+              onPointerDown={handlers.handlePointerDown}
               onClick={handlers.handleFabClick}
               aria-label="open-ai-chatbot"
               sx={{

@@ -4,7 +4,6 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Divider from "@mui/material/Divider";
-import Box from "@mui/material/Box";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";

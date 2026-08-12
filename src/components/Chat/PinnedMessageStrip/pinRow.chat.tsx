@@ -29,12 +29,11 @@ function ContentPreview({ pin }: { pin: pinMessages }) {
         if (isImage) {
             return (
                 <Box sx={{ display: "flex", alignItems: "center", gap: "5px", minWidth: 0 }}>
-                    <Box
-                        component="img"
-                        src={first.fileUrl}
-                        alt={first.fileName}
+                    <img
+                        src={first.fileUrl || ''}
+                        alt={first.fileName || ''}
                         loading="lazy"
-                        sx={{ width: 28, height: 28, borderRadius: 1, objectFit: "cover", flexShrink: 0 }}
+                        style={{ width: 28, height: 28, borderRadius: 4, objectFit: "cover", flexShrink: 0 }}
                     />
                     <Typography noWrap sx={{ fontSize: 12, color: "text.primary" }}>
                         {first.fileName}
@@ -72,12 +71,11 @@ function ContentPreview({ pin }: { pin: pinMessages }) {
         return (
             <Box sx={{ display: "flex", alignItems: "center", gap: "5px", minWidth: 0 }}>
                 <Box sx={{ position: "relative", flexShrink: 0 }}>
-                    <Box
-                        component="img"
-                        src={first.fileUrl}
-                        alt={first.fileName}
+                    <img
+                        src={first.fileUrl || ''}
+                        alt={first.fileName || ''}
                         loading="lazy"
-                        sx={{ width: 28, height: 28, borderRadius: 1, objectFit: "cover", display: "block" }}
+                        style={{ width: 28, height: 28, borderRadius: 4, objectFit: "cover", display: "block" }}
                     />
                     {remaining > 0 && (
                         <Box

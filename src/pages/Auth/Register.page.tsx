@@ -11,8 +11,11 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckIcon from "@mui/icons-material/Check";
 
+import type { AlertColor } from "@mui/material/Alert";
+
 import useAuth from "../../hooks/Auth/auth.hook";
 import type { typeRegister } from "../../types/auth.type";
+
 export default function RegisterPage() {
   const {
     register,
@@ -20,9 +23,9 @@ export default function RegisterPage() {
     watch,
     formState: { errors },
     //KHÔNG KHAI BÁO ONCHANGE THÌ MẶC ĐỊNH KHI SUBMIT MỚI CHECK ERRORS
-  } = useForm({
+  } = useForm<typeRegister>({
     defaultValues: {
-      fullName: "",
+      fullname: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -55,7 +58,7 @@ export default function RegisterPage() {
           Tạo tài khoản để bắt đầu chat và gọi video.
         </Typography>
         {isShowAlert && (
-          <Alert icon={<CheckIcon fontSize="inherit" />} severity={typeAlert}>
+          <Alert icon={<CheckIcon fontSize="inherit" />} severity={(typeAlert as AlertColor) || "success"}>
             Đã đăng ký tài khoản thành công. Vui lòng kiểm tra Email của bạn để
             tiến hành kích hoạt tài khoản
           </Alert>

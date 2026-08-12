@@ -243,7 +243,7 @@ export function MyProfile() {
                         {/* Pill Segment Tabs */}
                         <Tabs
                             value={activeTab}
-                            onChange={(e, val) => setActiveTab(val)}
+                            onChange={(_, val) => setActiveTab(val)}
                             variant="fullWidth"
                             sx={{
                                 minHeight: 38,

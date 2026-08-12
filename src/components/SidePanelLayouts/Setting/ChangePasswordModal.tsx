@@ -28,7 +28,6 @@ import {
   currentPasswordValidationRules,
   validateConfirmPassword,
 } from "../../../helpers/passwordValidation.helper";
-import { useProfile } from "../../../hooks/Profile/profile.hook";
 import type { AppDispatch } from "../../../redux/store";
 import { useDispatch } from "react-redux";
 import { onUpdateProfile } from "../../../redux/auth.redux";

@@ -3,12 +3,13 @@ export type typeRegister = {
     email: string,
     password: string,
     confirmPassword: string
+    agree?: boolean;
 }
 
 export type typeLogin = {
     email: string,
     password: string,
-    deviceId: string
+    deviceId?: string
 }
 
 export type DeviceSessionItem = {
