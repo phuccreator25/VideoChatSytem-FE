@@ -7,11 +7,11 @@ const messageTimeFormatter = new Intl.DateTimeFormat("vi-VN", {
   minute: "2-digit",
 });
 
-const toDisplayTime = (createdAt?: string, time?: string) => {
+const toDisplayTime = (createdAt?: string | Date, time?: string) => {
   if (time) return time;
   if (!createdAt) return "--:--";
 
-  const date = new Date(createdAt);
+  const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
   if (Number.isNaN(date.getTime())) return "--:--";
 
   return messageTimeFormatter.format(date);
@@ -23,7 +23,7 @@ export function ChatTime({
   color = 'rgba(255,255,255,0.82)',
   dense = false,
 }: {
-  createdAt?: string | undefined;
+  createdAt?: string | Date | undefined;
   time?: string | undefined;
   color?: string | undefined;
   dense?: boolean | undefined;

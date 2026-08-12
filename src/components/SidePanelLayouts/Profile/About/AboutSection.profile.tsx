@@ -15,7 +15,7 @@ import { InfoRow } from "./InfoRow.profile";
 import { ChangePasswordModal } from "../../Setting/ChangePasswordModal";
 
 type AboutSectionProps = {
-    profile: ProfileData;
+    profile: ProfileData | null;
     expanded: boolean;
     onChange: (_event: any, isExpanded: boolean) => void;
     onUpdate: (payload: object) => void;
@@ -107,7 +107,7 @@ export function AboutSection({
                     <InfoRow
                         label="Full name"
                         fieldKey="fullname"
-                        value={profile?.fullname}
+                        value={profile?.fullname || ""}
                         editingField={editingField}
                         editValue={editValue}
                         onStartEdit={handleStartEdit}
@@ -119,7 +119,7 @@ export function AboutSection({
                     <InfoRow
                         label="Username"
                         fieldKey="username"
-                        value={profile?.username}
+                        value={profile?.username || ""}
                         editingField={editingField}
                         editValue={editValue}
                         onStartEdit={handleStartEdit}
@@ -130,7 +130,7 @@ export function AboutSection({
 
                     <InfoRow
                         label="Email"
-                        value={profile?.email}
+                        value={profile?.email || ""}
                         editingField={editingField}
                         editValue={editValue}
                         readOnly
