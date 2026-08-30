@@ -61,8 +61,7 @@ export const useVideoCall = () => {
   // Tự động bật ghi âm giọng nói khi cuộc gọi đã kết nối thành công
   useEffect(() => {
     if (webrtc.isAccepted) {
-      console.log('Calll: ', callInfo);
-      
+
       startListening(currentUser?.fullname || "Người dùng", callInfo || incomingCall.callId || null);
     } else {
       stopListening();
@@ -240,7 +239,7 @@ export const useVideoCall = () => {
     const handleCallEndFromOpponent = async (payload: { callId: string }) => {
       if (callInfo === payload.callId) {
         stopListening();
-        closeUserMedia(); 
+        closeUserMedia();
       }
     };
 
@@ -293,7 +292,7 @@ export const useVideoCall = () => {
       await webrtc.handleReceiveReconnect(payload);
     };
 
-    const handleCallReconnectAnswer = async(payload: {
+    const handleCallReconnectAnswer = async (payload: {
       conversationId: string;
       calleeId: string;
       callerId: string;

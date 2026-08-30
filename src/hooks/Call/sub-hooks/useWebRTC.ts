@@ -69,7 +69,6 @@ export const useWebRTC = () => {
 
     try {
       const res = await callApi.onGetTurnCredentials();
-      console.log("res", res.data);
 
       const configuration = { iceServers: res.data.data.iceServers };
 
@@ -165,8 +164,6 @@ export const useWebRTC = () => {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      console.log("offer: ", offer);
-
       const dataSocket = {
         conversationId,
         callerId: currentUserId,
@@ -199,7 +196,6 @@ export const useWebRTC = () => {
 
     try {
       const res = await callApi.onGetTurnCredentials();
-      console.log("res: ", res);
 
       const pc = new RTCPeerConnection({
         iceServers: res.data.data.iceServers,
@@ -272,10 +268,10 @@ export const useWebRTC = () => {
             if (pc.signalingState === "stable") {
               const offer = await pc.createOffer({ iceRestart: true });
               await pc.setLocalDescription(offer);
-              
+
               emitCallReconnect({
                 conversationId: activeConversationId,
-                calleeId: incomingCall.callerId || "", 
+                calleeId: incomingCall.callerId || "",
                 callerId: currentUserId || "",
                 offer,
               });
@@ -333,26 +329,26 @@ export const useWebRTC = () => {
     remoteVideoRef.current = null;
   };
 
-  const handleReceiveReconnect = async(payload : {
+  const handleReceiveReconnect = async (payload: {
     conversationId: string;
     calleeId: string;
     callerId: string;
     offer: RTCSessionDescriptionInit;
   }) => {
     const pc = peerConnectionRef.current;
-   
-    if(!pc) return
-   
+
+    if (!pc) return
+
     try {
       const { conversationId, calleeId, callerId, offer } = payload;
-      
+
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer);
 
-      emitCallReconnectAnswer({conversationId, callerId, calleeId, answer})
-      
+      emitCallReconnectAnswer({ conversationId, callerId, calleeId, answer })
+
     } catch (error) {
       console.error("Error handling reconnect offer:", error);
     }
@@ -365,13 +361,13 @@ export const useWebRTC = () => {
     answer: RTCSessionDescriptionInit;
   }) => {
     const pc = peerConnectionRef.current;
-    
+
     if (!pc) return;
-    
+
     try {
 
       await pc.setRemoteDescription(new RTCSessionDescription(payload.answer));
-    
+
     } catch (err) {
       console.error("Lỗi khi nạp Reconnect Answer ở phía Caller:", err);
     }
