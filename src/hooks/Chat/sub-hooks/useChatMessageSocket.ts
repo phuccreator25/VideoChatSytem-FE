@@ -47,6 +47,8 @@ import type {
   deletePinMessageSocket,
   reactEmotionMessageSocket,
 } from "../../../types/chat/chat.socket.type";
+import mergeAttachments from "../../../helpers/mergeAttachment.helper";
+import { updateNewMessage } from "../../../helpers/chatMessage.helper";
 
 export const useChatMessageSocket = ({
   conversationId,
@@ -62,7 +64,6 @@ export const useChatMessageSocket = ({
   setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { mergeAttachments } = useMergeAttachment();
 
   const lastMessage = useRef<MessageType | null>(null);
   const currentTimeOut = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -118,37 +119,7 @@ export const useChatMessageSocket = ({
     const handleNewMessage = (payload: MessageType) => {
       if (!payload || payload.conversationId !== conversationId) return;
 
-      setMessages((prev) => {
-        const currentMessages = prev || [];
-
-        const existingIndex = currentMessages.findIndex(
-          (msg) =>
-            msg.id === payload.id ||
-            (payload.tempMessageId &&
-              (msg.tempMessageId === payload.tempMessageId ||
-                msg.id === payload.tempMessageId)),
-        );
-
-        if (existingIndex >= 0) {
-          const nextMessages = [...currentMessages];
-          const currentMessage = nextMessages[existingIndex];
-
-          nextMessages[existingIndex] = {
-            ...currentMessage,
-            ...payload,
-            attachments: payload.attachments?.length
-              ? mergeAttachments(
-                  currentMessage.attachments,
-                  payload.attachments,
-                )
-              : currentMessage.attachments,
-          };
-
-          return nextMessages;
-        }
-
-        return [...currentMessages, payload];
-      });
+      setMessages((prev) => updateNewMessage(prev, payload));
 
       if (payload.senderId === currentUserId) return;
 
@@ -187,10 +158,10 @@ export const useChatMessageSocket = ({
             deliveries: (msg.deliveries || []).map((delivery) =>
               delivery.userId === payload.readerUserId
                 ? {
-                    ...delivery,
-                    readAt,
-                    deliveredAt: delivery.deliveredAt || readAt,
-                  }
+                  ...delivery,
+                  readAt,
+                  deliveredAt: delivery.deliveredAt || readAt,
+                }
                 : delivery,
             ),
           };

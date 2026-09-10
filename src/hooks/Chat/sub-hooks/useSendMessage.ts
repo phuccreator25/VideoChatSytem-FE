@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent } from "react";
 import {
   ChatItemTypes,
+  type MessageAttachment,
   type MessageType,
   type SelectedGif,
 } from "../../../types/chat/chat.model.type";
@@ -9,8 +10,12 @@ import type {
   SendMessagePayload,
 } from "../../../types/chat/chat.payload.type";
 import ChatAPI from "../../../api/Chat.api";
-import useMergeAttachment from "../../../helpers/mergeAttachment.helper";
 import type { IGif } from "@giphy/js-types";
+import { handleCancelSingleFile, uploadMessageAttachments } from "../../../helpers/uploadS3.helper";
+import { compressMultipleImagesHelper } from "../../../helpers/compressImage.helper";
+import { enqueueSnackbar } from "notistack";
+import { updateNewMessage } from "../../../helpers/chatMessage.helper";
+import type { AbortMultipartParams } from "../../../types/upload.type";
 
 export const useSendMessage = ({
   conversationId,
@@ -43,7 +48,9 @@ export const useSendMessage = ({
   const URL_REGEX = /(https?:\/\/[^\s]+)/g;
   const [previousUrl, setPreviousUrl] = useState<string | null>("");
 
-  const { mergeAttachments } = useMergeAttachment();
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const MAX_CHAT_FILE_SIZE = 1 * 1024 * 1024 * 1024; // 1 GB
+
 
   useEffect(() => {
     if (!conversationId || !inputText.trim()) {
@@ -92,6 +99,53 @@ export const useSendMessage = ({
     }
   };
 
+  const handleSendMessage = async (
+    payload: SendMessagePayload,
+    previewFiles: any[],
+    tempMessageId: string,
+    isResend: boolean = false
+  ) => {
+    try {
+      if (payload.type === ChatItemTypes.FILE) {
+        setIsUploadingFiles(true);
+      }
+
+      const res = isResend
+        ? await ChatAPI.onResendMessage(payload, conversationId!)
+        : await ChatAPI.onSendMessage(payload, conversationId!);
+      const savedMessage = res.data.data;
+
+      setMessages((prev) => updateNewMessage(prev, savedMessage, tempMessageId));
+
+      if (savedMessage?.presignedUrls?.length > 0) {
+        await uploadMessageAttachments(
+          savedMessage.presignedUrls,
+          savedMessage.id,
+          previewFiles,
+          tempMessageId
+        );
+
+        setIsUploadingFiles(false);
+      }
+    } catch (error: any) {
+      console.error("Execute send message error:", error);
+      enqueueSnackbar(error?.response?.data?.message || "Gửi tin nhắn thất bại", {
+        variant: "error",
+      });
+
+      setMessages((prev) =>
+        (prev || []).map((msg) =>
+          msg.id === tempMessageId || msg.tempMessageId === tempMessageId
+            ? {
+              ...msg,
+              status: "failed",
+            }
+            : msg
+        )
+      );
+    }
+  };
+
   const handleSend = async () => {
     if (
       !conversationId ||
@@ -107,7 +161,8 @@ export const useSendMessage = ({
 
     const content = inputText.trim();
     const voiceSnapshot = voiceData.recordedFile;
-    const filesSnapshot = [...files, ...(voiceSnapshot ? [voiceSnapshot] : [])];
+    const rawFiles = [...files, ...(voiceSnapshot ? [voiceSnapshot] : [])];
+    const filesSnapshot = await compressMultipleImagesHelper(rawFiles);
     const gifSnapshot = selectedGif;
     const replyMessageSnapshot = messageReplyed;
 
@@ -183,95 +238,56 @@ export const useSendMessage = ({
     setMessageReplyed(null);
     voiceHandler.clearRecording();
 
-    try {
-      let payload: SendMessagePayload | FormData;
+    let payload: SendMessagePayload;
 
-      if (hasFiles) {
-        const formData = new FormData();
-
-        formData.append("tempMessageId", tempMessageId);
-        formData.append("conversationId", conversationId);
-        formData.append("type", ChatItemTypes.FILE);
-        formData.append("content", content);
-
-        previewFiles.forEach((item) => {
-          formData.append("files", item.file);
-          formData.append(
-            "recordDuration",
-            String(voiceUi?.recordingDuration ?? 0),
-          );
-          formData.append("tempAttachmentIds", item.tempAttachmentId);
-        });
-
-        payload = formData;
-      } else if (hasGif) {
-        payload = {
-          tempMessageId,
-          conversationId,
-          type: ChatItemTypes.GIF,
-          gifUrl: gifSnapshot?.url || null,
-        };
-      } else {
-        payload = {
-          tempMessageId,
-          conversationId,
-          type: ChatItemTypes.TEXT,
-          content: inputText.trim() || "",
-          replyToMessageId: replyMessageSnapshot?.id ?? null,
-          preview: linkPreview?.url ? previewLink : null,
-        };
-      }
-
-      const res = await ChatAPI.onSendMessage(payload, conversationId);
-
-      const savedMessage = res.data.data;
-
-      setMessages((prev) => {
-        const currentMessages = prev || [];
-
-        const currentTempMessage = currentMessages.find(
-          (msg) => msg.id === tempMessageId,
-        );
-
-        const mergedSavedMessage = {
-          ...savedMessage,
-          attachments: savedMessage.attachments?.length
-            ? mergeAttachments(
-                currentTempMessage?.attachments,
-                savedMessage.attachments,
-              )
-            : currentTempMessage?.attachments,
-        };
-
-        const withoutTemp = currentMessages.filter(
-          (msg) =>
-            msg.id !== tempMessageId && msg.tempMessageId !== tempMessageId,
-        );
-
-        if (withoutTemp.some((msg) => msg.id === mergedSavedMessage.id)) {
-          return withoutTemp;
-        }
-
-        return [...withoutTemp, mergedSavedMessage];
-      });
-    } catch (error) {
-      console.error(error);
-
-      setMessages((prev) =>
-        (prev || []).map((msg) =>
-          msg.id === tempMessageId
-            ? {
-                ...msg,
-                status: "failed",
-              }
-            : msg,
-        ),
-      );
+    if (hasFiles) {
+      payload = {
+        tempMessageId,
+        conversationId,
+        type: ChatItemTypes.FILE,
+        content,
+        replyToMessageId: replyMessageSnapshot?.id ?? null,
+        tempAttachmentIds: previewFiles.map((item) => item.tempAttachmentId),
+        attachments: previewFiles.map((item) => ({
+          tempAttachmentId: item.tempAttachmentId,
+          fileName: item.fileName,
+          fileSize: item.fileSize,
+          mimeType: item.mimeType,
+          resourceType: item.resourceType,
+          recordDuration: item.recordDuration,
+        })),
+      };
+    } else if (hasGif) {
+      payload = {
+        tempMessageId,
+        conversationId,
+        type: ChatItemTypes.GIF,
+        gifUrl: gifSnapshot?.url || null,
+      };
+    } else {
+      payload = {
+        tempMessageId,
+        conversationId,
+        type: ChatItemTypes.TEXT,
+        content: inputText.trim() || "",
+        replyToMessageId: replyMessageSnapshot?.id ?? null,
+        preview: linkPreview?.url ? previewLink : null,
+      };
     }
+
+    await handleSendMessage(payload, previewFiles, tempMessageId);
   };
 
   const handleResend = async (messageFailed: MessageType) => {
-    if (!conversationId || !currentUserId) return;
+    if (!conversationId || !currentUserId || !messageFailed) return;
+
+    const hasFiles = messageFailed.attachments?.some((att: MessageAttachment) => att.file instanceof File);
+    if (messageFailed.type === ChatItemTypes.FILE && !hasFiles) {
+      enqueueSnackbar("Dữ liệu file đã bị mất do bạn tải lại trang. Vui lòng chọn lại file để gửi!", {
+        variant: "error",
+      });
+      return;
+    }
 
     const tempMessageId = messageFailed.tempMessageId || messageFailed.id;
     const content = messageFailed.content || "";
@@ -280,105 +296,62 @@ export const useSendMessage = ({
     const replyToMessageId = messageFailed.replyToMessageId;
 
     setMessages((prev) =>
-      (prev || []).map((msg) =>
-        msg.id === messageFailed.id || msg.tempMessageId === tempMessageId
-          ? {
-              ...msg,
-              status: "sending",
-            }
-          : msg,
-      ),
-    );
+      (prev || []).map((msg) => {
+        if (msg.id === messageFailed.id || (tempMessageId && msg.tempMessageId === tempMessageId)) {
+          const updatedAttachments = msg.attachments?.map((att: any) => ({
+            ...att,
+            status: att.status === "failed" ? "pending" : att.status,
+          }));
 
-    try {
-      let payload: SendMessagePayload | FormData;
-
-      if (type === ChatItemTypes.FILE) {
-        const formData = new FormData();
-
-        formData.append("tempMessageId", tempMessageId);
-        formData.append("conversationId", conversationId);
-        formData.append("type", ChatItemTypes.FILE);
-        formData.append("content", content);
-
-        messageFailed.attachments?.forEach((item) => {
-          if (item.file) {
-            formData.append("files", item.file);
-            formData.append("recordDuration", String(item.recordDuration ?? 0));
-            formData.append("tempAttachmentIds", item.tempAttachmentId || "");
-          }
-        });
-
-        payload = formData;
-      } else if (type === ChatItemTypes.GIF) {
-        payload = {
-          tempMessageId,
-          conversationId,
-          type: ChatItemTypes.GIF,
-          gifUrl: gifUrl || null,
-        };
-      } else {
-        payload = {
-          tempMessageId,
-          conversationId,
-          type: ChatItemTypes.TEXT,
-          content: content,
-          replyToMessageId: replyToMessageId ?? null,
-          preview: messageFailed.preview as LinkPreviewData,
-        };
-      }
-
-      const res = await ChatAPI.onSendMessage(payload, conversationId);
-
-      const savedMessage = res.data.data;
-
-      setMessages((prev) => {
-        const currentMessages = prev || [];
-        const currentTempMessage = currentMessages.find(
-          (msg) => msg.id === tempMessageId || msg.id === messageFailed.id,
-        );
-
-        const mergedSavedMessage = {
-          ...savedMessage,
-          attachments: savedMessage.attachments?.length
-            ? mergeAttachments(
-                currentTempMessage?.attachments,
-                savedMessage.attachments,
-              )
-            : currentTempMessage?.attachments,
-        };
-
-        const withoutTemp = currentMessages.filter(
-          (msg) => msg.id !== tempMessageId && msg.id !== messageFailed.id,
-        );
-
-        if (withoutTemp.some((msg) => msg.id === mergedSavedMessage.id)) {
-          return withoutTemp;
+          return {
+            ...msg,
+            status: "sending",
+            attachments: updatedAttachments,
+          };
         }
-
-        return [...withoutTemp, mergedSavedMessage];
-      });
-    } catch (error) {
-      console.error("Resend error:", error);
-      setMessages((prev) =>
-        (prev || []).map((msg) =>
-          msg.id === messageFailed.id || msg.tempMessageId === tempMessageId
-            ? {
-                ...msg,
-                status: "failed",
-              }
-            : msg,
-        ),
-      );
-    }
-  };
-
-  const handleDeleteFailedMessage = (msgId: string) => {
-    setMessages((prev) =>
-      (prev || []).filter(
-        (msg) => msg.id !== msgId && msg.tempMessageId !== msgId,
-      ),
+        return msg;
+      })
     );
+
+    let payload: SendMessagePayload;
+
+    if (type === ChatItemTypes.FILE) {
+      payload = {
+        messageId: messageFailed?.id,
+        tempMessageId,
+        conversationId,
+        type: ChatItemTypes.FILE,
+        content,
+        replyToMessageId: replyToMessageId ?? null,
+        tempAttachmentIds: messageFailed.attachments?.map((item: any) => item.tempAttachmentId || ""),
+        attachments: messageFailed.attachments?.map((item: any) => ({
+          tempAttachmentId: item.tempAttachmentId,
+          fileName: item.fileName,
+          fileSize: item.fileSize,
+          mimeType: item.mimeType,
+          resourceType: item.resourceType,
+          recordDuration: item.recordDuration,
+        })),
+      };
+    } else if (type === ChatItemTypes.GIF) {
+      payload = {
+        tempMessageId,
+        conversationId,
+        type: ChatItemTypes.GIF,
+        gifUrl: gifUrl || null,
+      };
+    } else {
+      payload = {
+        tempMessageId,
+        conversationId,
+        type: ChatItemTypes.TEXT,
+        content,
+        replyToMessageId: replyToMessageId ?? null,
+        preview: messageFailed.preview as LinkPreviewData,
+      };
+    }
+
+    await handleSendMessage(payload, (messageFailed.attachments as any[]) || [], tempMessageId, true);
   };
 
   const handleUploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -386,11 +359,49 @@ export const useSendMessage = ({
 
     if (!files.length || !conversationId) return;
 
+    const oversizedFile = files.find((f) => f.size > MAX_CHAT_FILE_SIZE);
+    if (oversizedFile) {
+      enqueueSnackbar(`File "${oversizedFile.name}" vượt quá dung lượng tối đa 1GB. Vui lòng chọn file nhỏ hơn!`, {
+        variant: "error",
+      });
+      if (event.target) event.target.value = "";
+      return;
+    }
+
     setFiles(files);
   };
 
   const handleRemoveFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCancelUpload = (item: AbortMultipartParams) => {
+    handleCancelSingleFile(item);
+
+    if (!item.tempAttachmentId) return;
+
+    setMessages((prev) =>
+      (prev || []).map((msg) => {
+        if (!msg.attachments?.length) return msg;
+
+        const hasTarget = msg.attachments.some(
+          (att: any) => att.tempAttachmentId === item.tempAttachmentId
+        );
+
+        if (!hasTarget) return msg;
+
+        const updatedAttachments = msg.attachments.map((att: any) =>
+          att.tempAttachmentId === item.tempAttachmentId
+            ? { ...att, status: "failed" }
+            : att
+        );
+
+        return {
+          ...msg,
+          attachments: updatedAttachments,
+        };
+      })
+    );
   };
 
   const handleSelectGif = (gif: IGif) => {
@@ -418,6 +429,17 @@ export const useSendMessage = ({
     setInputText((prev) => prev + emoji);
   };
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isUploadingFiles) {
+        e.preventDefault();
+        e.returnValue = "File đang được tải lên. Bạn có chắc muốn rời đi?";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isUploadingFiles]);
+
   return {
     inputText,
     files,
@@ -430,11 +452,11 @@ export const useSendMessage = ({
     setLinkPreview,
     handleSend,
     handleResend,
-    handleDeleteFailedMessage,
     handleUploadFile,
     handleRemoveFile,
     handleSelectGif,
     onRemoveGif,
     applyEmoji,
+    handleCancelUpload
   };
 };

@@ -48,7 +48,6 @@ export function ImageFrame({
   status,
   showStatus = false,
   onResend,
-  onDeleteFailed,
 }: {
   images: Array<string | ImageFrameItem>;
   createdAt?: string;
@@ -56,7 +55,6 @@ export function ImageFrame({
   status?: string;
   showStatus?: boolean;
   onResend?: () => void;
-  onDeleteFailed?: () => void;
 }) {
   const normalizedImages: ImageFrameItem[] = useMemo(
     () =>
@@ -310,7 +308,6 @@ export function ImageFrame({
               status={status}
               type="message"
               onResend={onResend}
-              onDeleteFailed={onDeleteFailed}
             />
           )}
         </Box>

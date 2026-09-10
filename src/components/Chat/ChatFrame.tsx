@@ -118,6 +118,8 @@ export default function ChatFrame() {
           display: "flex",
           flex: 1,
           minHeight: 0,
+          minWidth: 0,
+          width: "100%",
           overflow: "hidden",
           position: "relative",
         }}
@@ -128,6 +130,8 @@ export default function ChatFrame() {
             flexDirection: "column",
             flex: 1,
             minHeight: 0,
+            minWidth: 0,
+            width: "100%",
             position: "relative",
           }}
         >
@@ -212,9 +216,9 @@ export default function ChatFrame() {
                         onUnReact={handler.handleUnReactEmotionMessage}
                         onHandleShare={handler.onHandleShare}
                         onResend={handler.handleResend}
-                        onDeleteFailed={handler.handleDeleteFailedMessage}
                         onGoToMessage={handler.navigateToMessage}
                         onReCall={handler.handleReCall}
+                        onCancelUpload={handler.handleCancelUpload}
                       />
                     </Box>
                   ),

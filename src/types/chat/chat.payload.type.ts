@@ -27,26 +27,39 @@ export type LinkPreviewData = {
 
 export type SendMessagePayload =
   | {
-      tempMessageId: string;
-      conversationId: string;
-      type: "text";
-      content: string;
-      preview: LinkPreviewData | null;
-      replyToMessageId: string | null;
-    }
+    tempMessageId: string;
+    conversationId: string;
+    type: "text";
+    content: string;
+    preview: LinkPreviewData | null;
+    replyToMessageId: string | null;
+    tempAttachmentIds?: string[];
+  }
   | {
-      tempMessageId: string;
-      conversationId: string;
-      type: "file";
-      file: File;
-      content?: string;
-    }
+    messageId?: string;
+    tempMessageId: string;
+    conversationId: string;
+    type: "file";
+    content?: string;
+    replyToMessageId?: string | null;
+    tempAttachmentIds?: string[];
+    attachments?: {
+      tempAttachmentId: string;
+      fileName: string;
+      fileSize: number;
+      mimeType: string;
+      resourceType: string;
+      recordDuration?: number | null;
+    }[];
+    file?: File;
+  }
   | {
-      tempMessageId: string;
-      conversationId: string;
-      type: "gif";
-      gifUrl: string | null;
-    };
+    tempMessageId: string;
+    conversationId: string;
+    type: "gif";
+    gifUrl: string | null;
+    replyToMessageId?: string | null;
+  };
 
 export type emotionPayload = {
   emotion: "LIKE" | "HAHA" | "SAD" | "WOW" | "LOVE" | "ANGRY" | string;

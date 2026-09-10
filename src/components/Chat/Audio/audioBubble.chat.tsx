@@ -16,7 +16,6 @@ export interface AudioBubbleProps {
   showStatus?: boolean;
   createdAt?: string;
   onResend?: () => void;
-  onDeleteFailed?: () => void;
 }
 
 const BAR_COUNT = 36;
@@ -48,7 +47,6 @@ export function AudioBubble({
   showStatus = false,
   createdAt,
   onResend,
-  onDeleteFailed,
 }: AudioBubbleProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rafRef = useRef<number>(0);
@@ -251,7 +249,6 @@ export function AudioBubble({
             type="message"
             status={status}
             onResend={onResend}
-            onDeleteFailed={onDeleteFailed}
           />
         )}
       </Box>

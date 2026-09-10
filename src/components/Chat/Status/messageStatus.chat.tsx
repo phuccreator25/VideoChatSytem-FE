@@ -7,14 +7,12 @@ type StatusIndicatorProps = {
   status?: string;
   type?: "message" | "attachment";
   onResend?: () => void;
-  onDeleteFailed?: () => void;
 };
 
 export function MessageStatus({
   status,
   type = "message",
   onResend,
-  onDeleteFailed,
 }: StatusIndicatorProps) {
   if (!status) return null;
 
@@ -143,7 +141,7 @@ export function MessageStatus({
           </Typography>
         </Stack>
 
-        {(onResend || onDeleteFailed) && (
+        {(onResend) && (
           <Stack direction="row" spacing={0.75} alignItems="center">
             {onResend && (
               <Typography
@@ -165,33 +163,6 @@ export function MessageStatus({
                 }}
               >
                 Resend
-              </Typography>
-            )}
-            {onResend && onDeleteFailed && (
-              <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
-                |
-              </Typography>
-            )}
-            {onDeleteFailed && (
-              <Typography
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteFailed();
-                }}
-                sx={{
-                  fontSize: 11,
-                  color: "#fca5a5",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  textDecoration: "underline",
-                  opacity: 0.85,
-                  transition: "opacity 0.2s",
-                  "&:hover": {
-                    opacity: 1,
-                  },
-                }}
-              >
-                Cancel
               </Typography>
             )}
           </Stack>

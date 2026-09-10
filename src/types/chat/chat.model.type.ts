@@ -37,7 +37,6 @@ export type MessageAttachment = {
   tempAttachmentId?: string;
   attachmentId?: string;
   fileUrl?: string | null;
-  publicId?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
   mimeType?: string | null;

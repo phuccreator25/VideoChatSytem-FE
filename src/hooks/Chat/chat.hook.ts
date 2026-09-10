@@ -86,12 +86,12 @@ export function useChatFrame() {
     setLinkPreview,
     handleSend,
     handleResend,
-    handleDeleteFailedMessage,
     handleUploadFile,
     handleRemoveFile,
     handleSelectGif,
     onRemoveGif,
     applyEmoji,
+    handleCancelUpload
   } = useSendMessage({
     conversationId,
     currentUserId,
@@ -326,7 +326,6 @@ export function useChatFrame() {
       handleUnReactEmotionMessage,
       onHandleShare,
       handleResend,
-      handleDeleteFailedMessage,
       handleSearchMessage,
       closeSearchDrawer,
       navigateToSearchResult,
@@ -338,6 +337,7 @@ export function useChatFrame() {
       closeProfileDrawer,
       setLinkPreview,
       handleReCall: (type: "video" | "voice") => dispatch(openCallModal({ type })),
+      handleCancelUpload
     },
 
     ref: {

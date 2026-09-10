@@ -39,7 +39,6 @@ export type VideoBubbleProps = {
     isLeft: boolean;
     isPinned?: boolean;
     onResend?: () => void;
-    onDeleteFailed?: () => void;
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -74,7 +73,6 @@ export function VideoBubble({
     isLeft,
     isPinned = false,
     onResend,
-    onDeleteFailed,
 }: VideoBubbleProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
@@ -378,7 +376,6 @@ export function VideoBubble({
                             type="message"
                             status={status}
                             onResend={onResend}
-                            onDeleteFailed={onDeleteFailed}
                         />
                     )}
                 </Stack>

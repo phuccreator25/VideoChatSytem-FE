@@ -3,6 +3,7 @@ import type { emotionPayload, SendMessagePayload } from "../types/chat/chat.payl
 
 const ChatAPI = {
     onSendMessage: (payload: SendMessagePayload | FormData, conversationId: string) => axiosInterceptor.post(`/chats/${conversationId}/send-message`, payload),
+    onResendMessage: (payload: SendMessagePayload | FormData, conversationId: string) => axiosInterceptor.post(`/chats/${conversationId}/resend-message`, payload),
     onReactionMessage: (payload: emotionPayload | string, conversationId: string, messageId: string) => axiosInterceptor.post(`/chats/react-emotion/${conversationId}/${messageId}`, payload),
     onUnReactEmotion: (conversationId: string, messageId: string) => axiosInterceptor.delete(`/chats/unreact-emotion/${conversationId}/${messageId}`),
     onForwardMessage: (messageId: string, selectedIds: string[]) => axiosInterceptor.post(`/chats/forward-message/${messageId}`, { selectedIds }),

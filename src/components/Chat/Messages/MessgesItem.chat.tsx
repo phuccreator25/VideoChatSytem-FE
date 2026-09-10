@@ -21,6 +21,9 @@ import { PopoverShare } from "./PopoverShare.chat";
 import renderMessageContent from "../../../helpers/renderMessageUrl.helper";
 import { ReplyQuoteBubble } from "./ReplyBubble.chat";
 import { CallBubble } from "./CallBubble.chat";
+import type { AbortMultipartParams } from "../../../types/upload.type";
+
+import { uploadControllers } from "../../../helpers/uploadS3.helper";
 
 type TempPreviewFile = {
   tempAttachmentId?: string;
@@ -44,14 +47,27 @@ type MessageAttachment = {
   status?: string;
   previewUrl?: string | null;
   recordDuration?: number | null
-};
+};  
 
 const getAttachments = (msg: MessageType) => {
   const attachments = (msg.attachments || []) as MessageAttachment[];
-  return attachments.map((attachment) => ({
-    ...attachment,
-    messageId: msg.id,
-  }));
+  return attachments.map((attachment) => {
+    const tempId = attachment.tempAttachmentId;
+    const isUploadingLocally = tempId ? uploadControllers.has(tempId) : false;
+
+    // Nếu attachment có status pending/uploading/sending nhưng không có fileUrl, không được upload tích cực ở tab này và không có binary File
+    const isAbandoned =
+      (attachment.status === "pending" || attachment.status === "uploading" || msg.status === "sending") &&
+      !attachment.fileUrl &&
+      !isUploadingLocally &&
+      !(attachment as any).file;
+
+    return {
+      ...attachment,
+      status: isAbandoned ? "failed" : attachment.status,
+      messageId: msg.id,
+    };
+  });
 };
 
 const isAudioAttachment = (attachment: MessageAttachment) =>
@@ -125,7 +141,6 @@ const getFileNote = (msg: MessageType) => {
   return String(msg.content || "").trim();
 };
 
-
 // ── MessageItem ───────────────────────────────────────────────────────────
 export const MessageItem = memo(function MessageItem({
   msg,
@@ -137,9 +152,9 @@ export const MessageItem = memo(function MessageItem({
   onUnReact,
   onHandleShare,
   onResend,
-  onDeleteFailed,
   onGoToMessage,
   onReCall,
+  onCancelUpload
 }: {
   msg: MessageType;
   isLeft: boolean;
@@ -150,11 +165,17 @@ export const MessageItem = memo(function MessageItem({
   onUnReact: (messageId: string) => void;
   onHandleShare: (targetConversationIds: string[], messageId: string) => Promise<void>;
   onResend?: (msg: MessageType) => void;
-  onDeleteFailed?: (msgId: string) => void;
   onGoToMessage?: (msg: MessageType) => void;
   onReCall?: (type: "video" | "voice") => void;
+  onCancelUpload?: (item: AbortMultipartParams) => void;
 }) {
   const attachments = getAttachments(msg);
+  const hasDoneAttachments = attachments.some((att) => att.status === "done");
+  
+  //Nếu khong có file nào done thì ẩn luôn
+  if (isLeft && msg.type === "file" && !hasDoneAttachments) {
+    return null;
+  }
   const imageItems = parseImageItems(msg);
   const nonImageAttachments = attachments.filter(
     (attachment) => isRawAttachment(attachment),
@@ -173,7 +194,17 @@ export const MessageItem = memo(function MessageItem({
     (attachment) => attachment.status === "failed",
   ).length;
 
-  const effectiveStatus = failedAttachmentCount > 0 ? "failed" : msg.status;
+  //show status khi có file còn upload trong list file hoặc tất cả đã failed
+  const isAnyUploading = attachments.some(
+    (att) => att.status === "pending" || att.status === "uploading" || att.status === "sending"
+  );
+  const allFailed = attachments.length > 0 && attachments.every((att) => att.status === "failed");
+
+  const effectiveStatus = isAnyUploading
+    ? "sending"
+    : allFailed || msg.status === "failed"
+      ? "failed"
+      : msg.status;
 
   const isText = msg.type === "text";
   const isGif = msg.type === "gif";
@@ -371,7 +402,6 @@ export const MessageItem = memo(function MessageItem({
                     type="message"
                     status={effectiveStatus}
                     onResend={() => onResend?.(msg)}
-                    onDeleteFailed={() => onDeleteFailed?.(msg.tempMessageId || msg.id)}
                   />
                 )}
               </Box>
@@ -468,7 +498,6 @@ export const MessageItem = memo(function MessageItem({
                     type="message"
                     status={msg.status}
                     onResend={() => onResend?.(msg)}
-                    onDeleteFailed={() => onDeleteFailed?.(msg.tempMessageId || msg.id)}
                   />
                 )}
               </Box>
@@ -542,7 +571,6 @@ export const MessageItem = memo(function MessageItem({
               status={effectiveStatus}
               showStatus={shouldShowStatus}
               onResend={() => onResend?.(msg)}
-              onDeleteFailed={() => onDeleteFailed?.(msg.tempMessageId || msg.id)}
             />
             <EmotionPicker
               reactions={msg.reactions || []}
@@ -585,14 +613,15 @@ export const MessageItem = memo(function MessageItem({
                   mimeType: a.mimeType,
                   status: a.status,
                   messageId: a.messageId,
-                  attachmentId: a.attachmentId
+                  attachmentId: a.attachmentId,
+                  tempAttachmentId: a.tempAttachmentId || undefined,
                 }))}
                 createdAt={msg.createdAt}
                 isLeft={isLeft}
                 showStatus={shouldShowStatus}
                 status={effectiveStatus}
                 onResend={() => onResend?.(msg)}
-                onDeleteFailed={() => onDeleteFailed?.(msg.tempMessageId || msg.id)}
+                onCancelUpload={onCancelUpload}
               />
             )}
 
@@ -606,12 +635,33 @@ export const MessageItem = memo(function MessageItem({
                   borderRadius: 2,
                   bgcolor: "rgba(254,226,226,0.72)",
                   border: "1px solid rgba(248,113,113,0.28)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
                 <Typography sx={{ fontSize: 12.5, color: "#b91c1c", fontWeight: 700 }}>
                   {failedAttachmentCount} attachment
                   {failedAttachmentCount > 1 ? "s" : ""} failed to upload
                 </Typography>
+                {!isLeft && onResend && (
+                  <Typography
+                    onClick={() => onResend(msg)}
+                    sx={{
+                      fontSize: 12.5,
+                      color: "#dc2626",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                      ml: 1,
+                      "&:hover": {
+                        color: "#991b1b",
+                      },
+                    }}
+                  >
+                    Resend
+                  </Typography>
+                )}
               </Box>
             )}
             <EmotionPicker
@@ -646,7 +696,6 @@ export const MessageItem = memo(function MessageItem({
                 showStatus={shouldShowStatus}
                 createdAt={msg.createdAt}
                 onResend={() => onResend?.(msg)}
-                onDeleteFailed={() => onDeleteFailed?.(msg.tempMessageId || msg.id)}
               />
             ))}
             <EmotionPicker
@@ -678,11 +727,12 @@ export const MessageItem = memo(function MessageItem({
               </Box>
             )}
 
-            {videoAttachment.map((item, index) => (
+            {videoAttachment.map((item) => (
+              console.log(item),
               <VideoBubble
                 messageId={msg.id}
-                key={item.attachmentId}
-                src={item.fileUrl ?? msg.attachments?.[index].previewUrl}
+                key={item.attachmentId || item.tempAttachmentId}
+                src={item.fileUrl || item.previewUrl || ""}
                 thumbnailUrl={null}
                 fileName={item.fileName ?? ""}
                 fileSize={item.fileSize}
@@ -691,7 +741,6 @@ export const MessageItem = memo(function MessageItem({
                 showStatus={shouldShowStatus}
                 createdAt={msg.createdAt}
                 onResend={() => onResend?.(msg)}
-                onDeleteFailed={() => onDeleteFailed?.(msg.tempMessageId || msg.id)}
               />
             ))}
             <EmotionPicker
