@@ -34,8 +34,9 @@ export type MessageDelivery = {
 };
 
 export type MessageAttachment = {
-  tempAttachmentId?: string;
+  messageId?: string | null;
   attachmentId?: string;
+  tempAttachmentId?: string;
   fileUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
@@ -126,4 +127,12 @@ export type SelectedGif = {
   previewUrl: string;
   width: number;
   height: number;
+};
+
+export type TempPreviewFile = {
+  tempAttachmentId?: string;
+  previewUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  resourceType?: string;
 };

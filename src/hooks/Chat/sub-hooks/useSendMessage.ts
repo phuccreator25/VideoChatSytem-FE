@@ -16,6 +16,7 @@ import { compressMultipleImagesHelper } from "../../../helpers/compressImage.hel
 import { enqueueSnackbar } from "notistack";
 import { updateNewMessage } from "../../../helpers/chatMessage.helper";
 import type { AbortMultipartParams } from "../../../types/upload.type";
+import { validateChatFiles } from "../../../validations/upload.validation";
 
 export const useSendMessage = ({
   conversationId,
@@ -49,7 +50,6 @@ export const useSendMessage = ({
   const [previousUrl, setPreviousUrl] = useState<string | null>("");
 
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
-  const MAX_CHAT_FILE_SIZE = 1 * 1024 * 1024 * 1024; // 1 GB
 
 
   useEffect(() => {
@@ -162,6 +162,10 @@ export const useSendMessage = ({
     const content = inputText.trim();
     const voiceSnapshot = voiceData.recordedFile;
     const rawFiles = [...files, ...(voiceSnapshot ? [voiceSnapshot] : [])];
+
+    const validation = validateChatFiles(rawFiles);
+    if (!validation.isValid) return;
+
     const filesSnapshot = await compressMultipleImagesHelper(rawFiles);
     const gifSnapshot = selectedGif;
     const replyMessageSnapshot = messageReplyed;
@@ -355,20 +359,18 @@ export const useSendMessage = ({
   };
 
   const handleUploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
+    const selectedFiles = Array.from(event.target.files || []);
 
-    if (!files.length || !conversationId) return;
+    if (!selectedFiles.length || !conversationId) return;
 
-    const oversizedFile = files.find((f) => f.size > MAX_CHAT_FILE_SIZE);
-    if (oversizedFile) {
-      enqueueSnackbar(`File "${oversizedFile.name}" vượt quá dung lượng tối đa 1GB. Vui lòng chọn file nhỏ hơn!`, {
-        variant: "error",
-      });
+    const validation = validateChatFiles(selectedFiles, files.length);
+    if (!validation.isValid) {
       if (event.target) event.target.value = "";
       return;
     }
 
-    setFiles(files);
+    setFiles((prev) => [...prev, ...selectedFiles]);
+    if (event.target) event.target.value = "";
   };
 
   const handleRemoveFile = (index: number) => {

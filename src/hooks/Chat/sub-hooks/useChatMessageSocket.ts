@@ -33,7 +33,6 @@ import {
 import ConversationsAPI from "../../../api/Conversation.api";
 import { connectSocket } from "../../../socket/socket";
 import { setUserData, updateContactRelation } from "../../../redux/chat.redux";
-import useMergeAttachment from "../../../helpers/mergeAttachment.helper";
 import {
   deletePinnedMessage,
   setAllPinnedMessagesByConversation,
@@ -47,7 +46,6 @@ import type {
   deletePinMessageSocket,
   reactEmotionMessageSocket,
 } from "../../../types/chat/chat.socket.type";
-import mergeAttachments from "../../../helpers/mergeAttachment.helper";
 import { updateNewMessage } from "../../../helpers/chatMessage.helper";
 
 export const useChatMessageSocket = ({

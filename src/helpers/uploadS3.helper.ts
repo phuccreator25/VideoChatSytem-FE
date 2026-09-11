@@ -165,9 +165,11 @@ export const uploadMessageAttachments = async (
 
 export const updateAvatarS3 = async (avatarFile: File) => {
     const compressed = await compressImageHelper(avatarFile);
+    console.log({ compressed });
+
 
     const presignURL = await uploadAPI.onPresignURL({
-        files: { fileName: compressed.name, mimeType: compressed.type },
+        files: { fileName: compressed.name, mimeType: compressed.type, fileSize: compressed.size },
         type: "avatar",
     });
 

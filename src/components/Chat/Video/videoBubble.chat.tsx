@@ -28,7 +28,7 @@ import useDownloadFile from "../../../helpers/downloadFile.helper";
 // ── Types ─────────────────────────────────────────────────────────────────
 export type VideoBubbleProps = {
     messageId: string;
-    key: string | null | undefined;
+    key: string | null;
     src?: string | null;
     thumbnailUrl?: string | null;
     fileName?: string;
@@ -257,7 +257,7 @@ export function VideoBubble({
                             size="small"
                             onClick={() => {
                                 if (!conversationId) return;
-                                dispatch(onPinMessageConversation({ conversationId, messageId, attachmentId: key }))
+                                dispatch(onPinMessageConversation({ conversationId, messageId, attachmentId: key?.toString() }))
                             }}
                             sx={{
                                 p: 0.55,

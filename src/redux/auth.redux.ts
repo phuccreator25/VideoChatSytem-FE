@@ -26,7 +26,7 @@ export const onUpdateProfile = createAsyncThunk(
 
 export const onUpdateAvatar = createAsyncThunk(
   'user/onUpdateAvatar',
-  async (payload: FormData) => {
+  async (payload: { fileName: string }) => {
     const res = await userApi.onUpdateAvatar(payload)
     return res.data.data as ProfileData
   }

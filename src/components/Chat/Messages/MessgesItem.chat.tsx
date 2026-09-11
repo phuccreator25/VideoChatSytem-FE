@@ -4,7 +4,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
 
-import type { MessageType } from "../../../types/chat/chat.model.type";
+import type { MessageAttachment, MessageType, TempPreviewFile } from "../../../types/chat/chat.model.type";
 import { ImageFrame, type ImageFrameItem } from "../Images/ImageFrame.chat";
 import { FileGroupBubble } from "../Files/FileBubble.chat";
 import { ChatTime } from "../ChatTime/ChatTime.chat";
@@ -25,30 +25,6 @@ import type { AbortMultipartParams } from "../../../types/upload.type";
 
 import { uploadControllers } from "../../../helpers/uploadS3.helper";
 
-type TempPreviewFile = {
-  tempAttachmentId?: string;
-  previewUrl?: string;
-  fileName?: string;
-  fileSize?: number;
-  resourceType?: string;
-};
-
-type MessageAttachment = {
-  messageId?: string | null;
-  attachmentId?: string | null;
-  tempAttachmentId?: string | null;
-  fileUrl?: string | null;
-  fileName?: string | null;
-  fileSize?: string | number | null;
-  mimeType?: string | null;
-  resourceType?: string | null;
-  width?: number | null;
-  height?: number | null;
-  status?: string;
-  previewUrl?: string | null;
-  recordDuration?: number | null
-};  
-
 const getAttachments = (msg: MessageType) => {
   const attachments = (msg.attachments || []) as MessageAttachment[];
   return attachments.map((attachment) => {
@@ -60,7 +36,7 @@ const getAttachments = (msg: MessageType) => {
       (attachment.status === "pending" || attachment.status === "uploading" || msg.status === "sending") &&
       !attachment.fileUrl &&
       !isUploadingLocally &&
-      !(attachment as any).file;
+      !(attachment as MessageAttachment).file;
 
     return {
       ...attachment,
@@ -171,6 +147,24 @@ export const MessageItem = memo(function MessageItem({
 }) {
   const attachments = getAttachments(msg);
   const hasDoneAttachments = attachments.some((att) => att.status === "done");
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  //EMOTION
+  const [showEmotionTrigger, setShowEmotionTrigger] = useState(false);
+
+  const [anchorEl, setPopoverAnchor] = useState<HTMLElement | null>(null);
+
+  const handleCloseDetail = () => {
+    setPopoverAnchor(null);
+  };
+
+  useEffect(() => {
+    if (anchorEl && (msg.reactions?.length ?? 0) === 0) {
+      const timer = setTimeout(() => {
+        handleCloseDetail();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [msg.reactions?.length, anchorEl]);
   
   //Nếu khong có file nào done thì ẩn luôn
   if (isLeft && msg.type === "file" && !hasDoneAttachments) {
@@ -218,8 +212,6 @@ export const MessageItem = memo(function MessageItem({
 
   const replyMessage = msg.replyMessage || null
 
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
-
   const actionHandlers = {
     onReply: (m: MessageType) => setMessageReplyed(m),
     onShare: () => {
@@ -227,24 +219,6 @@ export const MessageItem = memo(function MessageItem({
     },
     onMore: (m: MessageType, anchor: HTMLElement) => console.log("more", m, anchor),
   };
-
-  //EMOTION
-  const [showEmotionTrigger, setShowEmotionTrigger] = useState(false);
-
-  const [anchorEl, setPopoverAnchor] = useState<HTMLElement | null>(null);
-
-  const handleCloseDetail = () => {
-    setPopoverAnchor(null);
-  };
-
-  useEffect(() => {
-    if (anchorEl && (msg.reactions?.length ?? 0) === 0) {
-      const timer = setTimeout(() => {
-        handleCloseDetail();
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [msg.reactions?.length, anchorEl]);
 
   return (
     <Stack
@@ -556,45 +530,19 @@ export const MessageItem = memo(function MessageItem({
               position: "relative",
               opacity: msg.status === "sending" ? 0.78 : 1,
               mb: (msg.reactions?.length ?? 0) > 0 ? "18px" : 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: isLeft ? "flex-start" : "flex-end",
+              gap: 0.5,
             }}
           >
-            <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant={'image'} />
-            {replyMessage && (
-              <Box sx={{ mb: 0.5 }}>
-                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
-              </Box>
-            )}
-            <ImageFrame
-              images={imageItems}
-              createdAt={msg.createdAt}
-              isLeft={isLeft}
-              status={effectiveStatus}
-              showStatus={shouldShowStatus}
-              onResend={() => onResend?.(msg)}
-            />
-            <EmotionPicker
-              reactions={msg.reactions || []}
-              isLeft={isLeft}
-              showTrigger={showEmotionTrigger}
-              onReact={onReact}
-              onOpenDetail={(el) => setPopoverAnchor(el)}
+            {/* 1 MessageActions duy nhất cho toàn bộ message */}
+            <MessageActions
               msg={msg}
+              isLeft={isLeft}
+              {...actionHandlers}
+              variant={imageItems.length > 0 ? "image" : "file"}
             />
-          </Box>
-        )}
-
-        {/* ── FILE: non-image attachments ── */}
-        {msg.type === "file" && nonImageAttachments.length > 0 && !msg.isRevoked && (
-          <Box
-            onMouseEnter={() => setShowEmotionTrigger(true)}
-            onMouseLeave={() => setShowEmotionTrigger(false)}
-            sx={{
-              position: "relative",
-              mb: (msg.reactions?.length ?? 0) > 0 ? "18px" : 0,
-            }}
-          >
-            {/* 1 MessageActions duy nhất cho toàn bộ group */}
-            <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant="file" />
 
             {/* Reply quote chỉ hiện 1 lần phía trên */}
             {replyMessage && (
@@ -603,7 +551,19 @@ export const MessageItem = memo(function MessageItem({
               </Box>
             )}
 
-            {/* Tất cả file trong 1 card */}
+            {/* ── FILE: images ── */}
+            {imageItems.length > 0 && (
+              <ImageFrame
+                images={imageItems}
+                createdAt={msg.createdAt}
+                isLeft={isLeft}
+                status={effectiveStatus}
+                showStatus={shouldShowStatus && nonImageAttachments.length === 0 && audioAttachment.length === 0 && videoAttachment.length === 0}
+                onResend={() => onResend?.(msg)}
+              />
+            )}
+
+            {/* ── FILE: non-image attachments ── */}
             {nonImageAttachments.length > 0 && (
               <FileGroupBubble
                 files={nonImageAttachments.map((a) => ({
@@ -618,7 +578,7 @@ export const MessageItem = memo(function MessageItem({
                 }))}
                 createdAt={msg.createdAt}
                 isLeft={isLeft}
-                showStatus={shouldShowStatus}
+                showStatus={shouldShowStatus && audioAttachment.length === 0 && videoAttachment.length === 0}
                 status={effectiveStatus}
                 onResend={() => onResend?.(msg)}
                 onCancelUpload={onCancelUpload}
@@ -629,7 +589,7 @@ export const MessageItem = memo(function MessageItem({
             {failedAttachmentCount > 0 && (
               <Box
                 sx={{
-                  mt: nonImageAttachments.length > 0 ? 0.4 : 0.9,
+                  mt: 0.4,
                   px: 1.2,
                   py: 0.8,
                   borderRadius: 2,
@@ -664,85 +624,41 @@ export const MessageItem = memo(function MessageItem({
                 )}
               </Box>
             )}
-            <EmotionPicker
-              reactions={msg.reactions || []}
-              isLeft={isLeft}
-              showTrigger={showEmotionTrigger}
-              onReact={onReact}
-              onOpenDetail={(el) => setPopoverAnchor(el)}
-              msg={msg}
-            />
-          </Box>
-        )}
 
-        {/* ── FILE: audio ── */}
-        {msg.type === "file" && audioAttachment.length > 0 && !msg.isRevoked && (
-          <Box
-            onMouseEnter={() => setShowEmotionTrigger(true)}
-            onMouseLeave={() => setShowEmotionTrigger(false)}
-            sx={{
-              position: "relative",
-              mb: (msg.reactions?.length ?? 0) > 0 ? "18px" : 0,
-            }}
-          >
-            <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant={'file'} />
-            {audioAttachment.map((a) => (
-              <AudioBubble
-                key={a.attachmentId}
-                src={a.fileUrl ?? ""}
-                durationProp={a.recordDuration ?? null}
-                isLeft={isLeft}
-                status={effectiveStatus}
-                showStatus={shouldShowStatus}
-                createdAt={msg.createdAt}
-                onResend={() => onResend?.(msg)}
-              />
-            ))}
-            <EmotionPicker
-              reactions={msg.reactions || []}
-              isLeft={isLeft}
-              showTrigger={showEmotionTrigger}
-              onReact={onReact}
-              onOpenDetail={(el) => setPopoverAnchor(el)}
-              msg={msg}
-            />
-          </Box>
-        )}
+            {/* ── FILE: audio ── */}
+            {audioAttachment.length > 0 &&
+              audioAttachment.map((a, idx) => (
+                <AudioBubble
+                  key={a.attachmentId || idx}
+                  src={a.fileUrl ?? ""}
+                  durationProp={a.recordDuration ?? null}
+                  isLeft={isLeft}
+                  status={effectiveStatus}
+                  showStatus={shouldShowStatus && videoAttachment.length === 0 && idx === audioAttachment.length - 1}
+                  createdAt={msg.createdAt}
+                  onResend={() => onResend?.(msg)}
+                />
+              ))}
 
-        {/* ── FILE: video ── */}
-        {msg.type === "file" && videoAttachment.length > 0 && !msg.isRevoked && (
-          <Box
-            onMouseEnter={() => setShowEmotionTrigger(true)}
-            onMouseLeave={() => setShowEmotionTrigger(false)}
-            sx={{
-              position: "relative",
-              mb: (msg.reactions?.length ?? 0) > 0 ? "18px" : 0,
-            }}
-          >
-            <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant="file" />
+            {/* ── FILE: video ── */}
+            {videoAttachment.length > 0 &&
+              videoAttachment.map((item, idx) => (
+                <VideoBubble
+                  messageId={msg.id}
+                  key={item.attachmentId || item.tempAttachmentId || idx}
+                  src={item.fileUrl || item.previewUrl || ""}
+                  thumbnailUrl={null}
+                  fileName={item.fileName ?? ""}
+                  fileSize={item.fileSize}
+                  isLeft={isLeft}
+                  status={msg.status}
+                  showStatus={shouldShowStatus && idx === videoAttachment.length - 1}
+                  createdAt={msg.createdAt}
+                  onResend={() => onResend?.(msg)}
+                />
+              ))}
 
-            {replyMessage && (
-              <Box sx={{ mb: 0.5 }}>
-                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
-              </Box>
-            )}
-
-            {videoAttachment.map((item) => (
-              console.log(item),
-              <VideoBubble
-                messageId={msg.id}
-                key={item.attachmentId || item.tempAttachmentId}
-                src={item.fileUrl || item.previewUrl || ""}
-                thumbnailUrl={null}
-                fileName={item.fileName ?? ""}
-                fileSize={item.fileSize}
-                isLeft={isLeft}
-                status={msg.status}
-                showStatus={shouldShowStatus}
-                createdAt={msg.createdAt}
-                onResend={() => onResend?.(msg)}
-              />
-            ))}
+            {/* 1 EmotionPicker duy nhất cho toàn bộ message */}
             <EmotionPicker
               reactions={msg.reactions || []}
               isLeft={isLeft}

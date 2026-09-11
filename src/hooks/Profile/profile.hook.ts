@@ -4,6 +4,8 @@ import { onGetProfile, onUpdateAvatar, onUpdateProfile } from "../../redux/auth.
 import type { AppDispatch } from "../../redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
+import { updateAvatarS3 } from "../../helpers/uploadS3.helper";
+import { validateAvatarFile } from "../../validations/upload.validation";
 
 export const useProfile = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -12,7 +14,6 @@ export const useProfile = () => {
     (state: RootState) => state.user.currentUser
   );
 
-  const MAX_SIZE = 2 * 1024 * 1024;
   const [messageFile, setMessageFile] = useState<string>("");
 
   const [showAlert, setShowAlert] = useState<boolean>();
@@ -47,31 +48,32 @@ export const useProfile = () => {
 
   const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     try {
+      setShowAlert(false)
       const file = event.target.files?.[0]
       if (!file) return
 
-      if (file.size > MAX_SIZE) {
-        setShowAlert(true)
-        setMessageFile('Ảnh đại diện không được vượt quá 2MB')
-        return
+      const avatarValidation = validateAvatarFile(file);
+      if (!avatarValidation.isValid) {
+        setShowAlert(true);
+        setMessageFile(avatarValidation.errorMessage || "Ảnh đại diện không hợp lệ");
+        return;
       }
 
-      const formData = new FormData()
-      formData.append('file', file)
+      const avatar = await updateAvatarS3(file);
 
-      const res = await dispatch(onUpdateAvatar(formData)).unwrap()
+      if (avatar?.success && avatar?.fileName) {
+        const res = await dispatch(onUpdateAvatar({ fileName: avatar.fileName })).unwrap()
 
-      if (res) {
-        enqueueSnackbar("Cập nhật thông tin thành công", {
-          variant: "success",
-        });
+        if (res) {
+          enqueueSnackbar("Cập nhật thông tin thành công", {
+            variant: "success",
+          });
+        }
       }
 
     } catch (error: any) {
       setShowAlert(true)
       setMessageFile(error?.message || 'Upload avatar thất bại')
-    } finally {
-      setShowAlert(false)
     }
   }
 
