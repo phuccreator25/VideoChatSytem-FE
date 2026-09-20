@@ -99,7 +99,7 @@ export function GifPopover({
       >
         <InputBase
           autoFocus
-          placeholder="Tìm kiếm GIF..."
+          placeholder="Search GIF..."
           value={gifSearch}
           onChange={(event) => setGifSearch(event.target.value)}
           sx={{

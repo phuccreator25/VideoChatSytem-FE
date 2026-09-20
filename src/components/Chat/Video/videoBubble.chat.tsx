@@ -28,9 +28,8 @@ import useDownloadFile from "../../../helpers/downloadFile.helper";
 // ── Types ─────────────────────────────────────────────────────────────────
 export type VideoBubbleProps = {
     messageId: string;
-    key: string | null;
+    attachmentId: string | null | undefined;
     src?: string | null;
-    thumbnailUrl?: string | null;
     fileName?: string;
     fileSize?: string | number | null;
     status?: string;
@@ -62,9 +61,8 @@ const formatFileSize = (size?: string | number | null): string => {
 // ── Main component ────────────────────────────────────────────────────────
 export function VideoBubble({
     messageId,
-    key,
+    attachmentId,
     src,
-    thumbnailUrl,
     fileName,
     fileSize,
     status,
@@ -179,8 +177,7 @@ export function VideoBubble({
                         component="video"
                         ref={videoRef}
                         src={src}
-                        poster={thumbnailUrl || undefined}
-                        preload="metadata"
+                        preload="auto"
                         playsInline
                         onTimeUpdate={handleTimeUpdate}
                         onLoadedMetadata={() => setDuration(videoRef.current?.duration || 0)}
@@ -257,7 +254,9 @@ export function VideoBubble({
                             size="small"
                             onClick={() => {
                                 if (!conversationId) return;
-                                dispatch(onPinMessageConversation({ conversationId, messageId, attachmentId: key?.toString() }))
+                                console.log("attachmentId1", attachmentId?.toString());
+
+                                dispatch(onPinMessageConversation({ conversationId, messageId, attachmentId: attachmentId?.toString() }))
                             }}
                             sx={{
                                 p: 0.55,

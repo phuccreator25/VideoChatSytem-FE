@@ -55,11 +55,11 @@ export default function LoginPage() {
             mb: 1,
           }}
         >
-          Đăng nhập
+          Sign In
         </Typography>
 
         <Typography sx={{ color: '#64748b', fontWeight: 400 }}>
-          Truy cập tài khoản để bắt đầu chat và gọi video.
+          Access your account to start chatting and video calling.
         </Typography>
       </Box>
 
@@ -72,7 +72,7 @@ export default function LoginPage() {
               type="email"
               placeholder="you@example.com"
               {...register("email", {
-                required: "Vui lòng nhập vào email"
+                required: "Please enter your email"
               })}
               error={!!errors.email}
               helperText={errors.email?.message}
@@ -80,11 +80,11 @@ export default function LoginPage() {
 
             <TextField
               fullWidth
-              label="Mật khẩu"
+              label="Password"
               type="password"
-              placeholder="Nhập mật khẩu"
+              placeholder="Enter password"
               {...register("password", {
-                required: "Vui lòng nhập vào mật khẩu"
+                required: "Please enter your password"
               })}
               error={!!errors.password}
               helperText={errors.password?.message}
@@ -101,7 +101,7 @@ export default function LoginPage() {
             >
               <FormControlLabel
                 control={<Checkbox />}
-                label="Ghi nhớ đăng nhập"
+                label="Remember me"
               />
 
               <Link
@@ -113,7 +113,7 @@ export default function LoginPage() {
                   color: '#1976d2',
                 }}
               >
-                Quên mật khẩu?
+                Forgot password?
               </Link>
             </Box>
 
@@ -132,7 +132,7 @@ export default function LoginPage() {
                 boxShadow: 'none',
               }}
             >
-              Đăng nhập
+              Sign In
             </Button>
           </Stack>
         </Box>
@@ -146,14 +146,14 @@ export default function LoginPage() {
           fontWeight: 400,
         }}
       >
-        Chưa có tài khoản?{' '}
+        Don't have an account?{' '}
         <Link
           component={RouterLink}
           to="/register"
           underline="hover"
           sx={{ fontWeight: 400, color: '#1976d2' }}
         >
-          Đăng ký ngay
+          Sign Up now
         </Link>
       </Typography>
     </Box>

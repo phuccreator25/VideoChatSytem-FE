@@ -40,7 +40,7 @@ function useAuth() {
         setisShowAlert(true);
         settypeAlert("success");
         enqueueSnackbar(
-          "Đăng ký thành công, vui lòng kiểm tra email để kích hoạt tài khoản",
+          "Registration successful. Please check your email to activate your account",
           {
             variant: "success",
           }
@@ -49,7 +49,7 @@ function useAuth() {
     } catch (error: any) {
       console.error("Register failed:", error.response?.data?.message);
       setisShowAlert(false);
-      enqueueSnackbar(error?.response?.data?.message || "Đăng ký thất bại", {
+      enqueueSnackbar(error?.response?.data?.message || "Registration failed", {
         variant: "error",
       });
       throw error;
@@ -65,7 +65,7 @@ function useAuth() {
       const res = await dispatch(onLogin({ email, password, deviceId })).unwrap();
 
       if (res) {
-        enqueueSnackbar("Đăng nhập thành công", {
+        enqueueSnackbar("Signed in successfully", {
           variant: "success",
         });
         navigate("/chat");
@@ -85,13 +85,13 @@ function useAuth() {
     try {
       await authApi.onLogOut();
 
-      enqueueSnackbar("Đăng xuất thành công", {
+      enqueueSnackbar("Signed out successfully", {
         variant: "success",
       });
     } catch (error: any) {
       console.error("Logout API failed:", error?.response?.data?.message);
 
-      enqueueSnackbar("Đã đăng xuất khỏi thiết bị này", {
+      enqueueSnackbar("Logged out from this device", {
         variant: "success",
       });
     } finally {
@@ -107,7 +107,7 @@ function useAuth() {
       const res = await authApi.onForgotPassword(data);
 
       if (res.status === 200) {
-        enqueueSnackbar("Đã gửi email đặt lại mật khẩu", {
+        enqueueSnackbar("Password reset email sent", {
           variant: "success",
         });
         navigate(`/check-email/${encodeURIComponent(data.email)}`);
@@ -115,7 +115,7 @@ function useAuth() {
     } catch (error: any) {
       console.error("Forgot failed:", error.response?.data?.message);
       enqueueSnackbar(
-        error?.response?.data?.message || "Gửi yêu cầu quên mật khẩu thất bại",
+        error?.response?.data?.message || "Failed to send password reset request",
         {
           variant: "error",
         }
@@ -129,7 +129,7 @@ function useAuth() {
   const handleResetPass = async (payload: ResetPasswordPayload) => {
     try {
       if (!token) {
-        throw new Error("Yêu cầu không hợp lệ. Vui lòng thử lại");
+        throw new Error("Invalid request. Please try again");
       }
 
       setLoading(true);
@@ -138,7 +138,7 @@ function useAuth() {
       const res = await authApi.onResetPassword(token, payload);
 
       if (res.status === 200) {
-        enqueueSnackbar("Đặt lại mật khẩu thành công", {
+        enqueueSnackbar("Password reset successfully", {
           variant: "success",
         });
         navigate(`/login?email=${encodeURIComponent(res.data.data.email)}`);
@@ -146,7 +146,7 @@ function useAuth() {
     } catch (error: any) {
       console.error("Reset failed:", error.response?.data?.message || error.message);
       enqueueSnackbar(
-        error?.response?.data?.message || error.message || "Đặt lại mật khẩu thất bại",
+        error?.response?.data?.message || error.message || "Failed to reset password",
         {
           variant: "error",
         }

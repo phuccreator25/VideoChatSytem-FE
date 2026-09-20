@@ -73,11 +73,11 @@ export const CallBubble = ({ msg, isLeft, shouldShowStatus, onReCall }: CallBubb
       const res = await callApi.onGenerateCallAISummary(callInfo.callId);
       if (res.data?.data) {
         setCurrentAiSummary(res.data.data);
-        enqueueSnackbar("Đã tạo tóm tắt cuộc gọi bằng AI thành công!", { variant: "success" });
+        enqueueSnackbar("AI call summary generated successfully!", { variant: "success" });
       }
     } catch (err: any) {
-      console.error("Lỗi khi tạo tóm tắt AI:", err);
-      enqueueSnackbar(err.response?.data?.message || "Không thể tạo tóm tắt AI vào lúc này.", {
+      console.error("AI summary error:", err);
+      enqueueSnackbar(err.response?.data?.message || "Unable to generate AI summary at this time.", {
         variant: "error",
       });
     } finally {
@@ -220,7 +220,7 @@ export const CallBubble = ({ msg, isLeft, shouldShowStatus, onReCall }: CallBubb
           </Box>
 
           {/* Nút Gọi lại (ReCall) */}
-          <Tooltip title={isVideo ? "Gọi lại (Video)" : "Gọi lại (Thoại)"}>
+          <Tooltip title={isVideo ? "Call Back (Video)" : "Call Back (Voice)"}>
             <IconButton
               size="small"
               className="recall-btn"
@@ -256,7 +256,7 @@ export const CallBubble = ({ msg, isLeft, shouldShowStatus, onReCall }: CallBubb
                   }}
                 />
               }
-              label={currentAiSummary ? "Xem Tóm Tắt AI ✨" : "Tạo Tóm Tắt AI ✨"}
+              label={currentAiSummary ? "View AI Summary ✨" : "Generate AI Summary ✨"}
               size="small"
               onClick={handleOpenAISummary}
               sx={{

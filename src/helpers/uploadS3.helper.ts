@@ -165,8 +165,6 @@ export const uploadMessageAttachments = async (
 
 export const updateAvatarS3 = async (avatarFile: File) => {
     const compressed = await compressImageHelper(avatarFile);
-    console.log({ compressed });
-
 
     const presignURL = await uploadAPI.onPresignURL({
         files: { fileName: compressed.name, mimeType: compressed.type, fileSize: compressed.size },
@@ -174,14 +172,14 @@ export const updateAvatarS3 = async (avatarFile: File) => {
     });
 
     if (!presignURL.data.data?.[0]?.presignedUrl) {
-        enqueueSnackbar("Đã xảy ra lỗi trong quá trình tải file. Vui lòng thử lại", { variant: "error" });
+        enqueueSnackbar("An error occurred while uploading file. Please try again", { variant: "error" });
         return { success: false };
     }
 
     const uploadRes = await putBinaryToS3(presignURL.data.data[0].presignedUrl, compressed, compressed.type);
 
     if (uploadRes.status !== 200) {
-        enqueueSnackbar("Đã xảy ra lỗi trong quá trình tải file. Vui lòng thử lại", { variant: "error" });
+        enqueueSnackbar("An error occurred while uploading file. Please try again", { variant: "error" });
         return { success: false };
     }
 

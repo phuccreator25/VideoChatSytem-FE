@@ -10,10 +10,14 @@ export type ProfileData = {
 };
 
 export type FileItem = {
-  key: string;
+  url: string;
   name: string;
   size: string;
-  type: "file" | "image";
+  type: string;
+  messageId: string;
+  attachmentId: string;
+  conversationId: string;
+  createdAt: Date;
 };
 
 export type ChangePasswordForm = {

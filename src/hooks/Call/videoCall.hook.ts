@@ -61,7 +61,6 @@ export const useVideoCall = () => {
   // Tự động bật ghi âm giọng nói khi cuộc gọi đã kết nối thành công
   useEffect(() => {
     if (webrtc.isAccepted) {
-
       startListening(currentUser?.fullname || "Người dùng", callInfo || incomingCall.callId || null);
     } else {
       stopListening();
@@ -139,14 +138,9 @@ export const useVideoCall = () => {
     }
   };
 
-  // ==========================================
-  // IV. CÁC TÁC VỤ PHỤ (SIDE EFFECTS)
-  // ==========================================
-
   // Bộ đếm thời gian cuộc gọi
   useEffect(() => {
     if (!webrtc.isAccepted) return;
-
     const interval = setInterval(() => {
       setCallDuration((prev) => prev + 1);
     }, 1000);

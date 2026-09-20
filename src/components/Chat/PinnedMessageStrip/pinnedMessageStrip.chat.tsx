@@ -47,7 +47,7 @@ export function PinnedMessageStrip({
     const latestSender = resolveSender(latest);
 
     // Các tin còn lại — chỉ show khi expanded
-    const rest = pinnedMessages.slice(1);
+    const pinMessagesNotShow = pinnedMessages.slice(1);
 
     const stripBg = {
         bgcolor: "rgba(255,255,255,0.5)",
@@ -72,8 +72,8 @@ export function PinnedMessageStrip({
                 </Box>
 
                 {/* Chỉ show toggle khi có > 1 ghim */}
-                {rest.length > 0 && (
-                    <Tooltip title={expanded ? "Collapse" : `View ${rest.length} other messages`} placement="left" arrow>
+                {pinMessagesNotShow.length > 0 && (
+                    <Tooltip title={expanded ? "Collapse" : `View ${pinMessagesNotShow.length} other messages`} placement="left" arrow>
                         <IconButton
                             size="small"
                             onClick={() => setExpanded((v) => !v)}
@@ -97,13 +97,13 @@ export function PinnedMessageStrip({
             </Box>
 
             {/* Phần mở rộng: các ghim còn lại */}
-            {rest.length > 0 && (
+            {pinMessagesNotShow.length > 0 && (
                 <Collapse in={expanded} timeout={180}>
                     <Box sx={{ px: 2, pb: "6px" }}>
-                        {rest.map((pin) => {
+                        {pinMessagesNotShow.map((pin) => {
                             const { avatar, name } = resolveSender(pin);
                             return (
-                                <Box key={pin.id && pin.attachmentId}>
+                                <Box key={pin.attachmentId ? `${pin.id}-${pin.attachmentId}` : pin.id}>
                                     <Divider sx={{ borderColor: "rgba(148,163,184,0.15)", mx: "32px" }} />
                                     <PinRow
                                         pin={pin}

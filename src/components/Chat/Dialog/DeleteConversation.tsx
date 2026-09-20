@@ -21,7 +21,7 @@ type DialogDeleteConversationProps = {
 
 export function DialogDeleteConversation({ isOpen, onClose, userData, isLoading, onConfirm }: DialogDeleteConversationProps) {
     
-    const displayName = userData?.nickname || userData?.fullname || "Người dùng"
+    const displayName = userData?.nickname || userData?.fullname || "User"
 
     return (
          <Dialog

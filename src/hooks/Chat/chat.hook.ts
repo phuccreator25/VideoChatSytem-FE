@@ -267,6 +267,7 @@ export function useChatFrame() {
       if (!targetConversationIds.length || !messageId) return;
 
       await ChatAPI.onForwardMessage(messageId, targetConversationIds);
+
     } catch (error) {
       console.log("ERROE SHARE: ", error);
     }

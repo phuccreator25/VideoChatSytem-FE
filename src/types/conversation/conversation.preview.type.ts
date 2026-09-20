@@ -17,32 +17,33 @@ export type Conversation = {
   unread?: number;
   active?: boolean;
   userId?: string;
+  isBlocked: boolean;
 };
 
 export type Message =
   | {
-      id: string;
-      type: "text";
-      sender: "left" | "right";
-      name: string;
-      avatar: string;
-      time: string;
-      content: string;
-    }
+    id: string;
+    type: "text";
+    sender: "left" | "right";
+    name: string;
+    avatar: string;
+    time: string;
+    content: string;
+  }
   | {
-      id: string;
-      type: "file";
-      sender: "left" | "right";
-      name: string;
-      avatar: string;
-      time: string;
-      fileName: string;
-      fileSize: string;
-    }
+    id: string;
+    type: "file";
+    sender: "left" | "right";
+    name: string;
+    avatar: string;
+    time: string;
+    fileName: string;
+    fileSize: string;
+  }
   | {
-      id: string;
-      type: "typing";
-      sender: "left" | "right";
-      name: string;
-      avatar: string;
-    };
+    id: string;
+    type: "typing";
+    sender: "left" | "right";
+    name: string;
+    avatar: string;
+  };

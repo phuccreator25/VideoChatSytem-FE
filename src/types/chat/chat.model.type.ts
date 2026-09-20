@@ -35,8 +35,8 @@ export type MessageDelivery = {
 
 export type MessageAttachment = {
   messageId?: string | null;
-  attachmentId?: string;
-  tempAttachmentId?: string;
+  attachmentId?: string | null;
+  tempAttachmentId?: string | null;
   fileUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;

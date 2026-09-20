@@ -231,7 +231,7 @@ function useInvitation() {
       console.log("ERROR ADD CONTACT:", error?.message);
 
       enqueueSnackbar(
-        error?.response?.data?.message || "Gửi lời mời kết bạn thất bại",
+        error?.response?.data?.message || "Failed to send friend request",
         {
           variant: "error",
         },

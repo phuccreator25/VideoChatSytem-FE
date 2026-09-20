@@ -279,7 +279,7 @@ export const VideoCallMediaView = ({
             }}
           />
           <Typography sx={{ color: "#ffffff", fontSize: 12, fontWeight: 700, letterSpacing: "0.02em" }}>
-            {ui.connectionStatusText || "Đang kết nối lại..."}
+            {ui.connectionStatusText || "Reconnecting..."}
           </Typography>
         </Box>
       )}

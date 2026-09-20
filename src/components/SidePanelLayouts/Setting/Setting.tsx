@@ -134,7 +134,7 @@ export function Setting({ onRailChange }: SettingProps) {
                   lineHeight: 1.1,
                 }}
               >
-                Tùy chọn
+                Settings
               </Typography>
 
               <Typography
@@ -144,7 +144,7 @@ export function Setting({ onRailChange }: SettingProps) {
                   color: "#727887",
                 }}
               >
-                Quản lý tài khoản, quyền riêng tư và các thiết lập hệ thống
+                Manage your account, privacy, and system configurations
               </Typography>
             </Box>
           </Stack>
@@ -171,7 +171,7 @@ export function Setting({ onRailChange }: SettingProps) {
               color: "#8d93a1",
             }}
           >
-            Cài đặt tài khoản
+            Account Settings
           </Typography>
 
           <List disablePadding>
@@ -193,7 +193,7 @@ export function Setting({ onRailChange }: SettingProps) {
               color: "#8d93a1",
             }}
           >
-            Hỗ trợ & bảo mật
+            Support & Security
           </Typography>
 
           <List disablePadding>

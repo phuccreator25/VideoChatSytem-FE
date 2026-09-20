@@ -83,15 +83,15 @@ export default function useMessageSocketListener({
           const conversation = conversations.find(
             (c) => String(c.id) === String(payload.conversationId),
           );
-          const senderName = conversation?.name || "Người dùng";
+          const senderName = conversation?.name || "User";
 
-          let messageContent = "Đã gửi một tin nhắn";
+          let messageContent = "Sent a message";
           if (payload.type === "text" && payload.content) {
             messageContent = payload.content;
           } else if (payload.type === "file") {
-            messageContent = "Đã gửi một tệp đính kèm";
+            messageContent = "Sent an attachment";
           } else if (payload.type === "gif") {
-            messageContent = "Đã gửi một ảnh GIF";
+            messageContent = "Sent a GIF";
           }
 
           showTabNotification(senderName, messageContent);

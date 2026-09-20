@@ -63,7 +63,7 @@ export const CallSummaryModal = ({
     if (!aiSummary) return;
     const textToCopy = `📌 TÓM TẮT CUỘC GỌI AI:\n${aiSummary.summary || ""}\n\n🎯 Ý CHÍNH:\n${(aiSummary.keyPoints || []).map((k) => `• ${k}`).join("\n")}\n\n✅ VIỆC CẦN LÀM:\n${(aiSummary.actionItems || []).map((a) => `• ${a}`).join("\n")}`;
     navigator.clipboard.writeText(textToCopy);
-    enqueueSnackbar("Đã sao chép nội dung tóm tắt vào clipboard!", { variant: "success" });
+    enqueueSnackbar("Summary copied to clipboard!", { variant: "success" });
   };
 
   return (
@@ -122,7 +122,7 @@ export const CallSummaryModal = ({
                 WebkitTextFillColor: "transparent",
               }}
             >
-              Trí Tuệ Nhân Tạo Tóm Tắt
+              AI Call Summary
             </Typography>
             <Typography variant="caption" sx={{ color: "#94a3b8", display: "block", fontSize: 11.5 }}>
               Powered by Gemini AI Intelligence
@@ -172,10 +172,10 @@ export const CallSummaryModal = ({
               </Box>
             </Box>
             <Typography sx={{ color: "#cbd5e1", fontWeight: 600, fontSize: 15 }}>
-              Gemini AI đang phân tích hội thoại...
+              Gemini AI is analyzing the conversation...
             </Typography>
             <Typography variant="caption" sx={{ color: "#64748b", fontSize: 12 }}>
-              Vui lòng chờ trong giây lát
+              Please wait a moment
             </Typography>
           </Stack>
         ) : !aiSummary && onGenerateAI ? (
@@ -197,10 +197,10 @@ export const CallSummaryModal = ({
             </Box>
             <Box textAlign="center">
               <Typography sx={{ fontSize: 16, fontWeight: 700, color: "#f1f5f9" }}>
-                Cuộc gọi có bản ghi lời thoại
+                Call has transcript recording
               </Typography>
               <Typography variant="body2" sx={{ color: "#94a3b8", mt: 0.5, maxWidth: 360 }}>
-                Nhấn vào nút bên dưới để AI tự động phân tích ý chính và trích xuất danh sách công việc cần làm.
+                Click the button below to automatically generate key points and action items.
               </Typography>
             </Box>
 
@@ -223,7 +223,7 @@ export const CallSummaryModal = ({
                 },
               }}
             >
-              Tạo Tóm Tắt Bằng AI
+              Generate AI Summary
             </Button>
           </Stack>
         ) : (
@@ -253,9 +253,9 @@ export const CallSummaryModal = ({
                 },
               }}
             >
-              <Tab label="📌 Tóm tắt" />
-              <Tab label={`✅ Việc cần làm (${aiSummary?.actionItems?.length || 0})`} />
-              <Tab label={`💬 Hội thoại (${transcript.length})`} />
+              <Tab label="📌 Summary" />
+              <Tab label={`✅ Action Items (${aiSummary?.actionItems?.length || 0})`} />
+              <Tab label={`💬 Transcript (${transcript.length})`} />
             </Tabs>
 
             {/* TAB 0: TÓM TẮT CHUNG */}
@@ -270,7 +270,7 @@ export const CallSummaryModal = ({
                   }}
                 >
                   <Typography sx={{ fontSize: 14, color: "#e2e8f0", lineHeight: 1.6 }}>
-                    {aiSummary?.summary || "Không có tóm tắt."}
+                    {aiSummary?.summary || "No summary available."}
                   </Typography>
                 </Box>
 
@@ -279,7 +279,7 @@ export const CallSummaryModal = ({
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.2 }}>
                       <LightbulbOutlinedIcon sx={{ color: "#f59e0b", fontSize: 20 }} />
                       <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#cbd5e1" }}>
-                        Các ý chính đã thống nhất:
+                        Agreed Key Points:
                       </Typography>
                     </Stack>
                     <Stack spacing={1}>
@@ -332,7 +332,7 @@ export const CallSummaryModal = ({
                 </Stack>
               ) : (
                 <Typography sx={{ color: "#64748b", fontSize: 13.5, fontStyle: "italic", py: 2 }}>
-                  Không có công việc cụ thể được ghi nhận.
+                  No specific action items recorded.
                 </Typography>
               )}
             </CustomTabPanel>
@@ -370,7 +370,7 @@ export const CallSummaryModal = ({
                 <Stack alignItems="center" sx={{ py: 3 }}>
                   <RecordVoiceOverIcon sx={{ color: "#64748b", fontSize: 32, mb: 1 }} />
                   <Typography sx={{ color: "#64748b", fontSize: 13 }}>
-                    Chưa có dữ liệu bản ghi lời thoại.
+                    No transcript data available.
                   </Typography>
                 </Stack>
               )}
@@ -395,7 +395,7 @@ export const CallSummaryModal = ({
               "&:hover": { color: "#c084fc", bgcolor: "rgba(192, 132, 252, 0.08)" },
             }}
           >
-            Sao Chép Tóm Tắt
+            Copy Summary
           </Button>
         )}
         <Button
@@ -411,7 +411,7 @@ export const CallSummaryModal = ({
             "&:hover": { bgcolor: "rgba(255, 255, 255, 0.15)" },
           }}
         >
-          Đóng
+          Close
         </Button>
       </Box>
     </Dialog>

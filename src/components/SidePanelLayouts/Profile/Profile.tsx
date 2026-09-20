@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
@@ -14,47 +13,19 @@ import Alert from "@mui/material/Alert";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import { customScrollbarSx } from "../../../utils/CustomScroll";
-import type { FileItem } from "../../../types/profile/profile.model.type";
 import { AboutSection } from "./About/AboutSection.profile";
 import { AttachedFilesSection } from "./AttachedFile/AttachedSection.profile";
 import { useProfile } from "../../../hooks/Profile/profile.hook";
 import OpenAvatar from "./OpenAvatar/OpenAvatar.profile";
 
-const attachedFiles: FileItem[] = [
-    {
-        key: "admin-a",
-        name: "Admin-A.zip",
-        size: "12.5 MB",
-        type: "file",
-    },
-    {
-        key: "image-1",
-        name: "Image-1.jpg",
-        size: "4.2 MB",
-        type: "image",
-    },
-    {
-        key: "image-2",
-        name: "Image-2.jpg",
-        size: "3.1 MB",
-        type: "image",
-    },
-    {
-        key: "landing-a",
-        name: "Landing-A.zip",
-        size: "6.7 MB",
-        type: "file",
-    },
-];
-
 export function MyProfile() {
-    const { initialProfile, handleUpdateUser, handleAvatarChange, messageFile, showAlert } = useProfile();
+    const { ui, data, handlers } = useProfile();
+    const { activeTab, loadingAttachedFiles, openAvatarReview, currentPage, totalPage } = ui;
+    const { initialProfile } = data;
+    const { handleAvatarChange, setOpenAvatarReview, setActiveTab, messageFile, showAlert, attachedFiles, handleUpdateUser, onGetAllAttachedFiles, setCurrentPage } = handlers;
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-    const [activeTab, setActiveTab] = useState<number>(0);
-    const [openAvatarReview, setOpenAvatarReview] = useState(false);
 
     return (
         <>
@@ -243,7 +214,12 @@ export function MyProfile() {
                         {/* Pill Segment Tabs */}
                         <Tabs
                             value={activeTab}
-                            onChange={(_, val) => setActiveTab(val)}
+                            onChange={(_, val) => {
+                                setActiveTab(val);
+                                if (val === 1) {
+                                    onGetAllAttachedFiles(val);
+                                }
+                            }}
                             variant="fullWidth"
                             sx={{
                                 minHeight: 38,
@@ -291,7 +267,13 @@ export function MyProfile() {
                             <AttachedFilesSection
                                 files={attachedFiles}
                                 expanded={true}
-                                onChange={() => {}}
+                                page={currentPage}
+                                totalPage={totalPage}
+                                loading={loadingAttachedFiles}
+                                onChange={(newPage) => {
+                                    setCurrentPage(newPage);
+                                    onGetAllAttachedFiles(activeTab, newPage);
+                                }}
                             />
                         )}
 

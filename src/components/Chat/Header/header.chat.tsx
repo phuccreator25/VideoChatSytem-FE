@@ -16,7 +16,6 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import CallOutlinedIcon from "@mui/icons-material/CallOutlined";
 import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
-import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 
@@ -176,12 +175,6 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
       >
         {(!isMobile || !isSearchExpanded) && (
           <>
-            <Tooltip title="More">
-              <IconButton sx={actionButtonSx}>
-                <MoreHorizOutlinedIcon />
-              </IconButton>
-            </Tooltip>
-
             <Tooltip title="Profile">
               <IconButton sx={actionButtonSx} onClick={onOpenProfileDrawer}>
                 <PersonOutlineOutlinedIcon />

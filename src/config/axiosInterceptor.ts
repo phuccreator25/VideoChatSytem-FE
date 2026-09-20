@@ -34,7 +34,7 @@ axiosInterceptor.interceptors.response.use(
     const originalRequest = error?.config
 
     if (!originalRequest) {
-      enqueueSnackbar('Có lỗi không xác định xảy ra.', { variant: 'error' })
+      enqueueSnackbar('An unknown error occurred.', { variant: 'error' })
       return Promise.reject(error)
     }
 
@@ -42,7 +42,7 @@ axiosInterceptor.interceptors.response.use(
     const isRefreshRequest = originalRequest.url?.includes('/auth/refresh')
     const isLoginRequest = originalRequest.url?.includes('/auth/login')
     const message =
-      error.response?.data?.message || error.message || 'Đã có lỗi xảy ra'
+      error.response?.data?.message || error.message || 'An error occurred'
 
     if (!isUnauthorized || isRefreshRequest || isLoginRequest) {
       enqueueSnackbar(message, { variant: 'error' })
@@ -50,7 +50,7 @@ axiosInterceptor.interceptors.response.use(
     }
 
     if (originalRequest._retry) {
-      enqueueSnackbar('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', {
+      enqueueSnackbar('Session expired. Please sign in again.', {
         variant: 'error',
       })
       return Promise.reject(error)
@@ -81,7 +81,7 @@ axiosInterceptor.interceptors.response.use(
 
       enqueueSnackbar(
         refreshError?.response?.data?.message ||
-        'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+        'Session expired. Please sign in again.',
         { variant: 'error' }
       )
 

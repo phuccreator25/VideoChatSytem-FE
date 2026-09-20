@@ -4,8 +4,6 @@ export default function useDownloadFile() {
   const onHandleDownloadFile = async (url: string, fileName = "download") => {
     try {
       if (!url) return;
-      console.log(url);
-      
 
       const res = await fetch(url);
 

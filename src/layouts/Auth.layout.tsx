@@ -14,19 +14,19 @@ import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 const features = [
   {
     icon: <ChatRoundedIcon fontSize="small" />,
-    label: 'Chat thời gian thực',
+    label: 'Real-time chat',
   },
   {
     icon: <VideocamRoundedIcon fontSize="small" />,
-    label: 'Video call mượt',
+    label: 'Smooth video calls',
   },
   {
     icon: <SecurityRoundedIcon fontSize="small" />,
-    label: 'Bảo mật tài khoản',
+    label: 'Secure your account',
   },
   {
     icon: <BoltRoundedIcon fontSize="small" />,
-    label: 'Phản hồi nhanh',
+    label: 'Quick response',
   },
 ];
 
@@ -147,7 +147,7 @@ export default function AuthLayout() {
                       mb: 2,
                     }}
                   >
-                    Kết nối team nhanh hơn với chat và video call realtime
+                    Connect with your team faster with real-time chat and video calls
                   </Typography>
 
                   <Typography
@@ -162,8 +162,7 @@ export default function AuthLayout() {
                       mb: 4,
                     }}
                   >
-                    Không gian làm việc hiện đại cho nhắn tin, họp video, trao đổi
-                    nhanh và cộng tác mượt mà trong một nền tảng thống nhất.
+                    Connect with your team faster with real-time chat and video calls
                   </Typography>
 
                   <Stack direction="row" flexWrap="wrap" gap={1.2}>
@@ -199,9 +198,9 @@ export default function AuthLayout() {
                   }}
                 >
                   {[
-                    { value: '99.9%', label: 'Kết nối ổn định' },
-                    { value: '<200ms', label: 'Phản hồi nhanh' },
-                    { value: '24/7', label: 'Luôn sẵn sàng' },
+                    { value: '99.9%', label: 'Stable connection' },
+                    { value: '<200ms', label: 'Fast response' },
+                    { value: '24/7', label: 'Always ready' },
                   ].map((item) => (
                     <Box
                       key={item.label}
@@ -225,7 +224,7 @@ export default function AuthLayout() {
                         {item.value}
                       </Typography>
                       <Typography
-                        variant="body2"
+                        variant="caption"
                         sx={{
                           fontFamily: 'inherit',
                           color: '#64748b',
@@ -282,7 +281,7 @@ export default function AuthLayout() {
                       mb: 1,
                     }}
                   >
-                    Chào mừng bạn quay lại
+                    Welcome back
                   </Typography>
                   <Typography
                     sx={{
@@ -291,7 +290,7 @@ export default function AuthLayout() {
                       fontWeight: 400,
                     }}
                   >
-                    Đăng nhập để tiếp tục trò chuyện và kết nối với mọi người.
+                    Login to continue chatting and connecting with everyone.
                   </Typography>
                 </Box>
 

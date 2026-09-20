@@ -52,15 +52,15 @@ export default function RegisterPage() {
             mb: 1,
           }}
         >
-          Đăng ký
+          Sign Up
         </Typography>
         <Typography sx={{ color: "#64748b", fontWeight: 400 }}>
-          Tạo tài khoản để bắt đầu chat và gọi video.
+          Create an account to start chatting and video calling.
         </Typography>
         {isShowAlert && (
           <Alert icon={<CheckIcon fontSize="inherit" />} severity={(typeAlert as AlertColor) || "success"}>
-            Đã đăng ký tài khoản thành công. Vui lòng kiểm tra Email của bạn để
-            tiến hành kích hoạt tài khoản
+            Account registered successfully. Please check your email to
+            activate your account.
           </Alert>
         )}
       </Box>
@@ -69,10 +69,10 @@ export default function RegisterPage() {
         <Stack spacing={2.2}>
           <TextField
             fullWidth
-            label="Họ và tên"
-            placeholder="Nhập họ và tên"
+            label="Full Name"
+            placeholder="Enter full name"
             {...register("fullname", {
-              required: "Vui lòng nhập họ và tên",
+              required: "Please enter your full name",
             })}
             error={!!errors.fullname}
             helperText={errors.fullname?.message}
@@ -84,10 +84,10 @@ export default function RegisterPage() {
             type="email"
             placeholder="you@example.com"
             {...register("email", {
-              required: "Vui lòng nhập email",
+              required: "Please enter your email",
               pattern: {
                 value: /^\S+@\S+\.\S+$/,
-                message: "Email không hợp lệ",
+                message: "Invalid email address",
               },
             })}
             error={!!errors.email}
@@ -96,20 +96,20 @@ export default function RegisterPage() {
 
           <TextField
             fullWidth
-            label="Mật khẩu"
+            label="Password"
             type="password"
-            placeholder="Nhập mật khẩu"
+            placeholder="Enter password"
             {...register("password", {
-              required: "Vui lòng nhập vào mật khẩu",
+              required: "Please enter password",
                 minLength: {
                   value: 8,
-                  message: "Mật khẩu phải có ít nhất 8 ký tự",
+                  message: "Password must be at least 8 characters long",
                 },
                 pattern: {
                   value:
                     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/,
                   message:
-                    "Mật khẩu phải gồm ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt",
+                    "Password must be at least 8 characters, containing uppercase, lowercase, numbers, and special characters",
                 },
             })}
             error={!!errors.password}
@@ -118,13 +118,13 @@ export default function RegisterPage() {
 
           <TextField
             fullWidth
-            label="Xác nhận mật khẩu"
+            label="Confirm Password"
             type="password"
-            placeholder="Nhập lại mật khẩu"
+            placeholder="Re-enter password"
             {...register("confirmPassword", {
-              required: "Vui lòng xác nhận mật khẩu",
+              required: "Please confirm password",
               validate: (value) =>
-                value === password || "Mật khẩu xác nhận không khớp",
+                value === password || "Passwords do not match",
             })}
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword?.message}
@@ -134,11 +134,11 @@ export default function RegisterPage() {
             control={
               <Checkbox
                 {...register("agree", {
-                  required: "Bạn cần đồng ý với điều khoản",
+                  required: "You must agree to the terms",
                 })}
               />
             }
-            label="Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật"
+            label="I agree to the Terms of Service and Privacy Policy"
           />
 
           {errors.agree && (
@@ -162,7 +162,7 @@ export default function RegisterPage() {
               boxShadow: "none",
             }}
           >
-            Đăng ký
+            Sign Up
           </Button>
         </Stack>
       </form>
@@ -175,14 +175,14 @@ export default function RegisterPage() {
           fontWeight: 400,
         }}
       >
-        Đã có tài khoản?{" "}
+        Already have an account?{" "}
         <Link
           component={RouterLink}
           to="/login"
           underline="hover"
           sx={{ fontWeight: 400, color: "#1976d2" }}
         >
-          Đăng nhập ngay
+          Sign In
         </Link>
       </Typography>
     </Box>

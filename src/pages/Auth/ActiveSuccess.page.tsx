@@ -49,7 +49,7 @@ export default function ActivateSuccessPage() {
             mb: 1,
           }}
         >
-          Kích hoạt tài khoản
+          Account Activation
         </Typography>
 
         <Typography
@@ -58,7 +58,7 @@ export default function ActivateSuccessPage() {
             fontWeight: 400,
           }}
         >
-          Tài khoản của bạn đã được kích hoạt thành công.
+          Your account has been successfully activated.
         </Typography>
 
         <Alert
@@ -66,8 +66,8 @@ export default function ActivateSuccessPage() {
           severity="success"
           sx={{ mt: 2 }}
         >
-          Kích hoạt tài khoản thành công. Bây giờ bạn có thể đăng
-          nhập để bắt đầu chat và gọi video.
+          Account activated successfully. You can now log in to start
+          chatting and video calling.
         </Alert>
       </Box>
 
@@ -90,7 +90,7 @@ export default function ActivateSuccessPage() {
             fontSize: 18,
           }}
         >
-          Chúc mừng! Tài khoản của bạn đã sẵn sàng.
+          Congratulations! Your account is ready.
         </Typography>
 
         <Typography
@@ -101,7 +101,7 @@ export default function ActivateSuccessPage() {
             fontSize: 14,
           }}
         >
-          Nhấn nút bên dưới để đăng nhập và bắt đầu trải nghiệm ứng dụng.
+          Click the button below to log in and get started.
         </Typography>
 
         <Button
@@ -119,7 +119,7 @@ export default function ActivateSuccessPage() {
             boxShadow: "none",
           }}
         >
-          Đi đến trang đăng nhập
+          Go to Sign In
         </Button>
       </Stack>
     </Box>

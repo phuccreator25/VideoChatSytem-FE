@@ -91,9 +91,6 @@ export function MessageMorePopover({
             onClose()
         } catch (error: any) {
             console.log('DELETE MESSAGES ERROR: ', error);
-            enqueueSnackbar('Message delete error', {
-                variant: 'error'
-            })
         }
     }
 
@@ -112,9 +109,6 @@ export function MessageMorePopover({
             onClose()
         } catch (error: any) {
             console.log('REVOKE MESSAGES ERROR: ', error);
-            enqueueSnackbar('Message revoke error', {
-                variant: 'error'
-            })
         }
     }
 

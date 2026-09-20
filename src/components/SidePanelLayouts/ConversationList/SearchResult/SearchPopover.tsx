@@ -421,7 +421,7 @@ export const SearchPopover = ({
                         </Stack>
 
                         <Chip
-                          label="Nhắn tin"
+                          label="Message"
                           size="small"
                           icon={<ArrowForwardIosRoundedIcon sx={{ fontSize: "9px !important" }} />}
                           sx={{

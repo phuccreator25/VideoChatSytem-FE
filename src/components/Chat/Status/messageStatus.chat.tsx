@@ -4,7 +4,7 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import DoneIcon from "@mui/icons-material/Done";
 
 type StatusIndicatorProps = {
-  status?: string;
+  status?: string | null;
   type?: "message" | "attachment";
   onResend?: () => void;
 };

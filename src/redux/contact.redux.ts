@@ -43,7 +43,6 @@ export const onGetUserOnlines = createAsyncThunk(
 const contactSlice = createSlice({
   name: "contact",
   initialState,
-
   reducers: {
     setOnlineUsers: (state, action) => {
       state.onlineUsers = action.payload;
@@ -62,6 +61,19 @@ const contactSlice = createSlice({
         );
       }
     },
+
+    updateInfoUserOnline: (state, action) => {
+      const { userId, name } = action.payload;
+      state.onlineUsers = state.onlineUsers.map(user => {
+        if (user.userId === userId) {
+          return {
+            ...user,
+            name
+          }
+        }
+        return user
+      })
+    }
   },
 
   extraReducers: (builder) => {
@@ -115,6 +127,7 @@ const contactSlice = createSlice({
 export const {
   setOnlineUsers,
   updateUserPresence,
+  updateInfoUserOnline,
 } = contactSlice.actions;
 
 export const contactReducer = contactSlice.reducer;

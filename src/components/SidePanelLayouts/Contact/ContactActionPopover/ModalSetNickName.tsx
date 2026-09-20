@@ -32,7 +32,7 @@ export function SetNicknameModal({
             const result = await onConfirm?.({ ...selectedContact, nickname });
             
             if (result) {
-                enqueueSnackbar("Đã cập nhật biệt danh thành công", {
+                enqueueSnackbar("Nickname updated successfully", {
                     variant: 'success'
                 });
                 onClose();

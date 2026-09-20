@@ -82,14 +82,14 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
     try {
       await dispatch(onUpdateProfile(data)).unwrap()
 
-      enqueueSnackbar("Đổi mật khẩu thành công", {
+      enqueueSnackbar("Password changed successfully", {
         variant: "success",
       })
 
       reset()
       onClose()
     } catch (error: any) {
-      enqueueSnackbar(error?.response?.data?.message || "Đổi mật khẩu thất bại", {
+      enqueueSnackbar(error?.response?.data?.message || "Failed to change password", {
         variant: "error",
       })
     }

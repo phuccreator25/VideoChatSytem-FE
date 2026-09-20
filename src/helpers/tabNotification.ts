@@ -63,52 +63,52 @@ export const playNotificationSound = () => {
     // First chime (higher note, brief ping)
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
-    
+
     osc1.type = "sine";
     osc1.frequency.setValueAtTime(1046.50, time); // C6
     osc1.frequency.exponentialRampToValueAtTime(1567.98, time + 0.08); // G6
-    
+
     gain1.gain.setValueAtTime(0.0, time);
     gain1.gain.linearRampToValueAtTime(0.12, time + 0.03);
     gain1.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
-    
+
     osc1.connect(gain1);
     gain1.connect(ctx.destination);
-    
+
     osc1.start(time);
     osc1.stop(time + 0.3);
 
     // Second chime (chord, slightly delayed, warmer sound)
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
-    
+
     osc2.type = "sine";
     osc2.frequency.setValueAtTime(1318.51, time + 0.08); // E6
-    
+
     gain2.gain.setValueAtTime(0.0, time + 0.08);
     gain2.gain.linearRampToValueAtTime(0.1, time + 0.11);
     gain2.gain.exponentialRampToValueAtTime(0.001, time + 0.45);
-    
+
     osc2.connect(gain2);
     gain2.connect(ctx.destination);
-    
+
     osc2.start(time + 0.08);
     osc2.stop(time + 0.5);
 
     // Subtle third harmonic for resonance
     const osc3 = ctx.createOscillator();
     const gain3 = ctx.createGain();
-    
+
     osc3.type = "sine";
     osc3.frequency.setValueAtTime(1567.98, time + 0.08); // G6
-    
+
     gain3.gain.setValueAtTime(0.0, time + 0.08);
     gain3.gain.linearRampToValueAtTime(0.05, time + 0.11);
     gain3.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
-    
+
     osc3.connect(gain3);
     gain3.connect(ctx.destination);
-    
+
     osc3.start(time + 0.08);
     osc3.stop(time + 0.45);
 
@@ -124,7 +124,7 @@ export const setFaviconBadge = (hasBadge: boolean) => {
   if (typeof document === "undefined") return;
 
   let faviconLink = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-  
+
   if (!faviconLink) {
     // Dynamically insert a favicon link if it doesn't exist
     faviconLink = document.createElement("link");
@@ -202,11 +202,11 @@ export const showTabNotification = (senderName: string, messageText: string) => 
   let showNotificationTitle = true;
 
   const truncateMessage = (text: string, maxLen: number = 30) => {
-    if (!text) return "đã gửi tin nhắn";
+    if (!text) return "You have a new message";
     return text.length > maxLen ? text.substring(0, maxLen) + "..." : text;
   };
 
-  const cleanSenderName = senderName || "Ai đó";
+  const cleanSenderName = senderName || "Unknown";
   const notificationTitle = `🔴 ${cleanSenderName}: "${truncateMessage(messageText)}"`;
 
   // Start alternating titles
@@ -228,13 +228,13 @@ export const clearTabNotification = () => {
     flashInterval = null;
   }
   isFlashing = false;
-  
+
   if (typeof document !== "undefined") {
     // Restore original title
     if (originalTitle) {
       document.title = originalTitle;
     }
-    
+
     // Restore original favicon
     setFaviconBadge(false);
   }

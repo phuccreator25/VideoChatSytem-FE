@@ -1,6 +1,7 @@
 export type avatarFile = {
   fileName: string;
   mimeType: string;
+  fileSize?: number;
 }
 
 export type GetPartPresignedUrlParams = {

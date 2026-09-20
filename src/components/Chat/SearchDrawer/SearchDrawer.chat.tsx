@@ -107,8 +107,8 @@ export function SearchDrawer({
   const getSenderDetails = (senderId: string) => {
     const isCurrentUser = senderId === currentUserId;
     const name = isCurrentUser
-      ? "Bạn"
-      : otherUser?.nickname || otherUser?.fullname || "Người dùng";
+      ? "You"
+      : otherUser?.nickname || otherUser?.fullname || "User";
     const avatar = isCurrentUser ? "" : otherUser?.avatar || "";
     return { name, avatar, isCurrentUser };
   };

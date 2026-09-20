@@ -19,14 +19,14 @@ export const validateChatFiles = (
 
   const totalCount = existingCount + newFiles.length;
   if (totalCount > MAX_CHAT_FILE_COUNT) {
-    enqueueSnackbar(`Số lượng file gửi không được vượt quá tối đa ${MAX_CHAT_FILE_COUNT} file mỗi lần!`, { variant: "error" });
+    enqueueSnackbar(`The number of sent files cannot exceed ${MAX_CHAT_FILE_COUNT} at a time!`, { variant: "error" });
 
     return { isValid: false };
   }
 
   const oversizedFile = newFiles.find((f) => f.size > MAX_CHAT_FILE_SIZE);
   if (oversizedFile) {
-    enqueueSnackbar(`File "${oversizedFile.name}" vượt quá dung lượng tối đa 1GB. Vui lòng chọn file nhỏ hơn!`, { variant: "error" });
+    enqueueSnackbar(`File "${oversizedFile.name}" exceeds the maximum size limit of 1GB. Please select a smaller file!`, { variant: "error" });
 
     return { isValid: false };
   }
@@ -40,11 +40,11 @@ export const validateAvatarFile = (
   showErrorSnackbar: boolean = false
 ): ValidationResult => {
   if (!file) {
-    return { isValid: false, errorMessage: "File không hợp lệ" };
+    return { isValid: false, errorMessage: "Invalid file" };
   }
 
   if (file.size > MAX_AVATAR_FILE_SIZE) {
-    const errorMessage = "Ảnh đại diện không được vượt quá 5MB";
+    const errorMessage = "Avatar image size cannot exceed 5MB";
     if (showErrorSnackbar) {
       enqueueSnackbar(errorMessage, { variant: "error" });
     }

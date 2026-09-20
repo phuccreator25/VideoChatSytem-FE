@@ -7,9 +7,9 @@ import type {
   ContactRemoveSocket,
   ContactUpdateNickNameSocket,
 } from "../../../types/contact/contact.socket.type";
-import { onGetDataContact } from "../../../redux/contact.redux";
+import { onGetDataContact, updateInfoUserOnline } from "../../../redux/contact.redux";
 import { updateNickNameUser } from "../../../redux/chat.redux";
-import { updateNickNameConversation } from "../../../redux/conversation.redux";
+import { updateConversationBlockStatus, updateNickNameConversation } from "../../../redux/conversation.redux";
 import { removeUnblockIds, setBlockStatus, setUnblockedIds } from "../../../redux/block.redux";
 import {
   bindContactRemove,
@@ -85,6 +85,11 @@ export default function useContactSocketListener({
           nickname: payload.nickname,
         }),
       );
+
+      dispatch(updateInfoUserOnline({
+        userId: payload.userId,
+        name: payload.nickname
+      }))
     };
 
     const handleBlock = (payload: {
@@ -100,6 +105,9 @@ export default function useContactSocketListener({
             isBlockedByMe: payload.isBlockedByMe,
           }),
         );
+
+        const isBlocked = Boolean(payload.isBlockedMe || payload.isBlockedByMe);
+        dispatch(updateConversationBlockStatus({ userId: payload.userId, isBlocked }));
 
         //Handle Show List
         if (payload.isBlockedByMe === false) {

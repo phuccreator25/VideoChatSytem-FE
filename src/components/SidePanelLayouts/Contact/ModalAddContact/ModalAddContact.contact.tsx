@@ -46,7 +46,7 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
   } = useForm<AddContactData>({
     defaultValues: {
       selectedUser: null,
-      invitationMessage: `Xin chào, tôi là ${user?.fullname ?? ""}`,
+      invitationMessage: `Hello, I am ${user?.fullname ?? ""}`,
     },
   });
 
@@ -88,7 +88,7 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
   const handleClose = () => {
     reset({
       selectedUser: null,
-      invitationMessage: `Xin chào, tôi là ${user?.fullname ?? ""}`,
+      invitationMessage: `Hello, I am ${user?.fullname ?? ""}`,
     });
     setSearchKeyword("");
     setOptions([]);
@@ -229,7 +229,7 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
               <Controller
                 name="selectedUser"
                 control={control}
-                rules={{ required: "Vui lòng chọn user" }}
+                rules={{ required: "Please select a user" }}
                 render={({ field }) => (
                   <Autocomplete
                     options={options}
@@ -247,8 +247,8 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
                     }
                     noOptionsText={
                       searchKeyword.trim()
-                        ? "Không tìm thấy user"
-                        : "Nhập tên hoặc email để tìm"
+                        ? "No user found"
+                        : "Enter name or email to search"
                     }
                     ListboxProps={{
                       sx: {
@@ -347,7 +347,7 @@ const ModalAddContactModal: React.FC<AddContactModalProps> = ({
               <Controller
                 name="invitationMessage"
                 control={control}
-                rules={{ required: "Vui lòng nhập lời mời" }}
+                rules={{ required: "Please enter an invitation message" }}
                 render={({ field }) => (
                   <TextField
                     {...field}

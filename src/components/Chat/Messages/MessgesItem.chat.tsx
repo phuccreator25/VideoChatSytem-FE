@@ -2,120 +2,28 @@ import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-
-
-import type { MessageAttachment, MessageType, TempPreviewFile } from "../../../types/chat/chat.model.type";
-import { ImageFrame, type ImageFrameItem } from "../Images/ImageFrame.chat";
-import { FileGroupBubble } from "../Files/FileBubble.chat";
-import { ChatTime } from "../ChatTime/ChatTime.chat";
-import { COLORS } from "../../../utils/Colors";
-import { MessageActions } from "./MessageActions.chat";
-import { LinkPreview } from "./LinkPreview.chat";
-import { AudioBubble } from "../Audio/audioBubble.chat";
-import { MessageStatus } from "../Status/messageStatus.chat";
-import { VideoBubble } from "../Video/videoBubble.chat";
-import { EmotionPicker } from "../Emotion/emotionPicker.chat";
 import { useEffect, useState, memo } from "react";
+
+import type { MessageType } from "../../../types/chat/chat.model.type";
+import type { AbortMultipartParams } from "../../../types/upload.type";
+import { COLORS } from "../../../utils/Colors";
 import { EmotionDetailPopover } from "../Emotion/emotionDetailsPopover.chat";
 import { PopoverShare } from "./PopoverShare.chat";
-import renderMessageContent from "../../../helpers/renderMessageUrl.helper";
-import { ReplyQuoteBubble } from "./ReplyBubble.chat";
-import { CallBubble } from "./CallBubble.chat";
-import type { AbortMultipartParams } from "../../../types/upload.type";
 
-import { uploadControllers } from "../../../helpers/uploadS3.helper";
+import {
+  getAttachments,
+  getFileNote,
+  isAudioAttachment,
+  isRawAttachment,
+  isVideoAttachment,
+  parseImageItems,
+} from "../../../helpers/messageItem.helper";
 
-const getAttachments = (msg: MessageType) => {
-  const attachments = (msg.attachments || []) as MessageAttachment[];
-  return attachments.map((attachment) => {
-    const tempId = attachment.tempAttachmentId;
-    const isUploadingLocally = tempId ? uploadControllers.has(tempId) : false;
-
-    // Nếu attachment có status pending/uploading/sending nhưng không có fileUrl, không được upload tích cực ở tab này và không có binary File
-    const isAbandoned =
-      (attachment.status === "pending" || attachment.status === "uploading" || msg.status === "sending") &&
-      !attachment.fileUrl &&
-      !isUploadingLocally &&
-      !(attachment as MessageAttachment).file;
-
-    return {
-      ...attachment,
-      status: isAbandoned ? "failed" : attachment.status,
-      messageId: msg.id,
-    };
-  });
-};
-
-const isAudioAttachment = (attachment: MessageAttachment) =>
-  String(attachment.mimeType || "").startsWith("audio/") || attachment.resourceType === "audio";
-
-const isImageAttachment = (attachment: MessageAttachment) =>
-  attachment.resourceType === "image" ||
-  String(attachment.mimeType || "").startsWith("image/");
-
-const isVideoAttachment = (attachment: MessageAttachment) =>
-  attachment.resourceType === "video" &&
-  String(attachment.mimeType || "").startsWith("video/");
-
-const isRawAttachment = (attachment: MessageAttachment) =>
-  attachment.resourceType === "raw" &&
-  !isAudioAttachment(attachment);
-
-const parseImageItems = (msg: MessageType): ImageFrameItem[] => {
-  if (msg.type !== "file") return [];
-
-  const FilesBeforeUpload =
-    (msg as MessageType & { attachments?: TempPreviewFile[] }).attachments || [];
-
-  const imageAttachments = getAttachments(msg).filter((attachment) =>
-    isImageAttachment(attachment),
-  );
-
-  if (imageAttachments.length > 0) {
-    return imageAttachments.reduce<ImageFrameItem[]>((result, attachment) => {
-      const attachmentBeforeUpload = FilesBeforeUpload.find(
-        (item) =>
-          item.tempAttachmentId &&
-          item.tempAttachmentId === attachment.tempAttachmentId,
-      );
-
-      const urlBeforeUpload = attachmentBeforeUpload?.previewUrl;
-      const fileUrl = attachment.fileUrl ? String(attachment.fileUrl) : "";
-      const src = fileUrl || urlBeforeUpload || undefined;
-
-      if (!src) return result;
-
-      result.push({
-        src,
-        fileName: attachment.fileName || "",
-        status: attachment.status || (fileUrl ? "done" : "pending"),
-        isPreview: !fileUrl,
-        attachmentId: attachment.attachmentId || "",
-        messageId: msg.id || ""
-      });
-
-      return result;
-    }, []);
-  }
-
-  return FilesBeforeUpload.reduce<ImageFrameItem[]>((result, item) => {
-    if (!item.previewUrl || item.resourceType !== 'image') return result;
-
-    result.push({
-      src: item.previewUrl,
-      fileName: item.fileName || "",
-      status: msg.status || "sending",
-      isPreview: true,
-    });
-
-    return result;
-  }, []);
-};
-
-const getFileNote = (msg: MessageType) => {
-  if (msg.type !== "file") return "";
-  return String(msg.content || "").trim();
-};
+import { RevokedMessageBubble } from "./sub-components/RevokedMessageBubble";
+import { CallMessageBubbleItem } from "./sub-components/CallMessageBubbleItem";
+import { TextMessageBubble } from "./sub-components/TextMessageBubble";
+import { GifMessageBubble } from "./sub-components/GifMessageBubble";
+import { FileMessageBubble } from "./sub-components/FileMessageBubble";
 
 // ── MessageItem ───────────────────────────────────────────────────────────
 export const MessageItem = memo(function MessageItem({
@@ -146,11 +54,9 @@ export const MessageItem = memo(function MessageItem({
   onCancelUpload?: (item: AbortMultipartParams) => void;
 }) {
   const attachments = getAttachments(msg);
-  const hasDoneAttachments = attachments.some((att) => att.status === "done");
+  const hasDoneAttachments = attachments.some((att) => att.status === "done" || !!att.fileUrl || !att.status);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  //EMOTION
   const [showEmotionTrigger, setShowEmotionTrigger] = useState(false);
-
   const [anchorEl, setPopoverAnchor] = useState<HTMLElement | null>(null);
 
   const handleCloseDetail = () => {
@@ -166,29 +72,19 @@ export const MessageItem = memo(function MessageItem({
     }
   }, [msg.reactions?.length, anchorEl]);
   
-  //Nếu khong có file nào done thì ẩn luôn
+  // Nếu không có file nào done thì ẩn luôn
   if (isLeft && msg.type === "file" && !hasDoneAttachments) {
     return null;
   }
+
   const imageItems = parseImageItems(msg);
-  const nonImageAttachments = attachments.filter(
-    (attachment) => isRawAttachment(attachment),
-  );
-
-  const audioAttachment = attachments.filter(
-    (attachment) => isAudioAttachment(attachment)
-  )
-
-  const videoAttachment = attachments.filter(
-    (attachment) => isVideoAttachment(attachment)
-  )
+  const nonImageAttachments = attachments.filter((attachment) => isRawAttachment(attachment));
+  const audioAttachment = attachments.filter((attachment) => isAudioAttachment(attachment));
+  const videoAttachment = attachments.filter((attachment) => isVideoAttachment(attachment));
 
   const fileNote = getFileNote(msg);
-  const failedAttachmentCount = attachments.filter(
-    (attachment) => attachment.status === "failed",
-  ).length;
+  const failedAttachmentCount = attachments.filter((attachment) => attachment.status === "failed").length;
 
-  //show status khi có file còn upload trong list file hoặc tất cả đã failed
   const isAnyUploading = attachments.some(
     (att) => att.status === "pending" || att.status === "uploading" || att.status === "sending"
   );
@@ -206,19 +102,11 @@ export const MessageItem = memo(function MessageItem({
   const shouldShowStatus = !isLeft;
 
   const URL_REGEX = /(https?:\/\/[^\s]+)/g;
-  const hasUrl = msg.content && /https?:\/\/[^\s]+/.test(msg.content);
+  const hasUrl = msg.content && URL_REGEX.test(msg.content);
   const urlMatches = msg.content?.match(URL_REGEX);
   const hasLinkPreview = Boolean(hasUrl && urlMatches?.length === 1 && (msg.preview || msg.type === "text"));
 
-  const replyMessage = msg.replyMessage || null
-
-  const actionHandlers = {
-    onReply: (m: MessageType) => setMessageReplyed(m),
-    onShare: () => {
-      setShareDialogOpen(true);
-    },
-    onMore: (m: MessageType, anchor: HTMLElement) => console.log("more", m, anchor),
-  };
+  const replyMessage = msg.replyMessage || null;
 
   return (
     <Stack
@@ -251,426 +139,89 @@ export const MessageItem = memo(function MessageItem({
         onMouseEnter={() => setShowEmotionTrigger(true)}
         onMouseLeave={() => setShowEmotionTrigger(false)}
       >
+        {msg.isRevoked && <RevokedMessageBubble />}
 
-        {msg.isRevoked && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              bgcolor: "action.hover",
-              border: "1px dashed",
-              borderColor: "divider",
-              borderRadius: 3,
-              px: 2.2,
-              py: 1.25,
-              minWidth: 140,
-              maxWidth: { xs: "90%", sm: "75%" },
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: 14,
-                color: "text.secondary",
-                fontStyle: "italic",
-                userSelect: "none",
-              }}
-            >
-              This message has been revoked
-            </Typography>
-          </Box>
-        )}
-
-        {/* ── CALL BUBBLE ── */}
         {isCall && !msg.isRevoked && (
-          <Box
+          <CallMessageBubbleItem
+            msg={msg}
+            isLeft={isLeft}
+            shouldShowStatus={shouldShowStatus}
+            showEmotionTrigger={showEmotionTrigger}
+            onReCall={onReCall}
+            onReply={(m) => setMessageReplyed(m)}
+            onShare={() => setShareDialogOpen(true)}
+            onReact={onReact}
+            onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
             onMouseEnter={() => setShowEmotionTrigger(true)}
             onMouseLeave={() => setShowEmotionTrigger(false)}
-            sx={{
-              position: "relative",
-              maxWidth: { xs: "90%", sm: "75%" },
-              mb: (msg.reactions?.length ?? 0) > 0 ? "18px" : 0,
-            }}
-          >
-            <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant="text" />
-            <CallBubble msg={msg} isLeft={isLeft} shouldShowStatus={shouldShowStatus} onReCall={onReCall} />
-            <EmotionPicker
-              reactions={msg.reactions || []}
-              isLeft={isLeft}
-              showTrigger={showEmotionTrigger}
-              onReact={onReact}
-              onOpenDetail={(el) => setPopoverAnchor(el)}
-              msg={msg}
-            />
-          </Box>
+          />
         )}
 
-        {/* ── TEXT BUBBLE ── */}
-        {(isText && !msg.isRevoked) && (
-          <Box sx={{ position: "relative", width: hasLinkPreview ? "100%" : "auto", maxWidth: { xs: "90%", sm: hasLinkPreview ? 420 : "75%" } }}>
-            <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} variant={'text'} />
-            <Box
-              onMouseEnter={() => setShowEmotionTrigger(true)}
-              onMouseLeave={() => setShowEmotionTrigger(false)}
-              sx={{
-                position: "relative",         // ✅ required cho absolute children
-                overflow: "visible",          // ✅ cho phép icon tràn ra ngoài bubble
-                mb: (msg.reactions?.length ?? 0) > 0 ? "18px" : 0, // ✅ chừa chỗ reaction bar
-                bgcolor: isLeft ? "#ffffff" : "transparent",
-                backgroundImage: isLeft
-                  ? "none"
-                  : effectiveStatus === "failed"
-                    ? "linear-gradient(135deg, #ef4444 0%, #991b1b 100%)"
-                    : "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
-                border: isLeft ? "1px solid rgba(148, 163, 184, 0.22)" : "none",
-                borderRadius: 3,
-                px: 2.1,
-                py: 1.35,
-                minWidth: 140,
-                width: "100%",
-                opacity: effectiveStatus === "sending" ? 0.78 : 1,
-                boxShadow: isLeft
-                  ? "0 8px 22px rgba(15, 23, 42, 0.07)"
-                  : effectiveStatus === "failed"
-                    ? "0 12px 30px rgba(239, 68, 68, 0.25)"
-                    : "0 12px 30px rgba(79, 70, 229, 0.34)",
-              }}
-            >
-              {replyMessage && (
-                <Box sx={{ mb: 1 }}>
-                  <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
-                </Box>
-              )}
-
-              <Typography sx={{
-                fontSize: 15, lineHeight: 1.62,
-                color: isLeft ? COLORS.textMain : "#f8faff",
-                textAlign: "left", wordBreak: "break-word", letterSpacing: 0.1,
-              }}>
-                {renderMessageContent(msg.content || "", isLeft)}
-              </Typography>
-
-              {(() => {
-                if (!hasLinkPreview) return null;
-
-                if (msg.preview || (msg.type === "text" && hasUrl)) {
-                  return <LinkPreview preview={msg.preview || null} isLeft={isLeft} />;
-                }
-
-                return null;
-              })()}
-
-              <Box sx={{
-                display: "flex",
-                justifyContent: isLeft ? "flex-start" : "flex-end",
-                alignItems: "center", gap: 1, mt: 0.75,
-              }}>
-                {msg.createdAt && (
-                  <ChatTime
-                    createdAt={msg.createdAt}
-                    color={isLeft ? COLORS.textMuted : "rgba(229, 231, 255, 0.95)"}
-                    dense
-                  />
-                )}
-                {shouldShowStatus && (
-                  <MessageStatus
-                    type="message"
-                    status={effectiveStatus}
-                    onResend={() => onResend?.(msg)}
-                  />
-                )}
-              </Box>
-
-              {/* ✅ EmotionPicker nằm trong bubble để absolute đúng tọa độ */}
-              <EmotionPicker
-                reactions={msg.reactions || []}
-                isLeft={isLeft}
-                showTrigger={showEmotionTrigger}
-                onReact={onReact}
-                onOpenDetail={(el) => setPopoverAnchor(el)}
-                msg={msg}
-              />
-            </Box>
-          </Box>
+        {isText && !msg.isRevoked && (
+          <TextMessageBubble
+            msg={msg}
+            isLeft={isLeft}
+            effectiveStatus={effectiveStatus}
+            shouldShowStatus={shouldShowStatus}
+            showEmotionTrigger={showEmotionTrigger}
+            hasLinkPreview={hasLinkPreview}
+            replyMessage={replyMessage}
+            onGoToMessage={onGoToMessage}
+            onResend={onResend}
+            onReply={(m) => setMessageReplyed(m)}
+            onShare={() => setShareDialogOpen(true)}
+            onReact={onReact}
+            onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
+            onMouseEnter={() => setShowEmotionTrigger(true)}
+            onMouseLeave={() => setShowEmotionTrigger(false)}
+          />
         )}
 
-        {/* ── GIF BUBBLE ── */}
         {isGif && msg.gifUrl && !msg.isRevoked && (
-          <Box
+          <GifMessageBubble
+            msg={msg}
+            isLeft={isLeft}
+            shouldShowStatus={shouldShowStatus}
+            showEmotionTrigger={showEmotionTrigger}
+            replyMessage={replyMessage}
+            onGoToMessage={onGoToMessage}
+            onResend={onResend}
+            onReply={(m) => setMessageReplyed(m)}
+            onShare={() => setShareDialogOpen(true)}
+            onReact={onReact}
+            onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
             onMouseEnter={() => setShowEmotionTrigger(true)}
             onMouseLeave={() => setShowEmotionTrigger(false)}
-            sx={{
-              position: "relative",
-              maxWidth: { xs: "90%", sm: "75%" },
-              mb: (msg.reactions?.length ?? 0) > 0 ? "18px" : 0,
-            }}
-          >
-            <MessageActions msg={msg} isLeft={isLeft} {...actionHandlers} />
-            <Box
-              sx={{
-                bgcolor: isLeft ? "#ffffff" : "transparent",
-                backgroundImage: isLeft
-                  ? "none"
-                  : msg.status === "failed"
-                    ? "linear-gradient(135deg, #ef4444 0%, #991b1b 100%)"
-                    : "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
-                border: isLeft ? "1px solid rgba(148, 163, 184, 0.22)" : "none",
-                borderRadius: 2,
-                overflow: "hidden",
-                minWidth: 140,
-                opacity: msg.status === "sending" ? 0.78 : 1,
-                boxShadow: isLeft
-                  ? "0 8px 22px rgba(15, 23, 42, 0.07)"
-                  : msg.status === "failed"
-                    ? "0 12px 30px rgba(239, 68, 68, 0.25)"
-                    : "0 12px 30px rgba(79, 70, 229, 0.34)",
-              }}
-            >
-              {replyMessage && (
-                <Box sx={{ px: 1, pt: 1 }}>
-                  <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
-                </Box>
-              )}
-
-              <Box
-                component="img"
-                src={msg.gifUrl}
-                alt="GIF message"
-                loading="lazy"
-                sx={{
-                  display: "block",
-                  width: "100%",
-                  maxWidth: { xs: 180, sm: 280 },
-                  maxHeight: 320,
-                  objectFit: "contain",
-                  bgcolor: "rgba(241, 245, 249, 0.8)",
-                }}
-              />
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                  gap: 1,
-                  px: 1.25,
-                  py: 0.8,
-                  backgroundImage: isLeft
-                    ? "rgba(255, 255, 255, 0.96)"
-                    : msg.status === "failed"
-                      ? "linear-gradient(135deg, #ef4444 0%, #991b1b 100%)"
-                      : "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
-                }}
-              >
-                {msg.createdAt && (
-                  <ChatTime
-                    createdAt={msg.createdAt}
-                    color={isLeft ? COLORS.textMuted : "rgba(229, 231, 255, 0.95)"}
-                    dense
-                  />
-                )}
-                {shouldShowStatus && (
-                  <MessageStatus
-                    type="message"
-                    status={msg.status}
-                    onResend={() => onResend?.(msg)}
-                  />
-                )}
-              </Box>
-            </Box>
-            <EmotionPicker
-              reactions={msg.reactions || []}
-              isLeft={isLeft}
-              showTrigger={showEmotionTrigger}
-              onReact={onReact}
-              onOpenDetail={(el) => setPopoverAnchor(el)}
-              msg={msg}
-            />
-          </Box>
+          />
         )}
 
-        {/* ── FILE: caption text ── */}
-        {msg.type === "file" && fileNote && !msg.isRevoked && (
-          <Box
-            sx={{
-              mt: isText ? 0 : 0.35,
-              mb: 1,
-              px: 1.6,
-              py: 1.1,
-              borderRadius: 2.5,
-              maxWidth: { xs: "90%", sm: "75%" },
-              bgcolor: isLeft ? "rgba(255,255,255,0.9)" : "rgba(67, 56, 202, 0.12)",
-              border: isLeft
-                ? "1px solid rgba(148, 163, 184, 0.2)"
-                : "1px solid rgba(99, 102, 241, 0.18)",
-            }}
-          >
-            {replyMessage && (
-              <Box sx={{ mb: 1 }}>
-                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
-              </Box>
-            )}
-            <Typography
-              sx={{
-                fontSize: 14.5,
-                lineHeight: 1.58,
-                color: COLORS.textMain,
-                wordBreak: "break-word",
-              }}
-            >
-              {fileNote}
-            </Typography>
-          </Box>
-        )}
-
-        {/* ── FILE: images ── */}
-        {msg.type === "file" && imageItems.length > 0 && !msg.isRevoked && (
-          <Box
+        {msg.type === "file" && !msg.isRevoked && (
+          <FileMessageBubble
+            msg={msg}
+            isLeft={isLeft}
+            effectiveStatus={effectiveStatus}
+            shouldShowStatus={shouldShowStatus}
+            showEmotionTrigger={showEmotionTrigger}
+            fileNote={fileNote}
+            imageItems={imageItems}
+            nonImageAttachments={nonImageAttachments}
+            audioAttachment={audioAttachment}
+            videoAttachment={videoAttachment}
+            failedAttachmentCount={failedAttachmentCount}
+            replyMessage={replyMessage}
+            isText={isText}
+            onGoToMessage={onGoToMessage}
+            onResend={onResend}
+            onCancelUpload={onCancelUpload}
+            onReply={(m) => setMessageReplyed(m)}
+            onShare={() => setShareDialogOpen(true)}
+            onReact={onReact}
+            onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
             onMouseEnter={() => setShowEmotionTrigger(true)}
             onMouseLeave={() => setShowEmotionTrigger(false)}
-            sx={{
-              position: "relative",
-              opacity: msg.status === "sending" ? 0.78 : 1,
-              mb: (msg.reactions?.length ?? 0) > 0 ? "18px" : 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: isLeft ? "flex-start" : "flex-end",
-              gap: 0.5,
-            }}
-          >
-            {/* 1 MessageActions duy nhất cho toàn bộ message */}
-            <MessageActions
-              msg={msg}
-              isLeft={isLeft}
-              {...actionHandlers}
-              variant={imageItems.length > 0 ? "image" : "file"}
-            />
-
-            {/* Reply quote chỉ hiện 1 lần phía trên */}
-            {replyMessage && (
-              <Box sx={{ mb: 0.5 }}>
-                <ReplyQuoteBubble replyMsg={replyMessage} isLeft={isLeft} onClick={() => onGoToMessage?.(replyMessage)} />
-              </Box>
-            )}
-
-            {/* ── FILE: images ── */}
-            {imageItems.length > 0 && (
-              <ImageFrame
-                images={imageItems}
-                createdAt={msg.createdAt}
-                isLeft={isLeft}
-                status={effectiveStatus}
-                showStatus={shouldShowStatus && nonImageAttachments.length === 0 && audioAttachment.length === 0 && videoAttachment.length === 0}
-                onResend={() => onResend?.(msg)}
-              />
-            )}
-
-            {/* ── FILE: non-image attachments ── */}
-            {nonImageAttachments.length > 0 && (
-              <FileGroupBubble
-                files={nonImageAttachments.map((a) => ({
-                  fileName: a.fileName || "Attachment",
-                  fileSize: a.fileSize ?? 0,
-                  fileUrl: a.fileUrl,
-                  mimeType: a.mimeType,
-                  status: a.status,
-                  messageId: a.messageId,
-                  attachmentId: a.attachmentId,
-                  tempAttachmentId: a.tempAttachmentId || undefined,
-                }))}
-                createdAt={msg.createdAt}
-                isLeft={isLeft}
-                showStatus={shouldShowStatus && audioAttachment.length === 0 && videoAttachment.length === 0}
-                status={effectiveStatus}
-                onResend={() => onResend?.(msg)}
-                onCancelUpload={onCancelUpload}
-              />
-            )}
-
-            {/* Failed notice */}
-            {failedAttachmentCount > 0 && (
-              <Box
-                sx={{
-                  mt: 0.4,
-                  px: 1.2,
-                  py: 0.8,
-                  borderRadius: 2,
-                  bgcolor: "rgba(254,226,226,0.72)",
-                  border: "1px solid rgba(248,113,113,0.28)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Typography sx={{ fontSize: 12.5, color: "#b91c1c", fontWeight: 700 }}>
-                  {failedAttachmentCount} attachment
-                  {failedAttachmentCount > 1 ? "s" : ""} failed to upload
-                </Typography>
-                {!isLeft && onResend && (
-                  <Typography
-                    onClick={() => onResend(msg)}
-                    sx={{
-                      fontSize: 12.5,
-                      color: "#dc2626",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      textDecoration: "underline",
-                      ml: 1,
-                      "&:hover": {
-                        color: "#991b1b",
-                      },
-                    }}
-                  >
-                    Resend
-                  </Typography>
-                )}
-              </Box>
-            )}
-
-            {/* ── FILE: audio ── */}
-            {audioAttachment.length > 0 &&
-              audioAttachment.map((a, idx) => (
-                <AudioBubble
-                  key={a.attachmentId || idx}
-                  src={a.fileUrl ?? ""}
-                  durationProp={a.recordDuration ?? null}
-                  isLeft={isLeft}
-                  status={effectiveStatus}
-                  showStatus={shouldShowStatus && videoAttachment.length === 0 && idx === audioAttachment.length - 1}
-                  createdAt={msg.createdAt}
-                  onResend={() => onResend?.(msg)}
-                />
-              ))}
-
-            {/* ── FILE: video ── */}
-            {videoAttachment.length > 0 &&
-              videoAttachment.map((item, idx) => (
-                <VideoBubble
-                  messageId={msg.id}
-                  key={item.attachmentId || item.tempAttachmentId || idx}
-                  src={item.fileUrl || item.previewUrl || ""}
-                  thumbnailUrl={null}
-                  fileName={item.fileName ?? ""}
-                  fileSize={item.fileSize}
-                  isLeft={isLeft}
-                  status={msg.status}
-                  showStatus={shouldShowStatus && idx === videoAttachment.length - 1}
-                  createdAt={msg.createdAt}
-                  onResend={() => onResend?.(msg)}
-                />
-              ))}
-
-            {/* 1 EmotionPicker duy nhất cho toàn bộ message */}
-            <EmotionPicker
-              reactions={msg.reactions || []}
-              isLeft={isLeft}
-              showTrigger={showEmotionTrigger}
-              onReact={onReact}
-              onOpenDetail={(el) => setPopoverAnchor(el)}
-              msg={msg}
-            />
-          </Box>
+          />
         )}
 
-        {/* ── Display name ──s*/}
         <Typography
           sx={{
             mt: 1,
@@ -710,4 +261,3 @@ export const MessageItem = memo(function MessageItem({
     prevProps.avatar === nextProps.avatar
   );
 });
-

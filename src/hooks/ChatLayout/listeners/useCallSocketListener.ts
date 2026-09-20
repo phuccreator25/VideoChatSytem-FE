@@ -57,13 +57,13 @@ export default function useCallSocketListener(currentUserId: string) {
       if (payload.shouldCloseUI) {
         if (payload.userIdWhoLeft !== currentUserId) {
           if (payload.reason === "rejected") {
-            enqueueSnackbar("Đối phương đã từ chối cuộc gọi", {
+            enqueueSnackbar("The recipient declined the call", {
               variant: "info",
             });
           } else if (payload.reason === "cancelled") {
-            enqueueSnackbar("Cuộc gọi nhỡ", { variant: "warning" });
+            enqueueSnackbar("Missed call", { variant: "warning" });
           } else {
-            enqueueSnackbar("Cuộc gọi đã kết thúc", { variant: "info" });
+            enqueueSnackbar("Call ended", { variant: "info" });
           }
         }
 

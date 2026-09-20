@@ -5,7 +5,8 @@ const userApi = {
   onUpdateUser: (payload: object) => axiosInterceptor.put(`/users`, payload),
   onUpdateAvatar: (payload: object) => axiosInterceptor.put(`/users/avatar`, payload),
 
-  onSearchUser: (searchValue: string) => axiosInterceptor.get(`users/search/${searchValue}`)
+  onSearchUser: (searchValue: string) => axiosInterceptor.get(`users/search/${searchValue}`),
+
 };
 
 export default userApi;

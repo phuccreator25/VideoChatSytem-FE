@@ -129,7 +129,7 @@ export const useSendMessage = ({
       }
     } catch (error: any) {
       console.error("Execute send message error:", error);
-      enqueueSnackbar(error?.response?.data?.message || "Gửi tin nhắn thất bại", {
+      enqueueSnackbar(error?.response?.data?.message || "Failed to send message", {
         variant: "error",
       });
 
@@ -287,7 +287,7 @@ export const useSendMessage = ({
 
     const hasFiles = messageFailed.attachments?.some((att: MessageAttachment) => att.file instanceof File);
     if (messageFailed.type === ChatItemTypes.FILE && !hasFiles) {
-      enqueueSnackbar("Dữ liệu file đã bị mất do bạn tải lại trang. Vui lòng chọn lại file để gửi!", {
+      enqueueSnackbar("File data was lost due to page refresh. Please reselect the file to send!", {
         variant: "error",
       });
       return;
@@ -435,7 +435,7 @@ export const useSendMessage = ({
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isUploadingFiles) {
         e.preventDefault();
-        e.returnValue = "File đang được tải lên. Bạn có chắc muốn rời đi?";
+        e.returnValue = "Files are currently uploading. Are you sure you want to leave?";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);

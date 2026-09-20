@@ -35,7 +35,7 @@ export default function CheckEmailPage() {
             mb: 1.5,
           }}
         >
-          Không thể đăng nhập?
+          Unable to Sign In?
         </Typography>
 
         <Typography
@@ -46,7 +46,7 @@ export default function CheckEmailPage() {
             mx: 'auto',
           }}
         >
-          Chúng tôi đã gửi liên kết khôi phục mật khẩu tới email của bạn.
+          We have sent a password recovery link to your email.
         </Typography>
 
         <Typography
@@ -69,7 +69,7 @@ export default function CheckEmailPage() {
           mx: 'auto',
         }}
       >
-        Nếu bạn chưa nhận được email, hãy kiểm tra thư mục spam hoặc thử gửi lại liên kết khôi phục.
+        If you have not received the email, please check your spam folder or try resending the recovery link.
       </Typography>
 
       <Stack
@@ -84,7 +84,7 @@ export default function CheckEmailPage() {
           variant="text"
           sx={{ textTransform: 'none', fontWeight: 500 }}
         >
-          Quay lại đăng nhập
+          Back to Sign In
         </Button>
 
         <Button
@@ -96,14 +96,14 @@ export default function CheckEmailPage() {
           }
           sx={{ textTransform: 'none', fontWeight: 500 }}
         >
-          Gửi lại liên kết
+          Resend Link
         </Button>
       </Stack>
 
       <Divider sx={{ my: 3 }} />
 
       <Typography sx={{ color: '#94a3b8', fontSize: 14 }}>
-        Cần hỗ trợ thêm? Liên hệ bộ phận hỗ trợ hoặc thử lại sau.
+        Need additional help? Contact support or try again later.
       </Typography>
     </Box>
   );

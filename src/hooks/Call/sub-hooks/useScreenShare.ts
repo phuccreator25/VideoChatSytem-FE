@@ -19,7 +19,7 @@ export const useScreenShare = () => {
       if (!callId || !currentUserId) return;
 
       if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        enqueueSnackbar("Trình duyệt không hỗ trợ chia sẻ màn hình", {
+        enqueueSnackbar("Browser does not support screen sharing", {
           variant: "error",
         });
         return;
@@ -27,7 +27,7 @@ export const useScreenShare = () => {
 
       const pc = peerConnectionRef.current;
       if (!pc) {
-        enqueueSnackbar("Chưa có kết nối cuộc gọi để chia sẻ màn hình.", {
+        enqueueSnackbar("No active call connection to share screen.", {
           variant: "warning",
         });
         return;
@@ -52,7 +52,7 @@ export const useScreenShare = () => {
         await videoSender.replaceTrack(screenTrack);
         setScreenStream(stream);
         setIsScreenSharing(true);
-        enqueueSnackbar("Đã bắt đầu chia sẻ màn hình", { variant: "info" });
+        enqueueSnackbar("Screen sharing started", { variant: "info" });
 
         emitToggleMedia({
           callId,
@@ -71,7 +71,7 @@ export const useScreenShare = () => {
         };
       } else {
         enqueueSnackbar(
-          "Không tìm thấy kênh luồng video để chia sẻ màn hình.",
+          "Video stream channel not found for screen sharing.",
           {
             variant: "error",
           },
@@ -79,8 +79,8 @@ export const useScreenShare = () => {
       }
     } catch (error: any) {
       if (error.name !== "NotAllowedError" && error.name !== "AbortError") {
-        console.error("Lỗi khi share screen:", error);
-        enqueueSnackbar("Không thể chia sẻ màn hình.", { variant: "error" });
+        console.error("Screen share error:", error);
+        enqueueSnackbar("Unable to share screen.", { variant: "error" });
       }
     }
   };
@@ -111,7 +111,7 @@ export const useScreenShare = () => {
     });
 
     setIsScreenSharing(false);
-    enqueueSnackbar("Đã dừng chia sẻ màn hình", { variant: "info" });
+    enqueueSnackbar("Screen sharing stopped", { variant: "info" });
     console.log("Đã dừng chia sẻ màn hình và khôi phục lại Camera.");
   };
 

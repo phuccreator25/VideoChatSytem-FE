@@ -11,7 +11,7 @@ export default function useAuthSocketListener() {
 
     useEffect(() => {
         const handleBanSessionEvent = async (payload: { message?: string }) => {
-            enqueueSnackbar(payload?.message || "Phiên đăng nhập của bạn đã bị thu hồi", {
+            enqueueSnackbar(payload?.message || "Your session has been revoked", {
                 variant: "warning",
                 autoHideDuration: 4000,
             });

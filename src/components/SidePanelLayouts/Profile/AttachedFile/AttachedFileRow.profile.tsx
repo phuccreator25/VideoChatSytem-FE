@@ -8,9 +8,11 @@ import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRound
 import ImageRoundedIcon from "@mui/icons-material/ImageRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import useDownloadFile from "../../../../helpers/downloadFile.helper";
 
 export function AttachedFileRow({ item }: { item: FileItem }) {
     const isImage = item.type === 'image';
+    const { onHandleDownloadFile } = useDownloadFile()
     return (
         <Box
             sx={{
@@ -80,7 +82,7 @@ export function AttachedFileRow({ item }: { item: FileItem }) {
                 <IconButton
                     size="small"
                     onClick={() => {
-                        console.log('download', item.key);
+                        onHandleDownloadFile(item.url, item.name)
                     }}
                     sx={{
                         color: '#64748b',
@@ -91,19 +93,6 @@ export function AttachedFileRow({ item }: { item: FileItem }) {
                     <DownloadRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
 
-                <IconButton
-                    size="small"
-                    onClick={() => {
-                        console.log('more', item.key);
-                    }}
-                    sx={{
-                        color: '#64748b',
-                        transition: 'all 0.18s ease',
-                        '&:hover': { color: '#4f46e5', bgcolor: 'rgba(79,70,229,0.06)' }
-                    }}
-                >
-                    <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
-                </IconButton>
             </Stack>
         </Box>
     );

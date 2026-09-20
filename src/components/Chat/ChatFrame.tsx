@@ -68,10 +68,10 @@ export default function ChatFrame() {
           <Typography
             sx={{ fontSize: 22, fontWeight: 700, color: COLORS.title, mb: 1 }}
           >
-            Chọn một cuộc trò chuyện
+            Select a conversation
           </Typography>
           <Typography sx={{ fontSize: 15, color: COLORS.textMuted }}>
-            Hãy chọn contact hoặc conversation để bắt đầu nhắn tin
+            Select a contact or conversation to start messaging
           </Typography>
         </Box>
       </Paper>

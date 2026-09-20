@@ -35,11 +35,11 @@ export default function ResetPasswordPage() {
             mb: 1,
           }}
         >
-          Đặt lại mật khẩu
+          Reset Password
         </Typography>
 
         <Typography sx={{ color: "#64748b", fontWeight: 400 }}>
-          Nhập mật khẩu mới để tiếp tục đăng nhập vào tài khoản của bạn.
+          Enter a new password to continue signing in to your account.
         </Typography>
       </Box>
 
@@ -48,37 +48,37 @@ export default function ResetPasswordPage() {
           <Stack spacing={2.2}>
             <TextField
               fullWidth
-              label="Mật khẩu mới"
+              label="New Password"
               type="password"
-              placeholder="Nhập mật khẩu mới"
+              placeholder="Enter new password"
               error={!!errors.password}
               helperText={errors.password?.message}
               {...register("password", {
-                required: "Vui lòng nhập vào mật khẩu",
+                required: "Please enter password",
                 minLength: {
                   value: 8,
-                  message: "Mật khẩu phải có ít nhất 8 ký tự",
+                  message: "Password must be at least 8 characters long",
                 },
                 pattern: {
                   value:
                     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/,
                   message:
-                    "Mật khẩu phải gồm ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt",
+                    "Password must be at least 8 characters, containing uppercase, lowercase, numbers, and special characters",
                 },
               })}
             />
 
             <TextField
               fullWidth
-              label="Xác nhận mật khẩu"
+              label="Confirm Password"
               type="password"
-              placeholder="Nhập lại mật khẩu mới"
+              placeholder="Re-enter new password"
               error={!!errors.confirm_password}
               helperText={errors.confirm_password?.message}
               {...register("confirm_password", {
-                required: "Vui lòng nhập mật khẩu xác nhận",
+                required: "Please confirm password",
                 validate: (value) =>
-                  value === password || "Mật khẩu xác nhận không khớp",
+                  value === password || "Passwords do not match",
               })}
             />
 
@@ -97,7 +97,7 @@ export default function ResetPasswordPage() {
                 boxShadow: "none",
               }}
             >
-              Cập nhật mật khẩu
+              Update Password
             </Button>
           </Stack>
         </Box>
@@ -111,14 +111,14 @@ export default function ResetPasswordPage() {
           fontWeight: 400,
         }}
       >
-        Quay lại{" "}
+        Back to{" "}
         <Link
           component={RouterLink}
           to="/login"
           underline="hover"
           sx={{ fontWeight: 400, color: "#1976d2" }}
         >
-          đăng nhập
+          Sign In
         </Link>
       </Typography>
     </Box>

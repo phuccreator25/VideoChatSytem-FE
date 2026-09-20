@@ -13,7 +13,7 @@ export function useCallSpeechToText() {
   const startListening = useCallback((currentUserName: string, callId: string | null) => {
 
     if (!callId) {
-      enqueueSnackbar("Không thể ghi âm cuộc gọi. Không tìm thấy cuộc gọi.", {
+      enqueueSnackbar("Cannot record call. Call not found.", {
         variant: "error",
       });
       return;
@@ -24,7 +24,7 @@ export function useCallSpeechToText() {
       (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      enqueueSnackbar("Trình duyệt không hỗ trợ Web Speech API", {
+      enqueueSnackbar("Browser does not support Web Speech API", {
         variant: "error",
       });
       return;

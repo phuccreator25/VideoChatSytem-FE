@@ -25,15 +25,14 @@ export const useMediaStream = () => {
         audio: {
           echoCancellation: true, //Loại bỏ tiếng vang từ đối phương
           noiseSuppression: true, // Giảm tiếng ồn
-          autoGainControl: true, // Tự động kiểm soát âm lượng
         },
         video:
           callType === "video"
             ? {
-                width: isMobileDevice ? { ideal: 720 } : { ideal: 1280 },
-                height: isMobileDevice ? { ideal: 1280 } : { ideal: 720 },
-                facingMode: "user",
-              }
+              width: isMobileDevice ? { ideal: 720 } : { ideal: 1280 },
+              height: isMobileDevice ? { ideal: 1280 } : { ideal: 720 },
+              facingMode: "user",
+            }
             : false,
       };
 
@@ -84,7 +83,7 @@ export const useMediaStream = () => {
 
       if (error.message === "SECURE_CONTEXT_REQUIRED") {
         enqueueSnackbar(
-          "Yêu cầu kết nối bảo mật (HTTPS) để sử dụng camera/micro.",
+          "HTTPS connection required to use camera/microphone.",
           { variant: "error" },
         );
       } else if (
@@ -92,7 +91,7 @@ export const useMediaStream = () => {
         error.name === "DevicesNotFoundError"
       ) {
         enqueueSnackbar(
-          "Không tìm thấy bất kỳ thiết bị Microphone hay Camera nào.",
+          "No Microphone or Camera devices found.",
           { variant: "error" },
         );
       } else if (
@@ -100,19 +99,19 @@ export const useMediaStream = () => {
         error.name === "PermissionDeniedError"
       ) {
         enqueueSnackbar(
-          "Bạn đã chặn quyền truy cập thiết bị. Vui lòng mở lại trong cài đặt trình duyệt.",
+          "Device access permission blocked. Please enable it in browser settings.",
           { variant: "error" },
         );
       } else if (
         error.name === "NotReadableError" ||
         error.name === "TrackStartError"
       ) {
-        enqueueSnackbar("Thiết bị đang được sử dụng bởi một ứng dụng khác.", {
+        enqueueSnackbar("Device is currently in use by another application.", {
           variant: "error",
         });
       } else {
         enqueueSnackbar(
-          `Lỗi kết nối thiết bị: ${error.message || error.name}`,
+          `Device connection error: ${error.message || error.name}`,
           { variant: "error" },
         );
       }

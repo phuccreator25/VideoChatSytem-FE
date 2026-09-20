@@ -16,7 +16,7 @@ import MicRoundedIcon from "@mui/icons-material/MicRounded";
 
 import type { ConversationUserInfo } from "../../types/chat/chat.conversation.type";
 
-interface RingingCallViewProps {
+type RingingCallViewProps = {
     isOpen: boolean;
     userData?: ConversationUserInfo | null;
     callType?: "video" | "voice";

@@ -77,6 +77,8 @@ export const onPinMessageConversation = createAsyncThunk(
     messageId,
     attachmentId = null,
   }: PinMessagePayload) => {
+    console.log("attachmentId", attachmentId);
+
     const res = await ConversationsAPI.pinMessagesConversations(
       conversationId,
       messageId,
@@ -292,6 +294,14 @@ const conversationSlice = createSlice({
       );
       delete state.pinnedMessageIdsByConversation[conversationId];
     },
+
+    updateConversationBlockStatus(state, action) {
+      const { userId, isBlocked } = action.payload;
+      const conversation = state.conversations.find((c) => c.userId === userId);
+      if (conversation) {
+        conversation.isBlocked = isBlocked;
+      }
+    }
   },
 
   extraReducers: (builder) => {
@@ -322,7 +332,8 @@ export const {
   deletePinnedMessage,
   setAllPinnedMessagesByConversation,
   updateNickNameConversation,
-  deleteConversation
+  deleteConversation,
+  updateConversationBlockStatus
 } = conversationSlice.actions;
 
 export const conversationReducer = conversationSlice.reducer;

@@ -13,6 +13,7 @@ type AttachmentType = {
   fileName: string;
   fileSize: number;
   mimeType: string;
+  resourceType?: string;
   messageId: string;
   conversationId: string;
   createdAt: string;
@@ -37,10 +38,7 @@ export const useProfileDrawer = () => {
   const [shareMedia, setShareMedia] = useState<AttachmentType[]>([]);
   const [shareFiles, setShareFiles] = useState<AttachmentType[]>([]);
   const [shareLinks, setShareLinks] = useState<ShareLinkType[]>([]);
-  const [selectedMedia, setSelectedMedia] = useState<{
-    fileUrl: string;
-    fileName: string;
-  }>();
+  const [selectedMedia, setSelectedMedia] = useState<AttachmentType>();
 
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);

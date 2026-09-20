@@ -44,24 +44,24 @@ export const useWebRTC = () => {
     const calleeId = targetCalleeId || ortherUserId;
 
     if (!calleeId) {
-      console.error("❌ Không tìm thấy ID của người nhận cuộc gọi (calleeId).");
+      console.error("❌ Cannot find recipient ID (calleeId).");
       enqueueSnackbar(
-        "Không thể khởi tạo cuộc gọi: Thiếu thông tin người nhận.",
+        "Unable to initiate call: Missing recipient information.",
         { variant: "error" },
       );
       return;
     }
 
     if (!conversationId || !activeStream) {
-      console.error("❌ Thiếu thông tin conversationId hoặc activeStream");
+      console.error("❌ Missing conversationId or activeStream");
       return;
     }
 
     if (!currentUserId) {
       console.error(
-        "❌ Không tìm thấy ID của người gửi cuộc gọi (currentUserId).",
+        "❌ Cannot find sender ID (currentUserId).",
       );
-      enqueueSnackbar("Không thể khởi tạo cuộc gọi. Vui lòng thử lại", {
+      enqueueSnackbar("Unable to initiate call. Please try again", {
         variant: "error",
       });
       return;

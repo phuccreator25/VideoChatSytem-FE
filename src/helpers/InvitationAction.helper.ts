@@ -78,7 +78,7 @@ export default function useInvitationAction() {
       }
 
       if (showSuccessToast) {
-        enqueueSnackbar("Đã chấp nhận lời mời thành công", {
+        enqueueSnackbar("Invitation accepted successfully", {
           variant: "success",
         });
       }
@@ -86,7 +86,7 @@ export default function useInvitationAction() {
       return true;
     } catch (error: any) {
       enqueueSnackbar(
-        error?.response?.data?.message || "Chấp nhận lời mời thất bại",
+        error?.response?.data?.message || "Failed to accept invitation",
         { variant: "error" },
       );
 
@@ -135,7 +135,7 @@ export default function useInvitationAction() {
       }
 
       if (showSuccessToast) {
-        enqueueSnackbar("Từ chối lời mời thành công", {
+        enqueueSnackbar("Invitation declined successfully", {
           variant: "success",
         });
       }
@@ -143,7 +143,7 @@ export default function useInvitationAction() {
       return true;
     } catch (error: any) {
       enqueueSnackbar(
-        error?.response?.data?.message || "Từ chối lời mời thất bại",
+        error?.response?.data?.message || "Failed to decline invitation",
         { variant: "error" },
       );
 
@@ -188,7 +188,7 @@ export default function useInvitationAction() {
       }
 
       if (showSuccessToast) {
-        enqueueSnackbar("Đã thu hồi lời mời thành công", {
+        enqueueSnackbar("Invitation canceled successfully", {
           variant: "success",
         });
       }
@@ -196,7 +196,7 @@ export default function useInvitationAction() {
       return true;
     } catch (error: any) {
       enqueueSnackbar(
-        error?.response?.data?.message || "Thu hồi lời mời thất bại",
+        error?.response?.data?.message || "Failed to cancel invitation",
         { variant: "error" },
       );
 
@@ -224,17 +224,13 @@ export default function useInvitationAction() {
         }),
       );
 
-      enqueueSnackbar("Đã gửi lời mời thành công", {
-          variant: "success",
-        });
+      enqueueSnackbar("Invitation sent successfully", {
+        variant: "success",
+      });
 
       return true
     } catch (error: any) {
-      enqueueSnackbar(
-        error?.response?.data?.message || "Gửi lời mời thất bại",
-        { variant: "error" },
-      );
-
+      console.log('ERROR INVITATION: ', error);
       return false;
     }
   };

@@ -30,11 +30,11 @@ export default function ForgotPasswordPage() {
             mb: 1,
           }}
         >
-          Quên mật khẩu
+          Forgot Password
         </Typography>
 
         <Typography sx={{ color: "#64748b", fontWeight: 400 }}>
-          Nhập email của bạn để nhận hướng dẫn đặt lại mật khẩu.
+          Enter your email to receive password reset instructions.
         </Typography>
       </Box>
 
@@ -46,10 +46,10 @@ export default function ForgotPasswordPage() {
             type="email"
             placeholder="you@example.com"
             {...register("email", {
-              required: "Vui lòng nhập vào email tài khoản",
+              required: "Please enter your email",
               pattern: {
                 value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Email không đúng định dạng"
+                message: "Invalid email format"
               }
             })}
             error={!!errors.email}
@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
               boxShadow: "none",
             }}
           >
-            Gửi yêu cầu
+            Send Request
           </Button>
         </div>
       </form>
@@ -84,14 +84,14 @@ export default function ForgotPasswordPage() {
           fontWeight: 400,
         }}
       >
-        Nhớ mật khẩu rồi?{" "}
+        Remember your password?{" "}
         <Link
           component={RouterLink}
           to="/login"
           underline="hover"
           sx={{ fontWeight: 400, color: "#1976d2" }}
         >
-          Quay lại đăng nhập
+          Back to Sign In
         </Link>
       </Typography>
     </Box>

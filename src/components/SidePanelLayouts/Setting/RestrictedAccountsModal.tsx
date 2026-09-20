@@ -54,7 +54,7 @@ export function RestrictedAccountsModal({
     try {
       await handlers.handleUnblock(user);
     } catch (error) {
-      console.error("Lỗi khi bỏ hạn chế:", error);
+      console.error("Error unblocking account:", error);
     }
   };
 
@@ -302,7 +302,7 @@ export function RestrictedAccountsModal({
                         }}
                       />
                     }
-                    label="Đã bỏ hạn chế"
+                    label="Unblocked"
                     size="small"
                     sx={{
                       height: 32,
