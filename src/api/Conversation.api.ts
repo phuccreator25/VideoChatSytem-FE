@@ -22,6 +22,9 @@ const ConversationsAPI = {
 
   onDeleteConversation: (conversationId: string) =>
     axiosInterceptor.delete(`/conversations/${conversationId}`),
+
+  onTranslateMessage: (conversationId: string, targetLanguage: string) =>
+    axiosInterceptor.put(`/conversations/translation/${conversationId}`, { targetLanguage }),
 };
 
 export default ConversationsAPI;

@@ -38,7 +38,9 @@ export const MessageItem = memo(function MessageItem({
   onResend,
   onGoToMessage,
   onReCall,
-  onCancelUpload
+  onCancelUpload,
+  onTranslate,
+  targetLanguage
 }: {
   msg: MessageType;
   isLeft: boolean;
@@ -52,6 +54,8 @@ export const MessageItem = memo(function MessageItem({
   onGoToMessage?: (msg: MessageType) => void;
   onReCall?: (type: "video" | "voice") => void;
   onCancelUpload?: (item: AbortMultipartParams) => void;
+  onTranslate?: (msg: MessageType) => void;
+  targetLanguage?: string;
 }) {
   const attachments = getAttachments(msg);
   const hasDoneAttachments = attachments.some((att) => att.status === "done" || !!att.fileUrl || !att.status);
@@ -174,6 +178,8 @@ export const MessageItem = memo(function MessageItem({
             onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
             onMouseEnter={() => setShowEmotionTrigger(true)}
             onMouseLeave={() => setShowEmotionTrigger(false)}
+            onTranslate={onTranslate}
+            targetLanguage={targetLanguage}
           />
         )}
 

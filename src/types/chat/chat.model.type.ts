@@ -110,6 +110,7 @@ export type MessageType = {
   sendStatus?: "sent" | "failed" | string;
   deliveries?: MessageDelivery[];
   reactions?: reactionMessage[];
+  translations?: Record<string, string>;
 };
 
 export type reactionMessage = {

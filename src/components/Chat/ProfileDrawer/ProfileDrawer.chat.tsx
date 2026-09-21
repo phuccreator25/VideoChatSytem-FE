@@ -80,6 +80,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
           onSetNicknameInput={handlers.setNicknameInput}
           onUpdateNickName={handlers.onUpdateNickName}
           onOpenDeleteDialog={() => handlers.setIsDeleteDialogOpen(true)}
+          targetLanguage={data.targetLanguage}
+          onSelectLanguage={handlers.onSelectLanguage}
         />
 
         {/* Shared Media & Files Segment */}

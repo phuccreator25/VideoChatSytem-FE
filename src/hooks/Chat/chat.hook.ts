@@ -10,6 +10,7 @@ import { setUserData, updateContactRelation } from "../../redux/chat.redux";
 import {
   onDeletePinMessageConversation,
   setAllPinnedMessagesByConversation,
+  setTargetLanguageByConversation,
 } from "../../redux/conversation.redux";
 import { openCallModal } from "../../redux/call.redux";
 import { useVoiceChat } from "../Voice/voiceChat.hook";
@@ -20,6 +21,7 @@ import { useSendMessage } from "./sub-hooks/useSendMessage";
 import { useMessageSearch } from "./sub-hooks/useMessageSearch";
 import { useChatMessageSocket } from "./sub-hooks/useChatMessageSocket";
 import { setBlockStatus } from "../../redux/block.redux";
+import { useTranslationMessage } from "./sub-hooks/useTranslateMessage";
 
 export function useChatFrame() {
   const { conversationId } = useParams();
@@ -35,6 +37,10 @@ export function useChatFrame() {
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch<AppDispatch>();
+
+  const targetLanguage = useSelector((state: RootState) =>
+    conversationId ? state.conversation.targetLanguageByConversation[conversationId] || "en" : "en"
+  );
 
   const pinMessages = useSelector((state: RootState) => {
     if (!conversationId) return [];
@@ -57,6 +63,9 @@ export function useChatFrame() {
       console.log(error);
     },
   });
+
+  // TRANSLATE
+  const { handleTranslateMessage } = useTranslationMessage();
 
   // 1. SUB-HOOK: Sub-actions Thêm/Sửa/Chấp nhận kết bạn
   const {
@@ -176,6 +185,15 @@ export function useChatFrame() {
         );
 
         setMessages(conversationRes.data.data.messages);
+        // update targetLanguage
+        if (conversationRes.data.data.conversation.targetLanguage && conversationId) {
+          dispatch(
+            setTargetLanguageByConversation({
+              conversationId,
+              targetLanguage: conversationRes.data.data.conversation.targetLanguage,
+            })
+          );
+        }
 
         await emitConversationRead(conversationId);
 
@@ -273,6 +291,29 @@ export function useChatFrame() {
     }
   };
 
+  const onHandleTranslation = async (message: MessageType) => {
+    const res = await handleTranslateMessage(message.id)
+    if (!res) return
+
+    console.log("TRANSLATE", res);
+
+
+    setMessages((prev) => {
+      return prev.map((msg) => {
+        if (msg.id === message.id) {
+          return {
+            ...msg,
+            translations: {
+              ...(msg.translations || {}),
+              [res.data.data.targetLanguage]: res.data.data.translation,
+            }
+          }
+        }
+        return msg
+      })
+    })
+  }
+
   return {
     ui: {
       normalizedMessages,
@@ -303,6 +344,7 @@ export function useChatFrame() {
       currentSearchIndex,
       highlightedMessageId,
       currentUserId,
+      targetLanguage
     },
 
     handler: {
@@ -338,7 +380,8 @@ export function useChatFrame() {
       closeProfileDrawer,
       setLinkPreview,
       handleReCall: (type: "video" | "voice") => dispatch(openCallModal({ type })),
-      handleCancelUpload
+      handleCancelUpload,
+      handleTranslateMessage: onHandleTranslation
     },
 
     ref: {

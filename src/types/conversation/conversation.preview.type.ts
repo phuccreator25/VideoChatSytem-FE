@@ -18,6 +18,7 @@ export type Conversation = {
   active?: boolean;
   userId?: string;
   isBlocked: boolean;
+  translation: string
 };
 
 export type Message =

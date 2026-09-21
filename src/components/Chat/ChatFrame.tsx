@@ -219,6 +219,8 @@ export default function ChatFrame() {
                         onGoToMessage={handler.navigateToMessage}
                         onReCall={handler.handleReCall}
                         onCancelUpload={handler.handleCancelUpload}
+                        onTranslate={handler.handleTranslateMessage}
+                        targetLanguage={data.targetLanguage}
                       />
                     </Box>
                   ),

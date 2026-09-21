@@ -7,6 +7,7 @@ import type { pinMessages } from "../types/chat/chat.conversation.type";
 type ConversationState = {
   conversations: Conversation[];
   pinnedMessageIdsByConversation: Record<string, pinMessages[]>;
+  targetLanguageByConversation: Record<string, string>;
   isLoading: boolean;
 };
 
@@ -19,6 +20,7 @@ type PinMessagePayload = {
 const initialState: ConversationState = {
   conversations: [],
   pinnedMessageIdsByConversation: {},
+  targetLanguageByConversation: {},
   isLoading: false,
 };
 
@@ -301,7 +303,12 @@ const conversationSlice = createSlice({
       if (conversation) {
         conversation.isBlocked = isBlocked;
       }
-    }
+    },
+
+    setTargetLanguageByConversation(state, action) {
+      const { conversationId, targetLanguage } = action.payload;
+      state.targetLanguageByConversation[conversationId] = targetLanguage;
+    },
   },
 
   extraReducers: (builder) => {
@@ -333,7 +340,8 @@ export const {
   setAllPinnedMessagesByConversation,
   updateNickNameConversation,
   deleteConversation,
-  updateConversationBlockStatus
+  updateConversationBlockStatus,
+  setTargetLanguageByConversation,
 } = conversationSlice.actions;
 
 export const conversationReducer = conversationSlice.reducer;

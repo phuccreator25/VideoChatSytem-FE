@@ -17,6 +17,7 @@ const ChatAPI = {
     onGetLinkPreview: (url: string) => axiosInterceptor.get(`/chats/link-preview`, { params: { url } }),
 
     onSearchMessageGlobal: (keyword: string) => axiosInterceptor.get(`/chats/search-message-global?keyword=${keyword}`),
-    onGetAllAttachedFiles: (page: number, limit = 5) => axiosInterceptor.get(`/chats/attached-files`, { params: { page, limit } })
+    onGetAllAttachedFiles: (page: number, limit = 5) => axiosInterceptor.get(`/chats/attached-files`, { params: { page, limit } }),
+    onTranslationMessage: (messageId: string) => axiosInterceptor.post(`/chats/translation/${messageId}`)
 }
 export default ChatAPI

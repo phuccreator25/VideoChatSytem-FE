@@ -6,6 +6,8 @@ import Avatar from "@mui/material/Avatar";
 import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip";
 import InputBase from "@mui/material/InputBase";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
@@ -15,6 +17,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import TranslateRoundedIcon from "@mui/icons-material/TranslateRounded";
 
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../../../../redux/store";
@@ -89,6 +92,8 @@ type ProfileHeaderProps = {
   onSetNicknameInput: (val: string) => void;
   onUpdateNickName: () => void;
   onOpenDeleteDialog: () => void;
+  targetLanguage: string;
+  onSelectLanguage: (val: string) => void;
 };
 
 export function ProfileHeader({
@@ -103,6 +108,8 @@ export function ProfileHeader({
   onSetNicknameInput,
   onUpdateNickName,
   onOpenDeleteDialog,
+  targetLanguage,
+  onSelectLanguage,
 }: ProfileHeaderProps) {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -353,6 +360,93 @@ export function ProfileHeader({
           </IconButton>
         </Tooltip>
       </Stack>
+
+      {/* Target Language Selection Card */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 1.75,
+          px: 2,
+          borderRadius: 4.5,
+          bgcolor: "rgba(255, 255, 255, 0.45)",
+          border: "1px solid rgba(255, 255, 255, 0.5)",
+          boxShadow: "0 8px 24px rgba(15, 23, 42, 0.01)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          transition: "all 0.2s ease-in-out",
+          "&:hover": {
+            bgcolor: "rgba(255, 255, 255, 0.65)",
+            borderColor: "rgba(99, 102, 241, 0.3)",
+          },
+        }}
+      >
+        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
+          <Box
+            sx={{
+              width: 34,
+              height: 34,
+              borderRadius: "50%",
+              bgcolor: "rgba(99, 102, 241, 0.1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#6366f1",
+              flexShrink: 0,
+            }}
+          >
+            <TranslateRoundedIcon sx={{ fontSize: 18 }} />
+          </Box>
+
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              color: "#334155",
+              fontSize: "13.5px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Translate To:
+          </Typography>
+
+          <Select
+            value={targetLanguage}
+            onChange={(e) => onSelectLanguage(e.target.value)}
+            size="small"
+            variant="standard"
+            disableUnderline
+            sx={{
+              fontSize: "13px",
+              fontWeight: 700,
+              color: "#4f46e5",
+              bgcolor: "rgba(79, 70, 229, 0.06)",
+              borderRadius: "10px",
+              px: 1.25,
+              py: 0.25,
+              "& .MuiSelect-select": {
+                py: "3px !important",
+                pr: "22px !important",
+                display: "flex",
+                alignItems: "center",
+              },
+              "& .MuiSelect-icon": {
+                color: "#4f46e5",
+                fontSize: 18,
+                right: 4,
+              },
+            }}
+          >
+            <MenuItem value="vi" sx={{ fontSize: "13px", fontWeight: 600 }}>Vietnamese</MenuItem>
+            <MenuItem value="en" sx={{ fontSize: "13px", fontWeight: 600 }}>English</MenuItem>
+            <MenuItem value="ja" sx={{ fontSize: "13px", fontWeight: 600 }}>Japanese</MenuItem>
+            <MenuItem value="ko" sx={{ fontSize: "13px", fontWeight: 600 }}>Korean</MenuItem>
+            <MenuItem value="zh" sx={{ fontSize: "13px", fontWeight: 600 }}>Chinese</MenuItem>
+            <MenuItem value="fr" sx={{ fontSize: "13px", fontWeight: 600 }}>French</MenuItem>
+            <MenuItem value="es" sx={{ fontSize: "13px", fontWeight: 600 }}>Spanish</MenuItem>
+          </Select>
+        </Stack>
+      </Paper>
 
       {/* Mutual Groups Card */}
       <Paper

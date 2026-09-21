@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ChatAPI from "../../../api/Chat.api";
 import ConversationsAPI from "../../../api/Conversation.api";
 import { enqueueSnackbar } from "notistack";
-import { deleteConversation } from "../../../redux/conversation.redux";
+import { deleteConversation, setTargetLanguageByConversation } from "../../../redux/conversation.redux";
 
 type AttachmentType = {
   fileUrl: string;
@@ -40,12 +40,16 @@ export const useProfileDrawer = () => {
   const [shareLinks, setShareLinks] = useState<ShareLinkType[]>([]);
   const [selectedMedia, setSelectedMedia] = useState<AttachmentType>();
 
-  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
   const { conversationId } = useParams();
   const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
+
+  const targetLanguage = useSelector((state: RootState) =>
+    conversationId ? state.conversation.targetLanguageByConversation[conversationId] || "en" : "en"
+  );
+
+  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const displayName = userData?.nickname ?? userData?.fullname ?? "User";
 
@@ -166,6 +170,24 @@ export const useProfileDrawer = () => {
     }
   };
 
+  const onSelectLanguage = async (targetLanguage: string) => {
+    try {
+      if (!targetLanguage || !conversationId) return;
+
+      const res = await ConversationsAPI.onTranslateMessage(conversationId, targetLanguage);
+
+      if (res.status === 200) {
+        enqueueSnackbar('Translate Message Success', { variant: 'success' })
+        dispatch(setTargetLanguageByConversation({ conversationId, targetLanguage: res.data.data }));
+      }
+
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  };
+
   return {
     ui: {
       isEditingNickname,
@@ -183,6 +205,7 @@ export const useProfileDrawer = () => {
       shareMedia,
       shareLinks,
       selectedMedia,
+      targetLanguage
     },
 
     handlers: {
@@ -197,7 +220,8 @@ export const useProfileDrawer = () => {
       formatFileSize,
       setSelectedMedia,
       onHandleDeleteConversation,
-      setIsDeleteDialogOpen
+      setIsDeleteDialogOpen,
+      onSelectLanguage
     },
   };
 };
