@@ -22,11 +22,14 @@ export function decodeFileName(fileName: string): string {
 }
 
 export function formatFileSize(value: string | number): string {
-  if (typeof value === "string") return value;
-  if (value < 1024) return `${value} B`;
-  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
-  if (value < 1024 * 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(2)} MB`;
-  return `${(value / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  const num = typeof value === "number" ? value : Number(value);
+  if (!isNaN(num) && value !== null && value !== undefined && String(value).trim() !== "") {
+    if (num < 1024) return `${num} B`;
+    if (num < 1024 * 1024) return `${(num / 1024).toFixed(2)} KB`;
+    if (num < 1024 * 1024 * 1024) return `${(num / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(num / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  }
+  return String(value);
 }
 
 export function getFileVisualMeta(fileName: string, mimeType?: string | null): FileVisualMeta {

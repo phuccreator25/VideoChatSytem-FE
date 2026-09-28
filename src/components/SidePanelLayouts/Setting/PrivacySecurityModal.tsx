@@ -116,6 +116,7 @@ export function PrivacySecurityModal({ open, onClose }: PrivacySecurityModalProp
             elevation={0}
             onClick={() => setOpenSessionsModal(true)}
             sx={{
+              mt: 2,
               p: 2.25,
               borderRadius: 3,
               bgcolor: "#ffffff",

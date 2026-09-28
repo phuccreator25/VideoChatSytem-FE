@@ -431,6 +431,16 @@ export const useSendMessage = ({
     setInputText((prev) => prev + emoji);
   };
 
+  //Xử lý kéo thả file
+  const handleDropFiles = (droppedFiles: File[]) => {
+    if (!droppedFiles.length || !conversationId) return;
+    // Validate số lượng và dung lượng file
+    const validation = validateChatFiles(droppedFiles, files.length);
+    if (!validation.isValid) return;
+    // Thêm file vào state
+    setFiles((prev) => [...prev, ...droppedFiles]);
+  };
+
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isUploadingFiles) {
@@ -459,6 +469,7 @@ export const useSendMessage = ({
     handleSelectGif,
     onRemoveGif,
     applyEmoji,
-    handleCancelUpload
+    handleCancelUpload,
+    handleDropFiles
   };
 };

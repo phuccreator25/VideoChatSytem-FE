@@ -9,6 +9,7 @@ export default function useOpenConversation() {
   const handleOpenConversation = useCallback(
     async (userId: string) => {
       try {
+        if (!userId) return;
 
         setIsSubmitting(true);
 

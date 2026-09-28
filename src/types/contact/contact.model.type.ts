@@ -1,11 +1,12 @@
 export type Contact = {
-  _id: string;
+  _id?: string;
   userId: string;
   fullname: string;
-  nickname: string;
-  avatar: string;
-  email: string;
-  isBlocked: boolean;
+  nickname?: string | null;
+  avatar?: string;
+  email?: string;
+  isBlocked?: boolean;
+  isOnline?: string;
   onClick?: () => void;
 };
 

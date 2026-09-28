@@ -5,6 +5,8 @@ import Typography from "@mui/material/Typography";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import DoNotDisturbOnRoundedIcon from "@mui/icons-material/DoNotDisturbOnRounded";
 
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+
 import { customScrollbarSx } from "../../utils/CustomScroll";
 import { COLORS } from "../../utils/Colors";
 import { Header } from "./Header/header.chat";
@@ -80,6 +82,9 @@ export default function ChatFrame() {
   return (
     <Paper
       elevation={0}
+      onDragOver={handler.handleDragOver}
+      onDragLeave={handler.handleDragLeave}
+      onDrop={handler.handleDrop}
       sx={{
         width: "100%",
         height: "100%",
@@ -139,6 +144,7 @@ export default function ChatFrame() {
             pinnedMessages={data.pinMessages}
             otherUser={data.userData}
             onUnpin={handler.onUnPin}
+            onNavigate={handler.navigateToMessage}
           />
 
           <ContactRelationBar
@@ -390,6 +396,31 @@ export default function ChatFrame() {
           userData={data.userData}
         />
       </Box>
+
+      {ui.isDraggingOver && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 999,
+            backgroundColor: "rgba(255, 255, 255, 0.85)",
+            backdropFilter: "blur(4px)",
+            border: "3px dashed #4f46e5",
+            borderRadius: 5,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+            animation: "fadeIn 0.2s ease-in-out",
+          }}
+        >
+          <CloudUploadIcon sx={{ fontSize: 64, color: "#4f46e5", mb: 1 }} />
+          <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#1e293b" }}>
+            Drop files to upload
+          </Typography>
+        </Box>
+      )}
     </Paper>
   );
 }

@@ -3,6 +3,7 @@ import type { pinMessages } from "../../../types/chat/chat.conversation.type";
 import CloseIcon from "@mui/icons-material/Close";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
+import type { MessageType } from "../../../types/chat.type";
 
 function getInitials(name: string) {
     return name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
@@ -113,23 +114,25 @@ function ContentPreview({ pin }: { pin: pinMessages }) {
     );
 }
 
-
 export function PinRow({
     pin,
     avatar,
     name,
     isUnpinning,
     onUnpin,
+    onNavigate
 }: {
     pin: pinMessages;
     avatar: string | undefined;
     name: string;
     isUnpinning: boolean;
     onUnpin: (messageId: string,
-        attachmentId: string | null) => void;
+    attachmentId: string | null) => void;
+    onNavigate: (msg: MessageType) => void;
 }) {
     return (
         <Box
+            onClick={() => onNavigate(pin)}
             sx={{
                 display: "flex",
                 alignItems: "center",
@@ -137,6 +140,7 @@ export function PinRow({
                 py: "4px",
                 opacity: isUnpinning ? 0.45 : 1,
                 transition: "opacity 0.15s",
+                cursor: "pointer",
             }}
         >
             <Avatar
@@ -160,7 +164,10 @@ export function PinRow({
                     <IconButton
                         size="small"
                         disabled={isUnpinning}
-                        onClick={() => onUnpin(pin.id, pin.attachmentId)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onUnpin(pin.id, pin.attachmentId)
+                        }}
                         sx={{
                             width: 20,
                             height: 20,

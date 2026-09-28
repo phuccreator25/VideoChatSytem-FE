@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Skeleton from "@mui/material/Skeleton";
 import Pagination from "@mui/material/Pagination";
+import Paper from "@mui/material/Paper";
 
 import AttachmentOutlinedIcon from "@mui/icons-material/AttachmentOutlined";
 
@@ -20,28 +21,28 @@ type AttachedFilesSectionProps = {
 
 function AttachedFileSkeletonRow() {
     return (
-        <Box
+        <Paper
+            elevation={0}
             sx={{
+                p: 1.5,
+                borderRadius: 4,
+                border: "1px solid rgba(255, 255, 255, 0.5)",
+                bgcolor: "rgba(255, 255, 255, 0.45)",
                 display: "flex",
                 alignItems: "center",
-                gap: 1.75,
-                p: 1.5,
-                border: "1px solid rgba(148, 163, 184, 0.15)",
-                borderRadius: "14px",
-                bgcolor: "#ffffff",
-                mb: 1.5,
+                justifyContent: "space-between",
+                mb: 1.25,
             }}
         >
-            <Skeleton variant="rounded" width={48} height={48} sx={{ borderRadius: "10px", flexShrink: 0 }} />
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Skeleton variant="text" width="55%" height={20} sx={{ borderRadius: "4px" }} />
-                <Skeleton variant="text" width="25%" height={16} sx={{ mt: 0.5, borderRadius: "4px" }} />
-            </Box>
-            <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
-                <Skeleton variant="circular" width={28} height={28} />
-                <Skeleton variant="circular" width={28} height={28} />
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
+                <Skeleton variant="circular" width={36} height={36} sx={{ flexShrink: 0 }} />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Skeleton variant="text" width="60%" height={18} sx={{ borderRadius: "4px" }} />
+                    <Skeleton variant="text" width="40%" height={14} sx={{ mt: 0.25, borderRadius: "4px" }} />
+                </Box>
             </Stack>
-        </Box>
+            <Skeleton variant="circular" width={28} height={28} sx={{ flexShrink: 0 }} />
+        </Paper>
     );
 }
 

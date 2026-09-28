@@ -33,7 +33,7 @@ type TextMessageBubbleProps = {
   onOpenEmotionDetail: (el: HTMLElement) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
-  onTranslate: (msg: MessageType) => void;
+  onTranslate?: (msg: MessageType) => void | undefined;
   targetLanguage?: string;
 };
 
@@ -60,7 +60,7 @@ export function TextMessageBubble({
 
   useEffect(() => {
     const currentLang = (targetLanguage ?? "en").toLowerCase();
-    if (showTranslation && !msg.translations?.[currentLang]) {
+    if (showTranslation && !msg.translations?.[currentLang] && onTranslate) {
       onTranslate(msg);
     }
   }, [showTranslation, targetLanguage, msg.translations, msg.id]);
@@ -140,11 +140,13 @@ export function TextMessageBubble({
                 fontSize: 15,
                 lineHeight: 1.62,
                 color: isLeft ? COLORS.textMain : "#f8faff",
-                textAlign: "left",
+                textAlign: "justify",
+                whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
                 letterSpacing: 0.1,
                 opacity: showTranslation ? (isLeft ? 0.65 : 0.8) : 1,
                 transition: "opacity 0.25s ease",
+                
               }}
             >
               {renderMessageContent(msg.content || "", isLeft)}
@@ -157,7 +159,7 @@ export function TextMessageBubble({
             <IconButton
               size="small"
               onClick={() => {
-                if (!showTranslation) onTranslate(msg)
+                if (!showTranslation && onTranslate) onTranslate(msg)
                 setShowTranslation((prev) => !prev)
               }}
               sx={{
@@ -278,7 +280,9 @@ export function TextMessageBubble({
                       lineHeight: 1.6,
                       color: isLeft ? "#1e293b" : "#ffffff",
                       fontWeight: 450,
+                      whiteSpace: "pre-wrap",
                       wordBreak: "break-word",
+                      textAlign: "justify"
                     }}
                   >
                     {translatedText}

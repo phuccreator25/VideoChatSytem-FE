@@ -32,6 +32,7 @@ import type { AppDispatch } from "../../../redux/store";
 import { useDispatch } from "react-redux";
 import { onUpdateProfile } from "../../../redux/auth.redux";
 import { enqueueSnackbar } from "notistack";
+import { customScrollbarSx } from "../../../utils/CustomScroll";
 
 type ChangePasswordModalProps = {
   open: boolean;
@@ -103,32 +104,37 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
       maxWidth="sm"
       PaperProps={{
         sx: {
-          borderRadius: 4,
+          borderRadius: { xs: 3, sm: 4 },
           bgcolor: "#ffffff",
           backgroundImage: "none",
           boxShadow: "0 24px 48px rgba(15, 23, 42, 0.16)",
           overflow: "hidden",
           border: "1px solid rgba(148, 163, 184, 0.18)",
+          m: { xs: 1.5, sm: 2 },
+          maxHeight: { xs: "calc(100% - 32px)", sm: "calc(100% - 64px)" },
+          display: "flex",
+          flexDirection: "column",
         },
       }}
     >
       {/* Header */}
       <DialogTitle
         sx={{
-          p: { xs: 2.5, sm: 3 },
+          p: { xs: 2, sm: 3 },
           pb: 2,
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "space-between",
           borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
           bgcolor: "rgba(248, 250, 252, 0.6)",
+          gap: 1,
         }}
       >
-        <Stack direction="row" spacing={1.75} alignItems="center">
+        <Stack direction="row" spacing={{ xs: 1.25, sm: 1.75 }} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
           <Box
             sx={{
-              width: 44,
-              height: 44,
+              width: { xs: 38, sm: 44 },
+              height: { xs: 38, sm: 44 },
               borderRadius: 3,
               bgcolor: "rgba(99, 102, 241, 0.08)",
               color: "#6366f1",
@@ -136,14 +142,15 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
               alignItems: "center",
               justifyContent: "center",
               boxShadow: "0 4px 12px rgba(99, 102, 241, 0.12)",
+              flexShrink: 0,
             }}
           >
-            <LockResetRoundedIcon sx={{ fontSize: 24 }} />
+            <LockResetRoundedIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
           </Box>
-          <Box>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography
               sx={{
-                fontSize: 18,
+                fontSize: { xs: 16, sm: 18 },
                 fontWeight: 700,
                 color: "#0f172a",
                 letterSpacing: "-0.01em",
@@ -151,7 +158,17 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
             >
               Change Password
             </Typography>
-            <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.2 }}>
+            <Typography
+              sx={{
+                fontSize: { xs: 11.5, sm: 13 },
+                color: "#64748b",
+                mt: 0.2,
+                display: { xs: "-webkit-box", sm: "block" },
+                overflow: "hidden",
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: "vertical",
+              }}
+            >
               Update your account password to stay secure
             </Typography>
           </Box>
@@ -162,6 +179,7 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
           size="small"
           sx={{
             color: "#64748b",
+            flexShrink: 0,
             "&:hover": { bgcolor: "rgba(148, 163, 184, 0.14)", color: "#0f172a" },
           }}
         >
@@ -170,13 +188,15 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
       </DialogTitle>
 
       {/* Content Form */}
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
       <DialogContent
         sx={{
-          p: { xs: 2.5, sm: 3 },
+          p: { xs: 2, sm: 3 },
           display: "flex",
           flexDirection: "column",
-          gap: 2.5,
+          gap: { xs: 2, sm: 2.5 },
+          overflowY: "auto",
+          ...customScrollbarSx,
         }}
       >
         {/* Security Banner Note */}
@@ -308,7 +328,7 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
           )}
 
           {/* Password Requirements Checklist */}
-          <Box sx={{ mt: 1.2, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+          <Box sx={{ mt: 1.2, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1 }}>
             <Stack direction="row" spacing={0.6} alignItems="center">
               <CheckCircleRoundedIcon
                 sx={{
@@ -453,7 +473,7 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
         </Box>
 
         {/* Action Buttons */}
-        <Stack direction="row" spacing={1.5} justifyContent="flex-end" sx={{ mt: 1 }}>
+        <Stack direction={{ xs: "column-reverse", sm: "row" }} spacing={1.5} justifyContent="flex-end" sx={{ mt: 1 }}>
           <Button
             variant="outlined"
             type="button"
@@ -467,6 +487,7 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
               color: "#64748b",
               borderColor: "rgba(148, 163, 184, 0.25)",
               textTransform: "none",
+              width: { xs: "100%", sm: "auto" },
               "&:hover": {
                 bgcolor: "rgba(148, 163, 184, 0.08)",
                 borderColor: "#94a3b8",
@@ -489,6 +510,7 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
               bgcolor: "#4f46e5",
               color: "#ffffff",
               textTransform: "none",
+              width: { xs: "100%", sm: "auto" },
               boxShadow: "0 4px 14px rgba(79, 70, 229, 0.3)",
               "&:hover": {
                 bgcolor: "#4338ca",

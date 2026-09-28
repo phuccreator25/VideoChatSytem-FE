@@ -100,7 +100,8 @@ export function useChatFrame() {
     handleSelectGif,
     onRemoveGif,
     applyEmoji,
-    handleCancelUpload
+    handleCancelUpload,
+    handleDropFiles,
   } = useSendMessage({
     conversationId,
     currentUserId,
@@ -314,6 +315,38 @@ export function useChatFrame() {
     })
   }
 
+
+  //Xử lý kéo thả file
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  // Khi file được kéo qua
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Ngăn sự kiện lan đến các phần tử cha
+    if (!isDraggingOver) setIsDraggingOver(true);
+  };
+
+  // Khi file rời khỏi frame chat
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Ngăn sự kiện lan đến các phần tử cha
+    // Tránh bị nhấp nháy khi rê qua các element con
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDraggingOver(false);
+    }
+  };
+
+  // Thả file
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Ngăn sự kiện lan đến các phần tử cha
+    setIsDraggingOver(false);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      handleDropFiles(droppedFiles);
+    }
+  };
+
   return {
     ui: {
       normalizedMessages,
@@ -328,6 +361,7 @@ export function useChatFrame() {
       linkPreview,
       isLoadingLinkPreview,
       isMessagesLoading,
+      isDraggingOver
     },
 
     data: {
@@ -381,7 +415,11 @@ export function useChatFrame() {
       setLinkPreview,
       handleReCall: (type: "video" | "voice") => dispatch(openCallModal({ type })),
       handleCancelUpload,
-      handleTranslateMessage: onHandleTranslation
+      handleTranslateMessage: onHandleTranslation,
+      handleDropFiles,
+      handleDragOver,
+      handleDragLeave,
+      handleDrop,
     },
 
     ref: {

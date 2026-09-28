@@ -95,7 +95,7 @@ export default function ChatLayout({ middlePanel, activeRail, onRailChange, cont
         isOpen={ui.isCallModalOpen.isOpen}
         type={ui.isCallModalOpen.type}
         handleClose={handler.closeCallModal}
-        userData={ui.incomingCall.userData || ui.userData}
+        userData={ ui.isCallModalOpen.targetUser  || ui.incomingCall.userData || ui.userData}
       />
 
       <Chatbot />

@@ -9,8 +9,10 @@ import IconButton from "@mui/material/IconButton";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Alert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
 
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 
 import { customScrollbarSx } from "../../../utils/CustomScroll";
 import { AboutSection } from "./About/AboutSection.profile";
@@ -20,7 +22,7 @@ import OpenAvatar from "./OpenAvatar/OpenAvatar.profile";
 
 export function MyProfile() {
     const { ui, data, handlers } = useProfile();
-    const { activeTab, loadingAttachedFiles, openAvatarReview, currentPage, totalPage } = ui;
+    const { activeTab, loadingAttachedFiles, openAvatarReview, currentPage, totalPage, isUploadingAvatar, uploadSuccess, avatarPreview } = ui;
     const { initialProfile } = data;
     const { handleAvatarChange, setOpenAvatarReview, setActiveTab, messageFile, showAlert, attachedFiles, handleUpdateUser, onGetAllAttachedFiles, setCurrentPage } = handlers;
 
@@ -92,49 +94,142 @@ export function MyProfile() {
                                     position: "relative",
                                     mt: -6,
                                     display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                 }}
                             >
-                                <Avatar
-                                    src={initialProfile?.avatar}
-                                    alt={initialProfile?.fullname}
-                                    onClick={() => setOpenAvatarReview(true)}
+                                {/* Avatar Outer Ring Container */}
+                                <Box
                                     sx={{
-                                        width: 96,
-                                        height: 96,
-                                        border: "4px solid #ffffff",
-                                        outline: "2.5px solid rgba(79, 70, 229, 0.12)",
-                                        boxShadow: "0 8px 28px rgba(15, 23, 42, 0.15)",
-                                        cursor: "pointer",
-                                        transition: "all 0.25s ease",
-                                        "&:hover": {
-                                            transform: "scale(1.04)",
-                                            boxShadow: "0 12px 32px rgba(15, 23, 42, 0.2)",
-                                            outlineColor: "rgba(79, 70, 229, 0.25)",
-                                        }
+                                        position: "relative",
+                                        width: 104,
+                                        height: 104,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        borderRadius: "50%",
                                     }}
-                                />
+                                >
+                                    {/* Background Track when Uploading */}
+                                    {isUploadingAvatar && (
+                                        <CircularProgress
+                                            variant="determinate"
+                                            value={100}
+                                            size={104}
+                                            thickness={3.5}
+                                            sx={{
+                                                color: "rgba(79, 70, 229, 0.18)",
+                                                position: "absolute",
+                                                inset: 0,
+                                            }}
+                                        />
+                                    )}
+
+                                    {/* Animated Progress Spinner when Uploading */}
+                                    {isUploadingAvatar && (
+                                        <CircularProgress
+                                            size={104}
+                                            thickness={3.5}
+                                            sx={{
+                                                color: "#4f46e5",
+                                                position: "absolute",
+                                                inset: 0,
+                                                animationDuration: "0.85s",
+                                                "& .MuiCircularProgress-circle": {
+                                                    strokeLinecap: "round",
+                                                },
+                                            }}
+                                        />
+                                    )}
+
+                                    {/* Success Green Border Ring */}
+                                    {uploadSuccess && (
+                                        <Box
+                                            sx={{
+                                                position: "absolute",
+                                                inset: 0,
+                                                borderRadius: "50%",
+                                                border: "3.5px solid #22c55e",
+                                                boxShadow: "0 0 16px rgba(34, 197, 94, 0.35)",
+                                                animation: "pulseSuccessRing 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                                                "@keyframes pulseSuccessRing": {
+                                                    "0%": { transform: "scale(0.92)", opacity: 0 },
+                                                    "100%": { transform: "scale(1)", opacity: 1 },
+                                                },
+                                            }}
+                                        />
+                                    )}
+
+                                    <Avatar
+                                        src={avatarPreview || initialProfile?.avatar}
+                                        alt={initialProfile?.fullname}
+                                        onClick={() => !isUploadingAvatar && setOpenAvatarReview(true)}
+                                        sx={{
+                                            width: 96,
+                                            height: 96,
+                                            border: uploadSuccess || isUploadingAvatar
+                                                ? "3px solid #ffffff"
+                                                : "4px solid #ffffff",
+                                            outline: uploadSuccess || isUploadingAvatar
+                                                ? "none"
+                                                : "2.5px solid rgba(79, 70, 229, 0.12)",
+                                            boxShadow: uploadSuccess
+                                                ? "0 8px 24px rgba(34, 197, 94, 0.25)"
+                                                : "0 8px 28px rgba(15, 23, 42, 0.15)",
+                                            cursor: isUploadingAvatar ? "default" : "pointer",
+                                            transition: "all 0.3s ease",
+                                            filter: isUploadingAvatar ? "brightness(0.92) opacity(0.88)" : "none",
+                                            "&:hover": {
+                                                transform: isUploadingAvatar ? "none" : "scale(1.04)",
+                                                boxShadow: isUploadingAvatar
+                                                    ? "0 8px 28px rgba(15, 23, 42, 0.15)"
+                                                    : "0 12px 32px rgba(15, 23, 42, 0.2)",
+                                                outlineColor: "rgba(79, 70, 229, 0.25)",
+                                            },
+                                        }}
+                                    />
+                                </Box>
+
+                                {/* Bottom Right Badge Button */}
                                 <IconButton
                                     component="label"
+                                    disabled={isUploadingAvatar}
                                     sx={{
                                         position: "absolute",
                                         bottom: 0,
                                         right: 0,
-                                        width: 30,
-                                        height: 30,
-                                        bgcolor: "#4f46e5",
+                                        width: 32,
+                                        height: 32,
+                                        bgcolor: uploadSuccess ? "#22c55e" : "#4f46e5",
                                         color: "#ffffff",
-                                        boxShadow: "0 4px 12px rgba(79, 70, 229, 0.35)",
-                                        border: "2px solid #ffffff",
+                                        boxShadow: uploadSuccess
+                                            ? "0 4px 14px rgba(34, 197, 94, 0.45)"
+                                            : "0 4px 12px rgba(79, 70, 229, 0.35)",
+                                        border: "2.5px solid #ffffff",
+                                        transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                                        transform: uploadSuccess ? "scale(1.08)" : "scale(1)",
                                         "&:hover": {
-                                            bgcolor: "#4338ca",
+                                            bgcolor: uploadSuccess ? "#16a34a" : "#4338ca",
+                                        },
+                                        "&.Mui-disabled": {
+                                            bgcolor: "#4f46e5",
+                                            color: "#ffffff",
+                                            opacity: 0.9,
                                         },
                                     }}
                                 >
-                                    <CloudUploadIcon sx={{ fontSize: 13 }} />
+                                    {uploadSuccess ? (
+                                        <CheckRoundedIcon sx={{ fontSize: 16 }} />
+                                    ) : isUploadingAvatar ? (
+                                        <CircularProgress size={14} sx={{ color: "#ffffff" }} />
+                                    ) : (
+                                        <CloudUploadIcon sx={{ fontSize: 13 }} />
+                                    )}
                                     <input
                                         hidden
                                         type="file"
                                         accept="image/*"
+                                        disabled={isUploadingAvatar}
                                         onChange={handleAvatarChange}
                                     />
                                 </IconButton>

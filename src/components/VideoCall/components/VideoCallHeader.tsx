@@ -3,6 +3,7 @@ import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
 import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
 import FullscreenExitRoundedIcon from "@mui/icons-material/FullscreenExitRounded";
 import type { ConversationUserInfo } from "../../../types/chat/chat.conversation.type";
+import type { Contact } from "../../../types/contact/contact.model.type";
 
 const formatDuration = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -19,7 +20,7 @@ export const VideoCallHeader = ({
   onToggleFullScreen,
   callType,
 }: {
-  userData?: ConversationUserInfo | null;
+  userData?: Contact | ConversationUserInfo | null;
   displayName: string;
   ui: {
     isRemoteAudioMuted: boolean;

@@ -43,16 +43,7 @@ export type SetNicknameModalProps = {
 export type ViewUserInfoModalProps = {
   open: boolean;
   onClose: () => void;
-  user: {
-    userId: string;
-    fullname: string;
-    email?: string;
-    avatar?: string;
-    nickname?: string | null;
-    isBlocked?: boolean;
-  } | null;
-  onCall?: (userId: string) => void;
-  onMessage?: (userId: string) => void;
+  user: Contact | null;
   onBlockCommunication?: (userId: string) => void;
   setOpenSetNicknameModal: Dispatch<SetStateAction<boolean>>;
   setOpenModalRemove: Dispatch<SetStateAction<boolean>>;

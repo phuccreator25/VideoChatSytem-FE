@@ -10,14 +10,24 @@ export type ProfileData = {
 };
 
 export type FileItem = {
-  url: string;
-  name: string;
-  size: string;
-  type: string;
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  resourceType?: string;
   messageId: string;
-  attachmentId: string;
   conversationId: string;
-  createdAt: Date;
+  createdAt: string;
+};
+
+export type ShareLinkType = {
+  id: string;
+  url: string;
+  title: string;
+  domain: string;
+  messageId: string;
+  conversationId: string;
+  createdAt: string;
 };
 
 export type ChangePasswordForm = {

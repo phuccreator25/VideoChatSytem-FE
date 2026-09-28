@@ -7,27 +7,7 @@ import ChatAPI from "../../../api/Chat.api";
 import ConversationsAPI from "../../../api/Conversation.api";
 import { enqueueSnackbar } from "notistack";
 import { deleteConversation, setTargetLanguageByConversation } from "../../../redux/conversation.redux";
-
-type AttachmentType = {
-  fileUrl: string;
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
-  resourceType?: string;
-  messageId: string;
-  conversationId: string;
-  createdAt: string;
-};
-
-type ShareLinkType = {
-  id: string;
-  url: string;
-  title: string;
-  domain: string;
-  messageId: string;
-  conversationId: string;
-  createdAt: string;
-};
+import type { FileItem, ShareLinkType } from "../../../types/data.type";
 
 export const useProfileDrawer = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -35,10 +15,10 @@ export const useProfileDrawer = () => {
   const userData = useSelector((state: RootState) => state.chat.userData);
   const [nicknameInput, setNicknameInput] = useState<string | null>(null);
   const [isAvatarPreviewOpen, setIsAvatarPreviewOpen] = useState(false);
-  const [shareMedia, setShareMedia] = useState<AttachmentType[]>([]);
-  const [shareFiles, setShareFiles] = useState<AttachmentType[]>([]);
+  const [shareMedia, setShareMedia] = useState<FileItem[]>([]);
+  const [shareFiles, setShareFiles] = useState<FileItem[]>([]);
   const [shareLinks, setShareLinks] = useState<ShareLinkType[]>([]);
-  const [selectedMedia, setSelectedMedia] = useState<AttachmentType>();
+  const [selectedMedia, setSelectedMedia] = useState<FileItem>();
 
   const { conversationId } = useParams();
   const navigate = useNavigate()
@@ -50,6 +30,7 @@ export const useProfileDrawer = () => {
 
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLoadingTabs, setIsLoadingTabs] = useState(false);
 
   const displayName = userData?.nickname ?? userData?.fullname ?? "User";
 
@@ -85,6 +66,7 @@ export const useProfileDrawer = () => {
   const onGetShareMedia = async () => {
     try {
       if (!conversationId) return;
+      setIsLoadingTabs(true);
 
       const res = await ChatAPI.onGetShareMedia(conversationId);
 
@@ -96,12 +78,15 @@ export const useProfileDrawer = () => {
     } catch (error) {
       console.log(error);
       return false;
+    } finally {
+      setIsLoadingTabs(false);
     }
   };
 
   const onGetShareFiles = async () => {
     try {
       if (!conversationId) return;
+      setIsLoadingTabs(true);
 
       const res = await ChatAPI.onGetShareFiles(conversationId);
 
@@ -113,12 +98,15 @@ export const useProfileDrawer = () => {
     } catch (error) {
       console.log(error);
       return false;
+    } finally {
+      setIsLoadingTabs(false);
     }
   };
 
   const onGetShareLinks = async () => {
     try {
       if (!conversationId) return;
+      setIsLoadingTabs(true);
 
       const res = await ChatAPI.onGetShareLinks(conversationId);
 
@@ -130,6 +118,8 @@ export const useProfileDrawer = () => {
     } catch (error) {
       console.log(error);
       return false;
+    } finally {
+      setIsLoadingTabs(false);
     }
   };
 
@@ -197,7 +187,8 @@ export const useProfileDrawer = () => {
       displayName,
       userData,
       isLoadingDelete,
-      isDeleteDialogOpen
+      isDeleteDialogOpen,
+      isLoadingTabs,
     },
 
     data: {

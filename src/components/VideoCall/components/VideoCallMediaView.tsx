@@ -2,6 +2,7 @@ import { Box, Typography, Avatar, Button } from "@mui/material";
 import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
 import ScreenShareRoundedIcon from "@mui/icons-material/ScreenShareRounded";
 import type { ConversationUserInfo } from "../../../types/chat/chat.conversation.type";
+import type { Contact } from "../../../types/contact/contact.model.type";
 import { LocalVideoPreview } from "./LocalVideoPreview";
 
 const formatDuration = (seconds: number) => {
@@ -38,7 +39,7 @@ export const VideoCallMediaView = ({
   handler: {
     toggleShareScreen: () => void;
   };
-  userData?: ConversationUserInfo | null;
+  userData?: Contact | ConversationUserInfo | null;
   displayName: string;
   myAvatar: string;
   localVideoRef: React.RefObject<HTMLVideoElement | null>;

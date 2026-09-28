@@ -11,6 +11,7 @@ import { useSelector } from "react-redux";
 import type { ConversationUserInfo, pinMessages } from "../../../types/chat/chat.conversation.type";
 import { PinRow } from "./pinRow.chat";
 import type { RootState } from "../../../redux/store";
+import type { MessageType } from "../../../types/chat.type";
 
 export type PinnedMessageType = "text" | "gif" | "file";
 
@@ -19,6 +20,7 @@ export type PinnedMessageStripProps = {
     otherUser: ConversationUserInfo | null;
     onUnpin: (messageId: string, attachmentId: string | null) => void;
     unpinningIds?: string[];
+    onNavigate: (msg: MessageType) => void;
 }
 
 export function PinnedMessageStrip({
@@ -26,6 +28,7 @@ export function PinnedMessageStrip({
     otherUser,
     onUnpin,
     unpinningIds = [],
+    onNavigate,
 }: PinnedMessageStripProps) {
     const currentUser = useSelector((state: RootState) => state.user.currentUser);
     const [expanded, setExpanded] = useState(false);
@@ -68,6 +71,7 @@ export function PinnedMessageStrip({
                         name={latestSender.name}
                         isUnpinning={unpinningIds.includes(latest.id)}
                         onUnpin={onUnpin}
+                        onNavigate={onNavigate}
                     />
                 </Box>
 
@@ -111,6 +115,7 @@ export function PinnedMessageStrip({
                                         name={name}
                                         isUnpinning={unpinningIds.includes(pin.id)}
                                         onUnpin={onUnpin}
+                                        onNavigate={onNavigate}
                                     />
                                 </Box>
                             );

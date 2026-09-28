@@ -14,6 +14,7 @@ export type {
   EditableFieldKey,
   FileItem,
   ProfileData,
+  ShareLinkType,
 } from "./profile/profile.model.type";
 export type {
   InfoRowProps,

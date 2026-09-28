@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
 import { Dialog, Box, useTheme, useMediaQuery } from "@mui/material";
 import type { ConversationUserInfo } from "../../types/chat/chat.conversation.type";
+import type { Contact } from "../../types/contact/contact.model.type";
 import { VideoCallHeader } from "./components/VideoCallHeader";
 import { VideoCallMediaView } from "./components/VideoCallMediaView";
 import { VideoCallControls } from "./components/VideoCallControls";
@@ -18,7 +19,7 @@ export const VideoCallModal = ({
     isOpen: boolean;
     type: "video" | "voice";
     handleClose: () => void;
-    userData?: ConversationUserInfo | null;
+    userData?: Contact | ConversationUserInfo | null;
 }) => {
     const { ui, data, handler, refs: { localVideoRef } } = useVideoCall();
     const currentUser = useSelector((state: RootState) => state.user.currentUser);

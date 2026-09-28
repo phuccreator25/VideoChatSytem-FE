@@ -33,7 +33,8 @@ export interface CallEndPayload {
   reason?: "ended" | "rejected" | "cancelled";
 }
 
-//Redux
+import type { Contact } from "../contact/contact.model.type";
+
 export type incomingType = {
   isOpen: boolean;
   userData: ConversationUserInfo | null;
@@ -50,6 +51,7 @@ export type initialType = {
   isCallModalOpen: {
     isOpen: boolean;
     type: CallType; // Khai báo union type chuẩn ở đây
+    targetUser: Contact | ConversationUserInfo | null;
   };
   iceCandidates: RTCIceCandidate[];
 };

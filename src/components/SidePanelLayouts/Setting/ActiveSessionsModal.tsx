@@ -81,32 +81,35 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
       maxWidth="sm"
       PaperProps={{
         sx: {
-          borderRadius: 4,
+          borderRadius: { xs: 3, sm: 4 },
           bgcolor: "#ffffff",
           backgroundImage: "none",
           boxShadow: "0 24px 48px rgba(15, 23, 42, 0.16)",
           overflow: "hidden",
           border: "1px solid rgba(148, 163, 184, 0.18)",
+          m: { xs: 1.5, sm: 2 },
+          maxHeight: { xs: "calc(100% - 32px)", sm: "calc(100% - 64px)" },
         },
       }}
     >
       {/* header  */}
       <DialogTitle
         sx={{
-          p: { xs: 2.5, sm: 3 },
+          p: { xs: 2, sm: 3 },
           pb: 2,
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "space-between",
           borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
           bgcolor: "rgba(248, 250, 252, 0.6)",
+          gap: 1,
         }}
       >
-        <Stack direction="row" spacing={1.75} alignItems="center">
+        <Stack direction="row" spacing={{ xs: 1.25, sm: 1.75 }} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
           <Box
             sx={{
-              width: 44,
-              height: 44,
+              width: { xs: 38, sm: 44 },
+              height: { xs: 38, sm: 44 },
               borderRadius: 3,
               bgcolor: "rgba(79, 70, 229, 0.08)",
               color: "#4f46e5",
@@ -114,15 +117,16 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
               alignItems: "center",
               justifyContent: "center",
               boxShadow: "0 4px 12px rgba(79, 70, 229, 0.12)",
+              flexShrink: 0,
             }}
           >
-            <ShieldOutlinedIcon sx={{ fontSize: 24 }} />
+            <ShieldOutlinedIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
           </Box>
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center">
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: 0.5 }}>
               <Typography
                 sx={{
-                  fontSize: 18,
+                  fontSize: { xs: 16, sm: 18 },
                   fontWeight: 800,
                   color: "#0f172a",
                   letterSpacing: "-0.02em",
@@ -134,8 +138,8 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
                 label={`${sessions.length} Active`}
                 size="small"
                 sx={{
-                  height: 22,
-                  fontSize: 11,
+                  height: 20,
+                  fontSize: 10.5,
                   fontWeight: 700,
                   bgcolor: "rgba(34, 197, 94, 0.1)",
                   color: "#16a34a",
@@ -145,9 +149,13 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
             </Stack>
             <Typography
               sx={{
-                fontSize: 13,
+                fontSize: { xs: 11.5, sm: 13 },
                 color: "#64748b",
                 mt: 0.25,
+                display: { xs: "-webkit-box", sm: "block" },
+                overflow: "hidden",
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: "vertical",
               }}
             >
               Manage devices currently logged into your account
@@ -155,7 +163,7 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
           </Box>
         </Stack>
 
-        <Stack direction="row" spacing={0.5} alignItems="center">
+        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0, mt: 0.25 }}>
           <Tooltip title="Refresh sessions list" arrow placement="top">
             <IconButton
               onClick={fetchListSession}
@@ -347,16 +355,16 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
                   }}
                 >
                   <Stack
-                    direction="row"
-                    spacing={2}
-                    alignItems="flex-start"
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={{ xs: 1.5, sm: 2 }}
+                    alignItems={{ xs: "stretch", sm: "flex-start" }}
                     justifyContent="space-between"
                   >
-                    <Stack direction="row" spacing={1.75} alignItems="center" minWidth={0}>
+                    <Stack direction="row" spacing={{ xs: 1.25, sm: 1.75 }} alignItems="flex-start" minWidth={0} sx={{ flex: 1 }}>
                       <Box
                         sx={{
-                          width: 46,
-                          height: 46,
+                          width: { xs: 40, sm: 46 },
+                          height: { xs: 40, sm: 46 },
                           borderRadius: 2.5,
                           bgcolor: isCurrentSession
                             ? "rgba(14, 165, 233, 0.1)"
@@ -372,14 +380,15 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
                       </Box>
 
                       {/* info device  */}
-                      <Box minWidth={0}>
-                        <Stack direction="row" spacing={1} alignItems="center">
+                      <Box minWidth={0} sx={{ flex: 1 }}>
+                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: 0.5 }}>
                           <Typography
                             sx={{
-                              fontSize: 15,
+                              fontSize: { xs: 14, sm: 15 },
                               fontWeight: 700,
                               color: "#0f172a",
                               letterSpacing: "-0.01em",
+                              wordBreak: "break-word",
                             }}
                           >
                             {browserName} on {osName}
@@ -390,7 +399,7 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
                               icon={
                                 <CheckCircleRoundedIcon
                                   sx={{
-                                    fontSize: "14px !important",
+                                    fontSize: "13px !important",
                                     color: "#0284c7 !important",
                                   }}
                                 />
@@ -398,10 +407,10 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
                               label="Current Device"
                               size="small"
                               sx={{
-                                height: 22,
+                                height: 20,
                                 borderRadius: "999px",
                                 fontWeight: 700,
-                                fontSize: 11,
+                                fontSize: 10.5,
                                 bgcolor: "rgba(224, 242, 254, 0.9)",
                                 color: "#0369a1",
                                 border: "1px solid rgba(56, 189, 248, 0.3)",
@@ -413,9 +422,9 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
 
                         {/* info device  */}
                         <Stack
-                          direction="row"
-                          spacing={1.5}
-                          alignItems="center"
+                          direction={{ xs: "column", sm: "row" }}
+                          spacing={{ xs: 0.25, sm: 1.5 }}
+                          alignItems={{ xs: "flex-start", sm: "center" }}
                           flexWrap="wrap"
                           sx={{ mt: 0.5 }}
                         >
@@ -430,7 +439,9 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
                             </Typography>
                           </Stack>
 
-                          <Typography sx={{ color: "#cbd5e1", fontSize: 12 }}>•</Typography>
+                          <Typography sx={{ color: "#cbd5e1", fontSize: 12, display: { xs: "none", sm: "inline" } }}>
+                            •
+                          </Typography>
 
                           <Stack direction="row" spacing={0.4} alignItems="center">
                             <AccessTimeRoundedIcon
@@ -464,7 +475,7 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
                           sx={{
                             borderRadius: 2.5,
                             px: 1.75,
-                            py: 0.6,
+                            py: 0.7,
                             fontSize: 12,
                             fontWeight: 700,
                             color: "#ef4444",
@@ -472,6 +483,7 @@ export function ActiveSessionsModal({ open, onClose }: ActiveSessionsModalProps)
                             bgcolor: "rgba(254, 242, 242, 0.6)",
                             textTransform: "none",
                             flexShrink: 0,
+                            width: { xs: "100%", sm: "auto" },
                             "&:hover": {
                               bgcolor: "#ef4444",
                               color: "#ffffff",

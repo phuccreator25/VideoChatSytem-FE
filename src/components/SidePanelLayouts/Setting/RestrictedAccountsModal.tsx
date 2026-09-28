@@ -75,31 +75,35 @@ export function RestrictedAccountsModal({
       PaperProps={{
         elevation: 24,
         sx: {
-          borderRadius: 4,
+          borderRadius: { xs: 3, sm: 4 },
           bgcolor: "#ffffff",
           backgroundImage: "none",
           overflow: "hidden",
           border: "1px solid rgba(235, 236, 239, 0.8)",
           boxShadow: "0px 20px 60px rgba(0, 0, 0, 0.12)",
+          m: { xs: 1.5, sm: 2 },
+          width: { xs: "calc(100% - 24px)", sm: "100%" },
+          maxHeight: { xs: "calc(100% - 32px)", sm: "calc(100% - 64px)" },
         },
       }}
     >
       <DialogTitle
         sx={{
-          p: { xs: 2.5, sm: 3 },
+          p: { xs: 2, sm: 3 },
           background:
             "linear-gradient(135deg, rgba(111,99,246,0.06) 0%, rgba(245,246,250,0.4) 100%)",
           borderBottom: "1px solid #f0f1f4",
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "space-between",
+          gap: 1,
         }}
       >
-        <Stack direction="row" spacing={1.75} alignItems="center">
+        <Stack direction="row" spacing={{ xs: 1.25, sm: 1.75 }} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
           <Box
             sx={{
-              width: 44,
-              height: 44,
+              width: { xs: 38, sm: 44 },
+              height: { xs: 38, sm: 44 },
               borderRadius: "14px",
               background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
               color: "#ffffff",
@@ -107,15 +111,16 @@ export function RestrictedAccountsModal({
               alignItems: "center",
               justifyContent: "center",
               boxShadow: "0px 4px 12px rgba(239, 68, 68, 0.25)",
+              flexShrink: 0,
             }}
           >
-            <BlockRoundedIcon sx={{ fontSize: 24 }} />
+            <BlockRoundedIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
           </Box>
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center">
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: 0.5 }}>
               <Typography
                 sx={{
-                  fontSize: { xs: 18, sm: 20 },
+                  fontSize: { xs: 16, sm: 20 },
                   fontWeight: 700,
                   color: "#1f2430",
                   letterSpacing: "-0.02em",
@@ -127,9 +132,9 @@ export function RestrictedAccountsModal({
                 label={data.blockUsers.length}
                 size="small"
                 sx={{
-                  height: 22,
+                  height: 20,
                   fontWeight: 700,
-                  fontSize: 12,
+                  fontSize: 11,
                   bgcolor: "rgba(239, 68, 68, 0.1)",
                   color: "#dc2626",
                   borderRadius: "999px",
@@ -138,9 +143,13 @@ export function RestrictedAccountsModal({
             </Stack>
             <Typography
               sx={{
-                fontSize: 13,
+                fontSize: { xs: 11.5, sm: 13 },
                 color: "#727887",
                 mt: 0.25,
+                display: { xs: "-webkit-box", sm: "block" },
+                overflow: "hidden",
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: "vertical",
               }}
             >
               List accounts that you have blocked from interacting
@@ -150,9 +159,11 @@ export function RestrictedAccountsModal({
 
         <IconButton
           onClick={onClose}
+          size="small"
           sx={{
             color: "#8d93a1",
             bgcolor: "rgba(0,0,0,0.03)",
+            flexShrink: 0,
             "&:hover": {
               bgcolor: "rgba(0,0,0,0.08)",
               color: "#1f2430",
@@ -173,11 +184,11 @@ export function RestrictedAccountsModal({
           gap: 2,
         }}
       >
-        {data.blockUsers.length > 1 && (
+        {data.blockUsers.length > 0 && (
           <TextField
             fullWidth
             size="small"
-            placeholder="Search accounts that you have blocked from interacting..."
+            placeholder="Search blocked accounts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
@@ -191,7 +202,7 @@ export function RestrictedAccountsModal({
               "& .MuiOutlinedInput-root": {
                 borderRadius: 3,
                 bgcolor: "#ffffff",
-                fontSize: 14,
+                fontSize: { xs: 13, sm: 13.5 },
                 "& fieldset": {
                   borderColor: "#e5e7eb",
                 },
@@ -202,13 +213,16 @@ export function RestrictedAccountsModal({
                   borderColor: "#6f63f6",
                 },
               },
+              "& .MuiInputBase-input": {
+                textOverflow: "ellipsis",
+              },
             }}
           />
         )}
 
         <Box
           sx={{
-            maxHeight: 380,
+            maxHeight: { xs: 340, sm: 380 },
             overflowY: "auto",
             pr: 0.5,
             ...customScrollbarSx,
@@ -223,13 +237,10 @@ export function RestrictedAccountsModal({
                 key={user.blockId}
                 elevation={0}
                 sx={{
-                  p: 1.75,
+                  p: { xs: 1.5, sm: 1.75 },
                   borderRadius: 3,
                   bgcolor: "#ffffff",
                   border: "1px solid #edf0f5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
                     borderColor: "rgba(111,99,246,0.3)",
@@ -238,114 +249,128 @@ export function RestrictedAccountsModal({
                   },
                 }}
               >
-                <Stack direction="row" spacing={2} alignItems="center" minWidth={0}>
-                  <Avatar
-                    src={user.avatar}
-                    alt={user.name}
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: "14px",
-                      bgcolor: "rgba(111,99,246,0.1)",
-                      color: "#6f63f6",
-                      fontWeight: 700,
-                      fontSize: 18,
-                      border: "2px solid #ffffff",
-                      boxShadow: "0px 2px 8px rgba(0,0,0,0.06)",
-                    }}
-                  >
-                    {user.name ? user.name.charAt(0).toUpperCase() : "?"}
-                  </Avatar>
-
-                  <Box minWidth={0}>
-                    <Typography
-                      noWrap
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={{ xs: 1.25, sm: 2 }}
+                  alignItems={{ xs: "stretch", sm: "center" }}
+                  justifyContent="space-between"
+                >
+                  <Stack direction="row" spacing={{ xs: 1.25, sm: 2 }} alignItems="center" minWidth={0} sx={{ flex: 1 }}>
+                    <Avatar
+                      src={user.avatar}
+                      alt={user.name}
                       sx={{
-                        fontSize: 15,
-                        fontWeight: 700,
-                        color: "#1f2430",
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      {user.name || "User"}
-                    </Typography>
-
-                    <Stack
-                      direction="row"
-                      spacing={0.5}
-                      alignItems="center"
-                      sx={{ mt: 0.5 }}
-                    >
-                      <AccessTimeRoundedIcon
-                        sx={{ fontSize: 13, color: "#9aa0ad" }}
-                      />
-                      <Typography
-                        sx={{
-                          fontSize: 12,
-                          color: "#7b8190",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {formatDate(user.blockAt)}
-                      </Typography>
-                    </Stack>
-                  </Box>
-                </Stack>
-
-                {data.unblockedIds.includes(user.userId) ? (
-                  <Chip
-                    icon={
-                      <CheckCircleRoundedIcon
-                        sx={{
-                          fontSize: "16px !important",
-                          color: "#16a34a !important",
-                        }}
-                      />
-                    }
-                    label="Unblocked"
-                    size="small"
-                    sx={{
-                      height: 32,
-                      borderRadius: "999px",
-                      fontWeight: 700,
-                      fontSize: 12.5,
-                      bgcolor: "rgba(34, 197, 94, 0.1)",
-                      color: "#16a34a",
-                      border: "1px solid rgba(34, 197, 94, 0.25)",
-                      px: 1,
-                    }}
-                  />
-                ) : (
-                  <Tooltip title="Unblock this account" arrow placement="top">
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<LockOpenRoundedIcon sx={{ fontSize: 16 }} />}
-                      onClick={() => handleUnblockClick(user)}
-                      sx={{
-                        borderRadius: 2.5,
-                        px: 2,
-                        py: 0.75,
-                        fontSize: 13,
-                        fontWeight: 700,
-                        textTransform: "none",
+                        width: { xs: 42, sm: 48 },
+                        height: { xs: 42, sm: 48 },
+                        borderRadius: "14px",
+                        bgcolor: "rgba(111,99,246,0.1)",
                         color: "#6f63f6",
-                        borderColor: "rgba(111,99,246,0.3)",
-                        bgcolor: "rgba(111,99,246,0.03)",
-                        "&:hover": {
-                          bgcolor: "#6f63f6",
-                          color: "#ffffff",
-                          borderColor: "#6f63f6",
-                          boxShadow: "0px 4px 12px rgba(111,99,246,0.25)",
-                        },
-                        transition: "all 0.25s ease",
+                        fontWeight: 700,
+                        fontSize: { xs: 16, sm: 18 },
+                        border: "2px solid #ffffff",
+                        boxShadow: "0px 2px 8px rgba(0,0,0,0.06)",
                         flexShrink: 0,
                       }}
                     >
-                      Unblock
-                    </Button>
-                  </Tooltip>
-                )}
+                      {user.name ? user.name.charAt(0).toUpperCase() : "?"}
+                    </Avatar>
+
+                    <Box minWidth={0} sx={{ flex: 1 }}>
+                      <Typography
+                        sx={{
+                          fontSize: { xs: 14, sm: 15 },
+                          fontWeight: 700,
+                          color: "#1f2430",
+                          lineHeight: 1.3,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {user.name || "User"}
+                      </Typography>
+
+                      <Stack
+                        direction="row"
+                        spacing={0.5}
+                        alignItems="center"
+                        sx={{ mt: 0.4 }}
+                      >
+                        <AccessTimeRoundedIcon
+                          sx={{ fontSize: 13, color: "#9aa0ad", flexShrink: 0 }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: 12,
+                            color: "#7b8190",
+                            fontWeight: 500,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {formatDate(user.blockAt)}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  </Stack>
+
+                  {data.unblockedIds.includes(user.userId) ? (
+                    <Chip
+                      icon={
+                        <CheckCircleRoundedIcon
+                          sx={{
+                            fontSize: "15px !important",
+                            color: "#16a34a !important",
+                          }}
+                        />
+                      }
+                      label="Unblocked"
+                      size="small"
+                      sx={{
+                        height: 32,
+                        borderRadius: "999px",
+                        fontWeight: 700,
+                        fontSize: 12,
+                        bgcolor: "rgba(34, 197, 94, 0.1)",
+                        color: "#16a34a",
+                        border: "1px solid rgba(34, 197, 94, 0.25)",
+                        px: 1,
+                        width: { xs: "100%", sm: "auto" },
+                        justifyContent: "center",
+                      }}
+                    />
+                  ) : (
+                    <Tooltip title="Unblock this account" arrow placement="top">
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<LockOpenRoundedIcon sx={{ fontSize: 16 }} />}
+                        onClick={() => handleUnblockClick(user)}
+                        sx={{
+                          borderRadius: 2.5,
+                          px: 2,
+                          py: 0.75,
+                          fontSize: 12.5,
+                          fontWeight: 700,
+                          textTransform: "none",
+                          color: "#6f63f6",
+                          borderColor: "rgba(111,99,246,0.3)",
+                          bgcolor: "rgba(111,99,246,0.03)",
+                          width: { xs: "100%", sm: "auto" },
+                          "&:hover": {
+                            bgcolor: "#6f63f6",
+                            color: "#ffffff",
+                            borderColor: "#6f63f6",
+                            boxShadow: "0px 4px 12px rgba(111,99,246,0.25)",
+                          },
+                          transition: "all 0.25s ease",
+                          flexShrink: 0,
+                        }}
+                      >
+                        Unblock
+                      </Button>
+                    </Tooltip>
+                  )}
+                </Stack>
               </Paper>
             ))
           ) : (

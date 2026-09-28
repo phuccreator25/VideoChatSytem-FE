@@ -26,7 +26,11 @@ export const useProfile = () => {
   const [messageFile, setMessageFile] = useState<string>("");
 
   const [showAlert, setShowAlert] = useState<boolean>();
-  const [loadingAttachedFiles, setLoadingAttachedFiles] = useState<boolean>(false);
+  const [loadingAttachedFiles, setLoadingAttachedFiles] = useState<boolean>(false); // 
+
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
+  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(onGetProfile()).unwrap();
@@ -59,9 +63,9 @@ export const useProfile = () => {
 
   const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     try {
-      setShowAlert(false)
-      const file = event.target.files?.[0]
-      if (!file) return
+      setShowAlert(false);
+      const file = event.target.files?.[0];
+      if (!file) return;
 
       const avatarValidation = validateAvatarFile(file);
       if (!avatarValidation.isValid) {
@@ -70,23 +74,48 @@ export const useProfile = () => {
         return;
       }
 
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+      setIsUploadingAvatar(true);
+      setUploadSuccess(false);
+
       const avatar = await updateAvatarS3(file);
 
       if (avatar?.success && avatar?.fileName) {
-        const res = await dispatch(onUpdateAvatar({ fileName: avatar.fileName })).unwrap()
+        const res = await dispatch(onUpdateAvatar({ fileName: avatar.fileName })).unwrap();
 
         if (res) {
+          setIsUploadingAvatar(false);
+          setUploadSuccess(true);
           enqueueSnackbar("Profile updated successfully", {
             variant: "success",
           });
+
+          setTimeout(() => {
+            setUploadSuccess(false);
+            setAvatarPreview(null);
+          }, 2200);
+        } else {
+          setIsUploadingAvatar(false);
+          setAvatarPreview(null);
         }
+      } else {
+        setIsUploadingAvatar(false);
+        setAvatarPreview(null);
       }
 
     } catch (error: any) {
-      setShowAlert(true)
-      setMessageFile(error?.message || 'Failed to upload avatar')
+      setIsUploadingAvatar(false);
+      setUploadSuccess(false);
+      setAvatarPreview(null);
+      setShowAlert(true);
+      setMessageFile(error?.message || 'Failed to upload avatar');
+    } finally {
+      if (event.target) {
+        event.target.value = "";
+      }
     }
-  }
+  };
 
   const onGetAllAttachedFiles = async (tab: number | null = null, page: number = 1) => {
     if (tab !== 1) return;
@@ -112,6 +141,9 @@ export const useProfile = () => {
       currentPage,
       totalPage,
       loadingAttachedFiles,
+      isUploadingAvatar,
+      uploadSuccess,
+      avatarPreview,
     },
     data: {
       initialProfile,

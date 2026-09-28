@@ -17,6 +17,10 @@ import { IconButton } from "@mui/material";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import Zoom from "@mui/material/Zoom";
 import type { ViewUserInfoModalProps } from "../../../../types/contact/contact.ui.type";
+import { openCallModal } from "../../../../redux/call.redux";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "../../../../redux/store";
+import useOpenConversation from "../../../../helpers/openConversation.helper";
 
 const scrollSx = {
     "&::-webkit-scrollbar": {
@@ -42,24 +46,14 @@ export function ViewUserInfoModal({
     open,
     onClose,
     user,
-    onCall,
-    onMessage,
     setOpenSetNicknameModal,
     setOpenModalRemove,
     setOpenModalBlock
 }: ViewUserInfoModalProps) {
     const displayName = user?.nickname ?? user?.fullname ?? "";
     const avatarLetter = displayName.charAt(0).toUpperCase() || "?";
-
-    const handleCall = () => {
-        if (!user) return;
-        onCall?.(user.userId);
-    };
-
-    const handleMessage = () => {
-        if (!user) return;
-        onMessage?.(user.userId);
-    };
+    const dispatch = useDispatch<AppDispatch>();
+    const { handleOpenConversation } = useOpenConversation();
 
     return (
         <Dialog
@@ -220,7 +214,11 @@ export function ViewUserInfoModal({
                             <Button
                                 variant="contained"
                                 startIcon={<CallRoundedIcon />}
-                                onClick={handleCall}
+                                onClick={() => {
+                                    if (!user) return;
+                                    dispatch(openCallModal({ type: "voice", targetUser: user }));
+                                    onClose();
+                                }}
                                 sx={{
                                     flex: 1,
                                     maxWidth: 140,
@@ -246,7 +244,11 @@ export function ViewUserInfoModal({
                             <Button
                                 variant="outlined"
                                 startIcon={<ChatBubbleRoundedIcon />}
-                                onClick={handleMessage}
+                                onClick={() => {
+                                    if (!user?.userId) return;
+                                    handleOpenConversation(user?.userId);
+                                    onClose()
+                                }}
                                 sx={{
                                     flex: 1,
                                     maxWidth: 140,

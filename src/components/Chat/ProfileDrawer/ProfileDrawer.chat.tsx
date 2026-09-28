@@ -87,6 +87,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
         {/* Shared Media & Files Segment */}
         <ProfileTabs
           activeTab={ui.activeTab}
+          isLoading={ui.isLoadingTabs}
           shareMedia={data.shareMedia}
           shareFiles={data.shareFiles}
           shareLinks={data.shareLinks}

@@ -15,57 +15,57 @@ import type { GroupItem } from "../../../types/group/group.type";
 import { GroupRow } from "./GroupRow/GroupRow.group";
 
 const groupItems: GroupItem[] = [
-  {
-    key: 'general',
-    name: '#General',
-    initials: 'G',
-    onClick: () => {
-      console.log('general');
-    },
-  },
-  {
-    key: 'reporting',
-    name: '#Reporting',
-    initials: 'R',
-    badge: '23+',
-    onClick: () => {
-      console.log('reporting');
-    },
-  },
-  {
-    key: 'designer',
-    name: '#Designer',
-    initials: 'D',
-    badge: 'New',
-    onClick: () => {
-      console.log('designer');
-    },
-  },
-  {
-    key: 'developers',
-    name: '#Developers',
-    initials: 'D',
-    onClick: () => {
-      console.log('developers');
-    },
-  },
-  {
-    key: 'project-alpha',
-    name: '#Project-alpha',
-    initials: 'P',
-    badge: 'New',
-    onClick: () => {
-      console.log('project-alpha');
-    },
-  },
-  {
-    key: 'snacks',
-    name: '#Snacks',
-    initials: 'S',
-    onClick: () => {
-      console.log('snacks');
-    },
-  },
+  // {
+  //   key: 'general',
+  //   name: '#General',
+  //   initials: 'G',
+  //   onClick: () => {
+  //     console.log('general');
+  //   },
+  // },
+  // {
+  //   key: 'reporting',
+  //   name: '#Reporting',
+  //   initials: 'R',
+  //   badge: '23+',
+  //   onClick: () => {
+  //     console.log('reporting');
+  //   },
+  // },
+  // {
+  //   key: 'designer',
+  //   name: '#Designer',
+  //   initials: 'D',
+  //   badge: 'New',
+  //   onClick: () => {
+  //     console.log('designer');
+  //   },
+  // },
+  // {
+  //   key: 'developers',
+  //   name: '#Developers',
+  //   initials: 'D',
+  //   onClick: () => {
+  //     console.log('developers');
+  //   },
+  // },
+  // {
+  //   key: 'project-alpha',
+  //   name: '#Project-alpha',
+  //   initials: 'P',
+  //   badge: 'New',
+  //   onClick: () => {
+  //     console.log('project-alpha');
+  //   },
+  // },
+  // {
+  //   key: 'snacks',
+  //   name: '#Snacks',
+  //   initials: 'S',
+  //   onClick: () => {
+  //     console.log('snacks');
+  //   },
+  // },
 ];
 
 export function GroupsView() {

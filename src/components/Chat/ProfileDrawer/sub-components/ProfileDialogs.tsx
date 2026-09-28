@@ -6,31 +6,21 @@ import IconButton from "@mui/material/IconButton";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 import type { ConversationUserInfo } from "../../../../types/chat/chat.conversation.type";
+import type { FileItem } from "../../../../types/data.type";
 import { DialogDeleteConversation } from "../../Dialog/DeleteConversation";
 import { MediaPreviewModal, type MediaPreviewItem } from "../../Dialog/MediaPreviewModal";
-
-type AttachmentType = {
-  fileUrl: string;
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
-  resourceType?: string;
-  messageId: string;
-  conversationId: string;
-  createdAt: string;
-};
 
 type ProfileDialogsProps = {
   isAvatarPreviewOpen: boolean;
   userData: ConversationUserInfo | null;
   displayName: string;
-  selectedMedia?: AttachmentType;
-  shareMedia?: AttachmentType[];
+  selectedMedia?: FileItem;
+  shareMedia?: FileItem[];
   isDeleteDialogOpen: boolean;
   isLoadingDelete: boolean;
   onCloseAvatarPreview: () => void;
   onCloseSelectedMedia: () => void;
-  onSelectMedia?: (media: AttachmentType) => void;
+  onSelectMedia?: (media: FileItem) => void;
   onCloseDeleteDialog: () => void;
   onConfirmDeleteConversation: () => void;
   onDownloadFile: (url: string, fileName: string) => void;

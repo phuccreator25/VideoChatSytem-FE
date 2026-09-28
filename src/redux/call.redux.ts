@@ -16,6 +16,7 @@ const initialState: initialType = {
   isCallModalOpen: {
     isOpen: false,
     type: "video", // Giá trị mặc định thực tế (ví dụ: "video" hoặc "voice")
+    targetUser: null,
   },
   iceCandidates: [],
 };
@@ -65,6 +66,7 @@ const callSlice = createSlice({
     openCallModal: (state, action) => {
       state.isCallModalOpen.isOpen = true;
       state.isCallModalOpen.type = action.payload.type;
+      state.isCallModalOpen.targetUser = action.payload.targetUser || null;
     },
     closeCallModal: (state) => {
       state.isCallModalOpen.isOpen = false;
