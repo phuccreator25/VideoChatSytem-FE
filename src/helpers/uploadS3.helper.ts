@@ -1,5 +1,5 @@
 import axios from "axios";
-import uploadAPI from "../api/upload.api";
+import uploadAPI from "../api/client/upload.api";
 import { compressImageHelper } from "./compressImage.helper";
 import { enqueueSnackbar } from "notistack";
 import { CHUNK_SIZE } from "../data/upload.data";

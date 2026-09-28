@@ -10,14 +10,14 @@ import {
   PURGE,
   REGISTER,
 } from "redux-persist";
-import { userReducer } from "./auth.redux";
+import { userReducer } from "./client/auth.redux";
 import createWebStorage from "redux-persist/es/storage/createWebStorage";
-import { invitationReducer } from "./invitation.redux";
-import { contactReducer } from "./contact.redux";
-import { conversationReducer } from "./conversation.redux";
-import { chatReducer } from "./chat.redux";
-import { callReducer } from "./call.redux";
-import { blockReducer } from "./block.redux";
+import { invitationReducer } from "./client/invitation.redux";
+import { contactReducer } from "./client/contact.redux";
+import { conversationReducer } from "./client/conversation.redux";
+import { chatReducer } from "./client/chat.redux";
+import { callReducer } from "./client/call.redux";
+import { blockReducer } from "./client/block.redux";
 const storage = createWebStorage("local");
 
 const persistConfig = {

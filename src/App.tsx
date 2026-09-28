@@ -4,7 +4,7 @@ import './App.css'
 import ClientRoute from './routes/Client/Client.route.tsx'
 import { persistor, store } from './redux/store.ts'
 import { PersistGate } from 'redux-persist/integration/react'
-import { initTabNotification } from './helpers/tabNotification'
+import { initTabNotification } from './helpers/client/tabNotification.ts'
 
 function App() {
   useEffect(() => {

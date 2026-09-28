@@ -8,19 +8,19 @@ import {
 } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import AuthLayout from "../../layouts/Auth.layout";
+import AuthLayout from "../../layouts/client/Auth.layout";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
 
 // Lazy loading pages to optimize initial bundle size & load speed
-const LoginPage = lazy(() => import("../../pages/Auth/Login.page"));
-const RegisterPage = lazy(() => import("../../pages/Auth/Register.page"));
-const ForgotPasswordPage = lazy(() => import("../../pages/Auth/ForgotPassword.page"));
-const CheckEmailPage = lazy(() => import("../../pages/Auth/CheckEmail.page"));
-const ResetPasswordPage = lazy(() => import("../../pages/Auth/ResetPassword.page"));
-const ActiveSuccess = lazy(() => import("../../pages/Auth/ActiveSuccess.page"));
-const ChatPage = lazy(() => import("../../pages/Chat/Chat.page"));
-const InvitationPages = lazy(() => import("../../pages/Invitation/Invitaiton.page"));
+const LoginPage = lazy(() => import("../../pages/client/Auth/Login.page"));
+const RegisterPage = lazy(() => import("../../pages/client/Auth/Register.page"));
+const ForgotPasswordPage = lazy(() => import("../../pages/client/Auth/ForgotPassword.page"));
+const CheckEmailPage = lazy(() => import("../../pages/client/Auth/CheckEmail.page"));
+const ResetPasswordPage = lazy(() => import("../../pages/client/Auth/ResetPassword.page"));
+const ActiveSuccess = lazy(() => import("../../pages/client/Auth/ActiveSuccess.page"));
+const ChatPage = lazy(() => import("../../pages/client/Chat/Chat.page"));
+const InvitationPages = lazy(() => import("../../pages/client/Invitation/Invitaiton.page"));
 
 const PageLoadingFallback = () => (
   <Box

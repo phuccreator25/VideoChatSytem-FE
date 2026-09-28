@@ -1,0 +1,141 @@
+import { useEffect, useMemo, useState } from "react";
+import type {
+  ContactSection,
+  contacts,
+} from "../../../types/contact/contact.model.type";
+import { useDispatch, useSelector } from "react-redux";
+import { type AppDispatch, type RootState } from "../../../redux/store";
+import { onGetDataContact } from "../../../redux/client/contact.redux";
+import ContactApi from "../../../api/client/Contact.api";
+import useOpenConversation from "../../../helpers/client/openConversation.helper";
+
+export function useContact() {
+  const contacts = useSelector((state: RootState) => state.contact.contacts);
+  const isLoading = useSelector((state: RootState) => state.contact.isLoading);
+
+  const [searchValue, setSearchValue] = useState<string>("");
+  const [anchorElRowAction, setAnchorElRowAction] =
+    useState<HTMLButtonElement | null>(null);
+  const [openSetNicknameModal, setOpenSetNicknameModal] =
+    useState<boolean>(false);
+  const [openModalViewInfo, setOpenModalViewInfo] = useState<boolean>(false);
+  const [openModalRemove, setOpenModalRemove] = useState<boolean>(false);
+  const [selectedContact, setSelectedContact] = useState<contacts | null>(null);
+
+  const { handleOpenConversation } = useOpenConversation();
+
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    const fetchContacts = async () => {
+      await dispatch(onGetDataContact());
+    };
+
+    fetchContacts();
+  }, [dispatch]);
+
+  const filteredContacts = useMemo(() => {
+    const keyword = searchValue.trim().toLowerCase();
+
+    if (!keyword) return contacts;
+
+    return contacts?.filter((contact: contacts) => {
+      const displayName = (
+        contact.nickname ||
+        contact.fullname ||
+        ""
+      ).toLowerCase();
+
+      return displayName.includes(keyword);
+    });
+  }, [contacts, searchValue]);
+
+  const contactsAfterFilter = useMemo<ContactSection[]>(() => {
+    const grouped: Record<string, contacts[]> = {};
+
+    filteredContacts.forEach((contact: contacts) => {
+      const displayName = contact.nickname || contact.fullname || "";
+      const letter = displayName.charAt(0).toUpperCase() || "#";
+
+      if (!grouped[letter]) {
+        grouped[letter] = [];
+      }
+
+      grouped[letter].push({
+        ...contact,
+        onClick: () => handleOpenConversation(contact.userId),
+      });
+    });
+
+    return Object.keys(grouped)
+      .sort((a, b) => a.localeCompare(b, "vi", { sensitivity: "base" }))
+      .map((letter) => ({
+        key: letter.toLowerCase(),
+        letter,
+        items: grouped[letter],
+      }));
+  }, [filteredContacts, handleOpenConversation]);
+
+  const handleOpenPopover = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorElRowAction(event.currentTarget);
+  };
+
+  const handleClosePopover = () => {
+    setAnchorElRowAction(null);
+  };
+
+  const onUpdateNickName = async (data: contacts) => {
+    try {
+      if (!data) return false;
+
+      const res = await ContactApi.onUpdateContact(data);
+
+      return res.status === 201;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  };
+
+  const onRemoveFriend = async () => {
+    try {
+      if (!selectedContact) return false;
+
+      const res = await ContactApi.onRemoveContact(selectedContact.userId);
+      setOpenModalRemove(false);
+
+      return res.status === 201;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  };
+
+  return {
+    data: {
+      contacts,
+      filteredContacts,
+      contactsAfterFilter,
+      selectedContact,
+      isLoading,
+    },
+    ui: {
+      searchValue,
+      anchorElRowAction,
+      openSetNicknameModal,
+      openModalViewInfo,
+      openModalRemove,
+    },
+    handlers: {
+      setSearchValue,
+      handleOpenPopover,
+      handleClosePopover,
+      onUpdateNickName,
+      onRemoveFriend,
+      setOpenSetNicknameModal,
+      setSelectedContact,
+      setOpenModalViewInfo,
+      setOpenModalRemove,
+    },
+  };
+}

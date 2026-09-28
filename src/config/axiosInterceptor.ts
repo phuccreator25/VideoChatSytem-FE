@@ -1,8 +1,8 @@
 import axios from 'axios'
 import { enqueueSnackbar } from 'notistack'
 import { CONFIG } from './appConfig'
-import authApi from '../api/Auth.api'
-import { clearCurrentUser } from '../redux/auth.redux'
+import authApi from '../api/client/Auth.api'
+import { clearCurrentUser } from '../redux/client/auth.redux'
 import { store, persistor } from '../redux/store'
 import { connectSocket } from '../socket/socket'
 
