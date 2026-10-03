@@ -192,11 +192,9 @@ const conversationSlice = createSlice({
       state.conversations = state.conversations.map((conversation) => {
         if (String(conversation.userId) !== String(userId)) return conversation;
 
-        const status = isOnline ? "online" : "offline";
-
         return {
           ...conversation,
-          status,
+          isOnline: Boolean(isOnline),
         };
       });
     },
@@ -212,7 +210,7 @@ const conversationSlice = createSlice({
 
       state.conversations = state.conversations.map((conversation) => ({
         ...conversation,
-        status: onlineUserIds.has(String(conversation.userId)) ? "online" : "offline",
+        isOnline: onlineUserIds.has(String(conversation.userId)),
       }));
     },
 

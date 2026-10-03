@@ -7,7 +7,7 @@ export type ConversationUserInfo = {
   avatar: string;
   fullname: string;
   nickname?: string | null;
-  isOnline: string;
+  isOnline: boolean;
   lastSeenAt?: string | null;
   isBlocked?: boolean;
   invitationId?: string | null;

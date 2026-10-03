@@ -52,7 +52,7 @@ export const VideoCallModal = ({
         initCall();
     }, [isOpen]);
 
-    const isTargetOnline = userData?.isOnline === "online";
+    const isTargetOnline = Boolean(userData?.isOnline);
     const isRingingState = ui.isRinging || isTargetOnline;
 
     useCallAudioTones({

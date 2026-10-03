@@ -6,7 +6,7 @@ export type Contact = {
   avatar?: string;
   email?: string;
   isBlocked?: boolean;
-  isOnline?: string;
+  isOnline?: boolean;
   onClick?: () => void;
 };
 

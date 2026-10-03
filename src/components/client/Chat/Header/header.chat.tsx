@@ -97,14 +97,14 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
         <Badge
           overlap="circular"
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          invisible={userData?.isOnline !== "online"}
+          invisible={!userData?.isOnline}
           badgeContent={
             <Box
               sx={{
                 width: { xs: 10, sm: 12 },
                 height: { xs: 10, sm: 12 },
                 borderRadius: "50%",
-                bgcolor: userData?.isOnline === 'online' ? "#22c55e" : "#94a3b8",
+                bgcolor: userData?.isOnline ? "#22c55e" : "#94a3b8",
                 border: "2px solid #ffffff",
                 boxShadow: "0 0 0 1px rgba(34, 197, 94, 0.2)",
               }}
@@ -144,7 +144,7 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                bgcolor: userData?.isOnline === 'online' ? "#22c55e" : "#94a3b8",
+                bgcolor: userData?.isOnline ? "#22c55e" : "#94a3b8",
                 flexShrink: 0,
               }}
             />
@@ -152,14 +152,14 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
               sx={{
                 fontSize: { xs: 11, sm: 13 },
                 fontWeight: 600,
-                color: userData?.isOnline === 'online' ? "#16a34a" : "#6b7280",
+                color: userData?.isOnline ? "#16a34a" : "#6b7280",
                 lineHeight: 1.2,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
               }}
             >
-              {userData?.isOnline === 'online'
+              {userData?.isOnline
                 ? "Active now"
                 : getLastSeenText(userData?.lastSeenAt)}
             </Typography>

@@ -10,7 +10,7 @@ export type Conversation = {
   name: string;
   avatar?: string;
   initials?: string;
-  status?: "online" | "offline";
+  isOnline?: boolean;
   preview: string;
   time: string;
   type?: "text" | "image" | "typing";

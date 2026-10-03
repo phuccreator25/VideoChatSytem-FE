@@ -285,22 +285,22 @@ export function ProfileHeader({
                 width: 7,
                 height: 7,
                 borderRadius: "50%",
-                bgcolor: userData?.isOnline === "online" ? "#22c55e" : "#94a3b8",
-                boxShadow: userData?.isOnline === "online" ? "0 0 10px #22c55e" : "none",
+                bgcolor: userData?.isOnline ? "#22c55e" : "#94a3b8",
+                boxShadow: userData?.isOnline ? "0 0 10px #22c55e" : "none",
                 flexShrink: 0,
               }}
             />
             <Typography
               variant="caption"
               sx={{
-                color: userData?.isOnline === "online" ? "#16a34a" : "#64748b",
+                color: userData?.isOnline ? "#16a34a" : "#64748b",
                 fontWeight: 700,
                 fontSize: "11px",
                 display: "inline-block",
                 lineHeight: 1.4,
               }}
             >
-              {userData?.isOnline === 'online' ? "Active now" : getLastSeenText(userData?.lastSeenAt)}
+              {userData?.isOnline ? "Active now" : getLastSeenText(userData?.lastSeenAt)}
             </Typography>
           </Stack>
         </Box>

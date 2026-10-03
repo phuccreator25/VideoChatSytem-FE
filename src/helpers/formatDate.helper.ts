@@ -1,13 +1,16 @@
-export const formatDate = (dateInput?: string | Date | null) => {
+export const formatDate = (dateInput?: string | Date | null, includeTime: boolean = false) => {
   if (!dateInput) return "";
-  const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return "";
-
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  const yyyy = date.getFullYear();
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-
-  return `${hours}:${minutes} • ${dd}/${mm}/${yyyy}`;
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return "Invalid date";
+    const options: Intl.DateTimeFormatOptions = {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      ...(includeTime ? { hour: "2-digit", minute: "2-digit" } : {}),
+    };
+    return d.toLocaleDateString("en-US", options);
+  } catch {
+    return "Never";
+  }
 };

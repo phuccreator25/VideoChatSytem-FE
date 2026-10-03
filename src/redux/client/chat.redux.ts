@@ -48,7 +48,7 @@ const chatSlice = createSlice({
     updateStatusUser: (state, action) => {
       const { userId, isOnline, lastSeenAt } = action.payload;
       if (state.userData && state.userData.userId === userId) {
-        state.userData.isOnline = isOnline ? "online" : "offline";
+        state.userData.isOnline = Boolean(isOnline);
         state.userData.lastSeenAt = lastSeenAt ?? state.userData.lastSeenAt;
       }
     },

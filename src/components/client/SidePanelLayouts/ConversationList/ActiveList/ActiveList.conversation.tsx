@@ -39,7 +39,7 @@ export function ActiveList({ user, onClick }: { user: QuickUser; onClick: () => 
                 <Badge
                     overlap="circular"
                     anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                    badgeContent={user.isOnline ? <StatusActive status="online" /> : null}
+                    badgeContent={user.isOnline ? <StatusActive isOnline={true} /> : null}
                 >
                     <Box
                         sx={{

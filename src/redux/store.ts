@@ -18,12 +18,13 @@ import { conversationReducer } from "./client/conversation.redux";
 import { chatReducer } from "./client/chat.redux";
 import { callReducer } from "./client/call.redux";
 import { blockReducer } from "./client/block.redux";
+import { adminReducer } from "./admin/authAdmin.redux";
 const storage = createWebStorage("local");
 
 const persistConfig = {
   key: "root",
   storage: storage,
-  whitelist: ["user"],
+  whitelist: ["user", "admin"],
 };
 
 const rootReducer = combineReducers({
@@ -33,7 +34,9 @@ const rootReducer = combineReducers({
   conversation: conversationReducer,
   chat: chatReducer,
   call: callReducer,
-  block: blockReducer
+  block: blockReducer,
+  //admin
+  admin: adminReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

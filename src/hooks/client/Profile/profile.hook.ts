@@ -36,7 +36,6 @@ export const useProfile = () => {
     dispatch(onGetProfile()).unwrap();
   }, [dispatch]);
 
-
   const handleUpdateUser = async (payload: object) => {
     try {
       if (!payload) return;

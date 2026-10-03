@@ -96,7 +96,7 @@ export function ConversationItem({ item }: { item: Conversation }) {
                 <Badge
                     overlap="circular"
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    badgeContent={<StatusActive status={item.status} />}
+                    badgeContent={<StatusActive isOnline={item.isOnline} />}
                 >
                     {item.avatar ? (
                         <Avatar

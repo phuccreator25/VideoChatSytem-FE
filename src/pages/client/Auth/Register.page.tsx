@@ -15,6 +15,12 @@ import type { AlertColor } from "@mui/material/Alert";
 
 import useAuth from "../../../hooks/client/Auth/auth.hook";
 import type { typeRegister } from "../../../types/auth.type";
+import {
+  fullnameValidationRules,
+  emailValidationRules,
+  passwordValidationRules,
+  agreeTermsValidationRules,
+} from "../../../validations/accountValidation.helper";
 
 export default function RegisterPage() {
   const {
@@ -71,9 +77,7 @@ export default function RegisterPage() {
             fullWidth
             label="Full Name"
             placeholder="Enter full name"
-            {...register("fullname", {
-              required: "Please enter your full name",
-            })}
+            {...register("fullname", fullnameValidationRules)}
             error={!!errors.fullname}
             helperText={errors.fullname?.message}
           />
@@ -83,13 +87,7 @@ export default function RegisterPage() {
             label="Email"
             type="email"
             placeholder="you@example.com"
-            {...register("email", {
-              required: "Please enter your email",
-              pattern: {
-                value: /^\S+@\S+\.\S+$/,
-                message: "Invalid email address",
-              },
-            })}
+            {...register("email", emailValidationRules)}
             error={!!errors.email}
             helperText={errors.email?.message}
           />
@@ -99,19 +97,7 @@ export default function RegisterPage() {
             label="Password"
             type="password"
             placeholder="Enter password"
-            {...register("password", {
-              required: "Please enter password",
-                minLength: {
-                  value: 8,
-                  message: "Password must be at least 8 characters long",
-                },
-                pattern: {
-                  value:
-                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/,
-                  message:
-                    "Password must be at least 8 characters, containing uppercase, lowercase, numbers, and special characters",
-                },
-            })}
+            {...register("password", passwordValidationRules)}
             error={!!errors.password}
             helperText={errors.password?.message}
           />
@@ -123,8 +109,7 @@ export default function RegisterPage() {
             placeholder="Re-enter password"
             {...register("confirmPassword", {
               required: "Please confirm password",
-              validate: (value) =>
-                value === password || "Passwords do not match",
+              validate: (value) => value === password || "Passwords do not match",
             })}
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword?.message}
@@ -133,9 +118,7 @@ export default function RegisterPage() {
           <FormControlLabel
             control={
               <Checkbox
-                {...register("agree", {
-                  required: "You must agree to the terms",
-                })}
+                {...register("agree", agreeTermsValidationRules)}
               />
             }
             label="I agree to the Terms of Service and Privacy Policy"

@@ -9,7 +9,7 @@ export type CallOfferSuccessPayload = {
     avatar: string;
     fullname: string;
     nickname: string | null;
-    isOnline: string;
+    isOnline: boolean;
   };
 };
 

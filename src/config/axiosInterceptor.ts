@@ -87,11 +87,6 @@ axiosInterceptor.interceptors.response.use(
 
       store.dispatch(clearCurrentUser())
       await persistor.purge()
-      await authApi.onLogOut()
-
-      setTimeout(() => {
-        window.location.href = '/login'
-      }, 1500)
 
       return Promise.reject(refreshError)
     } finally {

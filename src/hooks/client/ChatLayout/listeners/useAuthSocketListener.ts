@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
 import { bindBanSession, unbindBanSession } from "../../../../socket/client/authSocket.socket";
 import { disconnectSocket } from "../../../../socket/socket";
-import useAuth from "../../Auth/auth.hook";
+import { useDispatch } from "react-redux";
+import { clearCurrentUser } from "../../../../redux/client/auth.redux";
+import { persistor, type AppDispatch } from "../../../../redux/store";
 
 export default function useAuthSocketListener() {
     const navigate = useNavigate();
-    const { handleLogOut } = useAuth();
+    const dispatch = useDispatch<AppDispatch>();
 
     useEffect(() => {
         const handleBanSessionEvent = async (payload: { message?: string }) => {
@@ -17,9 +19,11 @@ export default function useAuthSocketListener() {
             });
 
             try {
-                await handleLogOut()
+                disconnectSocket();
+                dispatch(clearCurrentUser());
+                await persistor.purge();
             } catch (error) {
-                console.error(error)
+                console.error(error);
             } finally {
                 disconnectSocket();
                 navigate("/login", { replace: true });
@@ -31,5 +35,5 @@ export default function useAuthSocketListener() {
         return () => {
             unbindBanSession(handleBanSessionEvent);
         };
-    }, [navigate]);
+    }, [navigate, dispatch]);
 }

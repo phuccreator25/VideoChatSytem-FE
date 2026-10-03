@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 
-export function StatusActive({ status = "offline" }: { status?: string }) {
-  if (status === "offline") return null;
+export function StatusActive({ isOnline = false }: { isOnline?: boolean }) {
+  if (!isOnline) return null;
 
   return (
     <Box
