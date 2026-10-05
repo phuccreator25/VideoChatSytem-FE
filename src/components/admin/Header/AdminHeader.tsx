@@ -17,6 +17,7 @@ import { useLocation, Link } from "react-router-dom";
 type AdminHeaderProps = {
   onToggleSidebar: () => void;
   onOpenMobileSidebar: () => void;
+  onLogOut: () => void;
 };
 
 export const ADMIN_HEADER_HEIGHT = 62;
@@ -24,6 +25,7 @@ export const ADMIN_HEADER_HEIGHT = 62;
 export const AdminHeader = ({
   onToggleSidebar,
   onOpenMobileSidebar,
+  onLogOut,
 }: AdminHeaderProps) => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
@@ -197,7 +199,7 @@ export const AdminHeader = ({
         </Tooltip>
 
         {/* Profile Avatar with Orbit Gradient */}
-        <AdminProfileMenu />
+        <AdminProfileMenu onLogOut={onLogOut}/>
       </Box>
     </Box>
   );

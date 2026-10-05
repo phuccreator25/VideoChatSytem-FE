@@ -23,14 +23,6 @@ export const onUpdateProfileAdmin = createAsyncThunk(
     }
 )
 
-// export const onUpdateAvatar = createAsyncThunk(
-//     'user/onUpdateAvatar',
-//     async (payload: { fileName: string }) => {
-//         const res = await userApi.onUpdateAvatar(payload)
-//         return res.data.data as ProfileData
-//     }
-// )P
-
 export const onGetProfileAdmin = createAsyncThunk(
     'admin/onGetProfileAdmin',
     async () => {
@@ -57,9 +49,6 @@ const adminSlice = createSlice({
         builder.addCase(onGetProfileAdmin.fulfilled, (state, action) => {
             state.currentAdmin = action.payload
         })
-        // builder.addCase(onUpdateAvatar.fulfilled, (state, action) => {
-        //     state.currentUser = action.payload
-        // })
     }
 })
 

@@ -1,31 +1,27 @@
 import React, { useState } from "react";
-import {
-  IconButton,
-  Avatar,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-  Box,
-  Divider,
-  Chip,
-} from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import Avatar from "@mui/material/Avatar";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import Chip from "@mui/material/Chip";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../../../redux/store";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../redux/store";
 import { useNavigate } from "react-router-dom";
-import { clearCurrentAdmin } from "../../../redux/admin/authAdmin.redux";
 import { roleLabel } from "../../../data/user.data";
 import avatarDefault from "../../../assets/avatar_default.jpg";
 
-export const AdminProfileMenu: React.FC = () => {
+export const AdminProfileMenu = ({ onLogOut }: { onLogOut: () => void }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const currentAdmin = useSelector((state: RootState) => state.admin.currentAdmin);
   const avatar = currentAdmin?.avatar || avatarDefault;
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -37,9 +33,8 @@ export const AdminProfileMenu: React.FC = () => {
   };
 
   const handleLogout = () => {
+    onLogOut();
     handleClose();
-    dispatch(clearCurrentAdmin());
-    navigate("/admin/login");
   };
 
   const handleNavigate = (path: string) => {

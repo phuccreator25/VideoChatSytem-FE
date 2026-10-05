@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Box,
   ThemeProvider,
@@ -8,6 +8,7 @@ import {
 import { Outlet } from "react-router-dom";
 import { AdminSidebar } from "../../components/admin/Sidebar/AdminSidebar";
 import { AdminHeader } from "../../components/admin/Header/AdminHeader";
+import { useAuthAdmin } from "../../hooks/admin/authAdmin.hook";
 
 // Orbit Admin Clean Light Theme Definition
 const orbitAdminLightTheme = createTheme({
@@ -67,6 +68,7 @@ const orbitAdminLightTheme = createTheme({
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { handler } = useAuthAdmin()
 
   const handleToggleSidebar = () => {
     setCollapsed((prev) => !prev);
@@ -114,7 +116,7 @@ export default function AdminLayout() {
         >
           {/* Sticky Header Topbar */}
           <AdminHeader
-            collapsed={collapsed}
+            onLogOut={handler.handleLogOut}
             onToggleSidebar={handleToggleSidebar}
             onOpenMobileSidebar={handleOpenMobileSidebar}
           />

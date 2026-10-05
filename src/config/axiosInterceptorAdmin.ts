@@ -85,11 +85,6 @@ axiosInterceptorAdmin.interceptors.response.use(
 
             store.dispatch(clearCurrentAdmin())
             await persistor.purge()
-            await authAdminAPI.onLogOut()
-
-            setTimeout(() => {
-                window.location.href = '/admin/login'
-            }, 1500)
 
             return Promise.reject(refreshError)
         } finally {
