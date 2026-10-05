@@ -1,7 +1,8 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import AdminLayout from "../../layouts/admin/Admin.layout";
 import { UserAdminPage } from "../../pages/admin/userAdmin.page";
-import AdminLoginPage from "../../pages/admin/adminLogin.pages";
+import AdminLoginPage from "../../pages/admin/adminLogin.page";
+import { ProfileAdminPage } from "../../pages/admin/profileAdmin.page";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
 
@@ -24,6 +25,7 @@ export default function AdminRoute() {
         <Route element={<AdminLayout />}>
           <Route index element={<Navigate to="users" replace />} />
           <Route path="users" element={<UserAdminPage />} />
+          <Route path="profile" element={<ProfileAdminPage />} />
         </Route>
       </Route>
 

@@ -14,6 +14,7 @@ export const fullnameValidationRules = {
 };
 
 export const usernameValidationRules = {
+  required: "Please enter your user name",
   minLength: {
     value: 3,
     message: "Username must be at least 3 characters",

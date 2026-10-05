@@ -1,8 +1,6 @@
-import {
-  Box,
-  Typography,
-  Button,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import { UserTable } from "../../components/admin/Users/UserTable";
 import { UserFilters } from "../../components/admin/Users/UserFilters";

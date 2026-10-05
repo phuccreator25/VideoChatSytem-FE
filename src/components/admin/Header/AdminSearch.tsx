@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { Box, InputBase, Chip } from "@mui/material";
+import Box from "@mui/material/Box";
+import InputBase from "@mui/material/InputBase";
+import Chip from "@mui/material/Chip";
 import SearchIcon from "@mui/icons-material/Search";
 
 type AdminSearchProps = {

@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import {
-  Box,
-  IconButton,
-  Typography,
-  Tooltip,
-  useTheme,
-  useMediaQuery,
-  Popover,
-  InputBase,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import Popover from "@mui/material/Popover";
+import InputBase from "@mui/material/InputBase";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
@@ -17,7 +15,6 @@ import { AdminProfileMenu } from "./AdminProfileMenu";
 import { useLocation, Link } from "react-router-dom";
 
 type AdminHeaderProps = {
-  collapsed: boolean;
   onToggleSidebar: () => void;
   onOpenMobileSidebar: () => void;
 };
@@ -25,7 +22,6 @@ type AdminHeaderProps = {
 export const ADMIN_HEADER_HEIGHT = 62;
 
 export const AdminHeader = ({
-  collapsed: _collapsed,
   onToggleSidebar,
   onOpenMobileSidebar,
 }: AdminHeaderProps) => {
@@ -47,6 +43,7 @@ export const AdminHeader = ({
 
   // Determine current page title from route
   const getPageTitle = () => {
+    if (location.pathname.includes("/admin/profile")) return "Admin Profile";
     if (location.pathname.includes("/admin/users")) return "User Management";
     if (location.pathname.includes("/admin/analytics")) return "Analytics";
     if (location.pathname.includes("/admin/settings")) return "Settings";

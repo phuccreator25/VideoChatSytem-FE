@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import {
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Chip,
-  Collapse,
-  List,
-  Tooltip,
-  Box,
-} from "@mui/material";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Chip from "@mui/material/Chip";
+import Collapse from "@mui/material/Collapse";
+import List from "@mui/material/List";
+import Tooltip from "@mui/material/Tooltip";
+import Box from "@mui/material/Box";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { Link, useLocation } from "react-router-dom";

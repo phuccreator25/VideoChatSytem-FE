@@ -1,18 +1,16 @@
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-  Box,
-  TextField,
-  Button,
-  IconButton,
-  Alert,
-  Avatar,
-  Chip,
-  Stack,
-} from "@mui/material";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Alert from "@mui/material/Alert";
+import Avatar from "@mui/material/Avatar";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";

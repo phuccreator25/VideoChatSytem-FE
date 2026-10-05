@@ -1,4 +1,5 @@
-import { Box, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 type BadgeVariant =
   | "online"
@@ -11,7 +12,7 @@ type BadgeVariant =
   | "admin"
   | "client";
 
-type UserStatusBadgeProps = {
+type UserStatusBadgeProps = { 
   variant: BadgeVariant;
   label?: string;
 };

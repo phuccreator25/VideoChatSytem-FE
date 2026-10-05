@@ -1,17 +1,15 @@
 import React, { useState } from "react";
-import {
-  IconButton,
-  Popover,
-  Box,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Button,
-  Divider,
-  Tooltip,
-} from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import Popover from "@mui/material/Popover";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
+import Tooltip from "@mui/material/Tooltip";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";

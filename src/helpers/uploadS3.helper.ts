@@ -1,5 +1,6 @@
 import axios from "axios";
 import uploadAPI from "../api/client/upload.api";
+import authAdminAPI from "../api/admin/authAdmin.api";
 import { compressImageHelper } from "./compressImage.helper";
 import { enqueueSnackbar } from "notistack";
 import { CHUNK_SIZE } from "../data/upload.data";
@@ -186,6 +187,28 @@ export const updateAvatarS3 = async (avatarFile: File) => {
     return { success: true, fileName: compressed.name };
 };
 
+export const updateAdminAvatarS3 = async (avatarFile: File) => {
+    const compressed = await compressImageHelper(avatarFile);
+
+    const presignURL = await authAdminAPI.onUploadPresign({
+        files: { fileName: compressed.name, mimeType: compressed.type, fileSize: compressed.size },
+        type: "avatar",
+    });
+
+    if (!presignURL.data.data?.[0]?.presignedUrl) {
+        enqueueSnackbar("An error occurred while uploading file. Please try again", { variant: "error" });
+        return { success: false };
+    }
+
+    const uploadRes = await putBinaryToS3(presignURL.data.data[0].presignedUrl, compressed, compressed.type);
+
+    if (uploadRes.status !== 200) {
+        enqueueSnackbar("An error occurred while uploading file. Please try again", { variant: "error" });
+        return { success: false };
+    }
+
+    return { success: true, fileName: compressed.name };
+};
 
 window.addEventListener("pagehide", () => {
     const tempIdUploads = Array.from(uploadControllers.keys());

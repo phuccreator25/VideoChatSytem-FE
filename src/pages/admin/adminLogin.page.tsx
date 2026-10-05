@@ -1,14 +1,12 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  IconButton,
-  InputAdornment,
-  Stack,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import Stack from "@mui/material/Stack";
 import ChatBubbleRoundedIcon from "@mui/icons-material/ChatBubbleRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
@@ -18,7 +16,7 @@ import { useAuthAdmin } from "../../hooks/admin/authAdmin.hook";
 import type { typeLogin } from "../../types/auth.type";
 
 
-export const AdminLoginPage: React.FC = () => {
+export const AdminLoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { handler } = useAuthAdmin();
 

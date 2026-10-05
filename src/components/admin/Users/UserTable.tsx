@@ -1,20 +1,18 @@
 import React from "react";
-import {
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Avatar,
-  Typography,
-  IconButton,
-  TablePagination,
-  Paper,
-  Tooltip,
-  Skeleton,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Avatar from "@mui/material/Avatar";
+import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import TablePagination from "@mui/material/TablePagination";
+import Paper from "@mui/material/Paper";
+import Tooltip from "@mui/material/Tooltip";
+import Skeleton from "@mui/material/Skeleton";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import LockOpenRoundedIcon from '@mui/icons-material/LockOpenRounded';

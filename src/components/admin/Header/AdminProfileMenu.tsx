@@ -16,12 +16,15 @@ import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../redux/store";
-import { clearCurrentUser } from "../../../redux/client/auth.redux";
 import { useNavigate } from "react-router-dom";
+import { clearCurrentAdmin } from "../../../redux/admin/authAdmin.redux";
+import { roleLabel } from "../../../data/user.data";
+import avatarDefault from "../../../assets/avatar_default.jpg";
 
 export const AdminProfileMenu: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const currentUser = useSelector((state: RootState) => state.user.currentUser);
+  const currentAdmin = useSelector((state: RootState) => state.admin.currentAdmin);
+  const avatar = currentAdmin?.avatar || avatarDefault;
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
@@ -35,8 +38,8 @@ export const AdminProfileMenu: React.FC = () => {
 
   const handleLogout = () => {
     handleClose();
-    dispatch(clearCurrentUser());
-    navigate("/login");
+    dispatch(clearCurrentAdmin());
+    navigate("/admin/login");
   };
 
   const handleNavigate = (path: string) => {
@@ -58,8 +61,8 @@ export const AdminProfileMenu: React.FC = () => {
         }}
       >
         <Avatar
-          src={currentUser?.avatar || undefined}
-          alt={currentUser?.fullName || "Admin"}
+          src={avatar}
+          alt={currentAdmin?.fullname || "Admin"}
           sx={{
             width: 32,
             height: 32,
@@ -70,7 +73,6 @@ export const AdminProfileMenu: React.FC = () => {
             boxShadow: "0 2px 8px rgba(59, 130, 246, 0.25)",
           }}
         >
-          {currentUser?.fullName?.charAt(0)?.toUpperCase() || "A"}
         </Avatar>
       </IconButton>
 
@@ -99,10 +101,10 @@ export const AdminProfileMenu: React.FC = () => {
         <Box sx={{ px: 1.5, py: 1.25 }}>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: "0.9rem" }}>
-              {currentUser?.fullName || "Super Admin"}
+              {currentAdmin?.fullname}
             </Typography>
             <Chip
-              label="Admin"
+              label={roleLabel[currentAdmin?.role || 'admin']}
               size="small"
               sx={{
                 height: 18,
@@ -116,14 +118,14 @@ export const AdminProfileMenu: React.FC = () => {
             />
           </Box>
           <Typography variant="caption" sx={{ color: "#64748B", fontSize: "0.75rem" }}>
-            {currentUser?.email || "admin@orbit.dev"}
+            {currentAdmin?.email || "admin@orbit.dev"}
           </Typography>
         </Box>
 
         <Divider sx={{ my: 1, borderColor: "#F1F5F9" }} />
 
         <MenuItem
-          onClick={() => handleNavigate("/admin/users")}
+          onClick={() => handleNavigate("/admin/profile")}
           sx={{
             borderRadius: "8px",
             py: 1,

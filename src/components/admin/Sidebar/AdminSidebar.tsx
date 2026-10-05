@@ -1,5 +1,7 @@
-import React from "react";
-import { Box, Drawer, useMediaQuery, useTheme } from "@mui/material";
+import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { AdminLogo } from "./AdminLogo";
 import { AdminNavGroup } from "./AdminNavGroup";
 import { adminNavConfig } from "./adminNavConfig";

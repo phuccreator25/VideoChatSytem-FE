@@ -1,17 +1,17 @@
-import {
-  Box,
-  InputBase,
-  Select,
-  MenuItem,
-  FormControl,
-  Button,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import InputBase from "@mui/material/InputBase";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
 import RotateLeftRoundedIcon from "@mui/icons-material/RotateLeftRounded";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import type { typeQueryUser } from "../../../types/admin/userAdmin.type";
-import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import { roleList } from "../../../data/user.data";
 
 type UserFiltersProps = {
@@ -22,12 +22,18 @@ type UserFiltersProps = {
 export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState<string>(filters.search || "");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Sync internal search state when filter prop changes externally (e.g. on reset/popstate)
+  useEffect(() => {
+    setSearchValue(filters.search || "");
+  }, [filters.search]);
 
   useEffect(() => {
     const currentFilterSearch = filters.search || "";
 
     // Tránh set lại URL nếu giá trị search không thay đổi
-    if (currentFilterSearch === searchValue.trim()) { 
+    if (currentFilterSearch === searchValue.trim()) {
       return;
     }
 
@@ -40,16 +46,12 @@ export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
       }
       nextParams.set("page", "1");
       setSearchParams(nextParams);
-    }, 1000);
+    }, 700);
 
-    // Xóa timer cũ khi user gõ tiếp trước khi đủ 1s
     return () => clearTimeout(timer);
   }, [searchValue]);
 
-  const handleSelectChange = (
-    key: string,
-    value: string
-  ) => {
+  const handleSelectChange = (key: string, value: string) => {
     const nextParams = new URLSearchParams(searchParams);
 
     if (!value || value === "all") {
@@ -62,187 +64,333 @@ export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
     setSearchParams(nextParams);
   };
 
+  const handleClearSearch = () => {
+    setSearchValue("");
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("search");
+    nextParams.set("page", "1");
+    setSearchParams(nextParams);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const nextParams = new URLSearchParams(searchParams);
+      if (!searchValue.trim()) {
+        nextParams.delete("search");
+      } else {
+        nextParams.set("search", searchValue.trim());
+      }
+      nextParams.set("page", "1");
+      setSearchParams(nextParams);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onFetchData();
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
+
   const handleReset = () => {
     setSearchValue("");
     setSearchParams(new URLSearchParams());
   };
 
-  const hasActiveFilters = Boolean(
-    filters.search ||
-    (filters.role && filters.role !== "all") ||
-    (filters.isOnline && filters.isOnline !== "all") ||
-    (filters.isActive && filters.isActive !== "all") ||
-    (filters.isBanned && filters.isBanned !== "all")
-  );
+  const activeCount = [
+    Boolean(filters.search?.trim()),
+    Boolean(filters.role && filters.role !== "all"),
+    Boolean(filters.isOnline && filters.isOnline !== "all"),
+    Boolean(filters.isActive && filters.isActive !== "all"),
+    Boolean(filters.isBanned && filters.isBanned !== "all"),
+  ].filter(Boolean).length;
+
+  const hasActiveFilters = activeCount > 0;
+
+  // Custom styling helper for Select filters when active
+  const getSelectStyle = (isActive: boolean) => ({
+    height: 40,
+    fontSize: "0.835rem",
+    fontWeight: isActive ? 600 : 500,
+    borderRadius: "10px",
+    bgcolor: isActive ? "#F5F3FF" : "#F8FAFC",
+    color: isActive ? "#7C3AED" : "#334155",
+    transition: "all 0.2s ease",
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: isActive ? "#A78BFA" : "#E2E8F0",
+      borderWidth: isActive ? "1.5px" : "1px",
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: isActive ? "#7C3AED" : "#CBD5E1",
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#7C3AED",
+      boxShadow: "0 0 0 3px rgba(124, 58, 237, 0.12)",
+    },
+    "& .MuiSelect-select": {
+      py: 1,
+      px: 1.5,
+      display: "flex",
+      alignItems: "center",
+    },
+  });
 
   return (
     <Box
       sx={{
         display: "flex",
-        flexDirection: { xs: "column", lg: "row" },
-        alignItems: { xs: "stretch", lg: "center" },
-        justifyContent: "space-between",
-        gap: 1.5,
-        p: 2,
+        flexDirection: "column",
+        gap: { xs: 1.5, sm: 2 },
+        p: { xs: 1.5, sm: 2 },
         bgcolor: "#FFFFFF",
-        borderRadius: "14px",
+        borderRadius: "16px",
         border: "1px solid #E2E8F0",
+        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03)",
       }}
     >
-      {/* Search Input */}
+      {/* Top Row: Search Input & Action Buttons */}
       <Box
         sx={{
           display: "flex",
-          alignItems: "center",
-          bgcolor: "#F8FAFC",
-          border: "1px solid #E2E8F0",
-          borderRadius: "10px",
-          px: 1.5,
-          py: 0.6,
-          flex: { xs: "1", lg: "0 1 320px" },
-          transition: "all 0.2s ease",
-          "&:focus-within": {
-            bgcolor: "#FFFFFF",
-            borderColor: "#7C3AED",
-            boxShadow: "0 0 0 3px rgba(124, 58, 237, 0.1)",
-          },
+          flexDirection: { xs: "column", sm: "row" },
+          alignItems: { xs: "stretch", sm: "center" },
+          justifyContent: "space-between",
+          gap: 1.5,
         }}
       >
-        <SearchIcon sx={{ color: "#94A3B8", fontSize: 20, mr: 1 }} />
-        <InputBase
-          placeholder="Search by name, username, email..."
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
+        {/* Search Input */}
+        <Box
           sx={{
-            color: "#0F172A",
-            fontSize: "0.85rem",
-            width: "100%",
-            "& ::placeholder": { color: "#94A3B8", opacity: 1 },
-          }}
-        />
-      </Box>
-
-      {/* Select Filter Dropdowns */}
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          gap: 1,
-        }}
-      >
-        <Button
-          size="small"
-          onClick={onFetchData}
-          startIcon={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
-          sx={{
-            textTransform: "none",
-            fontSize: "0.8rem",
-            color: "#EF4444",
-            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            bgcolor: "#F8FAFC",
+            border: "1px solid #E2E8F0",
+            borderRadius: "10px",
             px: 1.5,
-            "&:hover": { bgcolor: "#FEE2E2" },
+            height: 40,
+            flex: { xs: "1 1 100%", sm: "1 1 auto" },
+            transition: "all 0.2s ease",
+            "&:hover": {
+              borderColor: "#CBD5E1",
+            },
+            "&:focus-within": {
+              bgcolor: "#FFFFFF",
+              borderColor: "#7C3AED",
+              boxShadow: "0 0 0 3px rgba(124, 58, 237, 0.12)",
+            },
           }}
         >
-          Refresh
-        </Button>
-        {/* Role Filter */}
-        <FormControl size="small" sx={{ minWidth: 110 }}>
-          <Select
-            value={filters.role}
-            onChange={(e) => handleSelectChange('role', e.target.value)}
-            displayEmpty
+          <SearchIcon sx={{ color: "#94A3B8", fontSize: 20, mr: 1, flexShrink: 0 }} />
+          <InputBase
+            placeholder="Search by name, username, email..."
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             sx={{
-              fontSize: "0.825rem",
+              color: "#0F172A",
+              fontSize: "0.85rem",
+              width: "100%",
+              "& ::placeholder": { color: "#94A3B8", opacity: 1 },
+            }}
+          />
+          {searchValue && (
+            <IconButton
+              size="small"
+              onClick={handleClearSearch}
+              sx={{
+                p: 0.5,
+                color: "#94A3B8",
+                "&:hover": { color: "#64748B", bgcolor: "rgba(0,0,0,0.04)" },
+              }}
+            >
+              <CloseRoundedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          )}
+        </Box>
+
+        {/* Action Buttons: Refresh & Clear Filters */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            justifyContent: { xs: "flex-end", sm: "flex-start" },
+            flexShrink: 0,
+          }}
+        >
+          {/* Refresh Button */}
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            startIcon={
+              <RefreshRoundedIcon
+                sx={{
+                  fontSize: 18,
+                  transition: "transform 0.5s ease",
+                  transform: isRefreshing ? "rotate(360deg)" : "none",
+                }}
+              />
+            }
+            sx={{
+              height: 40,
+              textTransform: "none",
+              fontSize: "0.835rem",
+              fontWeight: 600,
+              color: "#475569",
+              borderColor: "#E2E8F0",
+              bgcolor: "#FFFFFF",
               borderRadius: "10px",
-              bgcolor: "#F8FAFC",
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
-              "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#CBD5E1" },
+              px: { xs: 1.5, sm: 2 },
+              "&:hover": {
+                bgcolor: "#F8FAFC",
+                borderColor: "#CBD5E1",
+                color: "#1E293B",
+              },
             }}
           >
+            Refresh
+          </Button>
+
+          {/* Reset Active Filters Button */}
+          {hasActiveFilters && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleReset}
+              startIcon={<RotateLeftRoundedIcon sx={{ fontSize: 18 }} />}
+              sx={{
+                height: 40,
+                textTransform: "none",
+                fontSize: "0.835rem",
+                fontWeight: 600,
+                color: "#DC2626",
+                borderColor: "#FCA5A5",
+                bgcolor: "#FEF2F2",
+                borderRadius: "10px",
+                px: { xs: 1.5, sm: 2 },
+                "&:hover": {
+                  bgcolor: "#FEE2E2",
+                  borderColor: "#F87171",
+                },
+              }}
+            >
+              Reset ({activeCount})
+            </Button>
+          )}
+        </Box>
+      </Box>
+
+      {/* Bottom Grid: Filter Select Dropdowns */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "repeat(2, 1fr)",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(4, 1fr)",
+          },
+          gap: { xs: 1, sm: 1.5 },
+          alignItems: "center",
+        }}
+      >
+        {/* Role Filter */}
+        <FormControl fullWidth size="small">
+          <Select
+            value={filters.role || "all"}
+            onChange={(e) => handleSelectChange("role", e.target.value)}
+            displayEmpty
+            sx={getSelectStyle(Boolean(filters.role && filters.role !== "all"))}
+          >
             {roleList.map((role) => (
-              <MenuItem key={role.value} value={role.value} sx={{ fontSize: "0.825rem" }}>
-                {role.label}
+              <MenuItem key={role.value} value={role.value} sx={{ fontSize: "0.835rem" }}>
+                {role.value === "all" ? "Role: All" : `Role: ${role.label}`}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
 
         {/* isOnline Filter */}
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+        <FormControl fullWidth size="small">
           <Select
-            value={filters.isOnline}
-            onChange={(e) => handleSelectChange('isOnline', e.target.value)}
+            value={filters.isOnline || "all"}
+            onChange={(e) => handleSelectChange("isOnline", e.target.value)}
             displayEmpty
-            sx={{
-              fontSize: "0.825rem",
-              borderRadius: "10px",
-              bgcolor: "#F8FAFC",
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
-            }}
+            sx={getSelectStyle(Boolean(filters.isOnline && filters.isOnline !== "all"))}
           >
-            <MenuItem value="all" sx={{ fontSize: "0.825rem" }}>Status: All</MenuItem>
-            <MenuItem value="true" sx={{ fontSize: "0.825rem" }}>Online</MenuItem>
-            <MenuItem value="false" sx={{ fontSize: "0.825rem" }}>Offline</MenuItem>
+            <MenuItem value="all" sx={{ fontSize: "0.835rem" }}>
+              Status: All
+            </MenuItem>
+            <MenuItem value="true" sx={{ fontSize: "0.835rem" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#10B981" }} />
+                Status: Online
+              </Box>
+            </MenuItem>
+            <MenuItem value="false" sx={{ fontSize: "0.835rem" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#94A3B8" }} />
+                Status: Offline
+              </Box>
+            </MenuItem>
           </Select>
         </FormControl>
 
         {/* isActive Filter */}
-        <FormControl size="small" sx={{ minWidth: 130 }}>
+        <FormControl fullWidth size="small">
           <Select
-            value={filters.isActive}
-            onChange={(e) => handleSelectChange('isActive', e.target.value)}
+            value={filters.isActive || "all"}
+            onChange={(e) => handleSelectChange("isActive", e.target.value)}
             displayEmpty
-            sx={{
-              fontSize: "0.825rem",
-              borderRadius: "10px",
-              bgcolor: "#F8FAFC",
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
-            }}
+            sx={getSelectStyle(Boolean(filters.isActive && filters.isActive !== "all"))}
           >
-            <MenuItem value="all" sx={{ fontSize: "0.825rem" }}>Verify: All</MenuItem>
-            <MenuItem value="true" sx={{ fontSize: "0.825rem" }}>Active</MenuItem>
-            <MenuItem value="false" sx={{ fontSize: "0.825rem" }}>Pending</MenuItem>
+            <MenuItem value="all" sx={{ fontSize: "0.835rem" }}>
+              Verify: All
+            </MenuItem>
+            <MenuItem value="true" sx={{ fontSize: "0.835rem" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#06B6D4" }} />
+                Verify: Active
+              </Box>
+            </MenuItem>
+            <MenuItem value="false" sx={{ fontSize: "0.835rem" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#F59E0B" }} />
+                Verify: Pending
+              </Box>
+            </MenuItem>
           </Select>
         </FormControl>
 
         {/* isBanned Filter */}
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+        <FormControl fullWidth size="small">
           <Select
-            value={filters.isBanned}
-            onChange={(e) => handleSelectChange('isBanned', e.target.value)}
+            value={filters.isBanned || "all"}
+            onChange={(e) => handleSelectChange("isBanned", e.target.value)}
             displayEmpty
-            sx={{
-              fontSize: "0.825rem",
-              borderRadius: "10px",
-              bgcolor: "#F8FAFC",
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
-            }}
+            sx={getSelectStyle(Boolean(filters.isBanned && filters.isBanned !== "all"))}
           >
-            <MenuItem value="all" sx={{ fontSize: "0.825rem" }}>Ban: All</MenuItem>
-            <MenuItem value="false" sx={{ fontSize: "0.825rem" }}>Normal</MenuItem>
-            <MenuItem value="true" sx={{ fontSize: "0.825rem" }}>Banned</MenuItem>
+            <MenuItem value="all" sx={{ fontSize: "0.835rem" }}>
+              Ban: All
+            </MenuItem>
+            <MenuItem value="false" sx={{ fontSize: "0.835rem" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#10B981" }} />
+                Ban: Normal
+              </Box>
+            </MenuItem>
+            <MenuItem value="true" sx={{ fontSize: "0.835rem" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#EF4444" }} />
+                Ban: Banned
+              </Box>
+            </MenuItem>
           </Select>
         </FormControl>
-
-        {/* Reset Button */}
-        {hasActiveFilters && (
-          <Button
-            size="small"
-            onClick={handleReset}
-            startIcon={<RotateLeftRoundedIcon sx={{ fontSize: 16 }} />}
-            sx={{
-              textTransform: "none",
-              fontSize: "0.8rem",
-              color: "#EF4444",
-              borderRadius: "8px",
-              px: 1.5,
-              "&:hover": { bgcolor: "#FEE2E2" },
-            }}
-          >
-            Reset
-          </Button>
-        )}
       </Box>
     </Box>
   );
