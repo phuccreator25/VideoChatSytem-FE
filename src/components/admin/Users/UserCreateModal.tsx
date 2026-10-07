@@ -175,7 +175,7 @@ export const UserCreateModal = ({
               border: "1px solid rgba(124, 58, 237, 0.18)",
             }}
           >
-            Assigned Role: <strong>ADMIN</strong>. This account will have full access to view users, enforce moderation, and configure system settings.
+            Assigned Role: <strong>ADMIN</strong>. This account will have full access to view users, and configure system settings.
           </Alert>
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>

@@ -98,7 +98,7 @@ export default function useCallSocketListener(currentUserId: string) {
   const handleDeclineCall = async () => {
     try {
       if (incomingCall.callId) {
-        await dispatch(onEndCallAction(incomingCall.callId));
+        await dispatch(onEndCallAction({ callId: incomingCall.callId, endReason: "rejected" }));
       }
     } catch (error) {
       console.error("Lỗi khi từ chối cuộc gọi:", error);

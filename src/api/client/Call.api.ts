@@ -4,8 +4,8 @@ import type { ChatBotPayLoad } from "../../types/Chatbot.type";
 const callApi = {
   onGetTurnCredentials: () => axiosInterceptor.get("/calls/turn-credentials"),
 
-  onEndCall: (callId: string) =>
-    axiosInterceptor.post("/calls/end-call", { callId }),
+  onEndCall: ({ callId, endReason }: { callId: string, endReason?: string }) =>
+    axiosInterceptor.post("/calls/end-call", { callId, endReason }),
 
   onAcceptCall: (callId: string) =>
     axiosInterceptor.post("/calls/accept-call", { callId }),

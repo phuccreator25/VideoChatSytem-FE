@@ -24,6 +24,7 @@ import type { AdminUserItem } from "../../../types/admin/userAdmin.type";
 import { formatDate } from "../../../helpers/formatDate.helper";
 import type { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
+import { maskEmail } from "../../../helpers/admin/userAdmin.helper";
 
 type UserDetailModalProps = {
   user: AdminUserItem | null;
@@ -213,7 +214,7 @@ export const UserDetailModal = ({
               }}
             >
               {user.username ? `@${user.username} • ` : ""}
-              {user.email}
+              {user.role === 'client' ? maskEmail(user.email): user.email}
             </Typography>
           </Box>
         </Box>
@@ -553,7 +554,7 @@ export const UserDetailModal = ({
                   }}
                 >
                   {user.createdByUser.username ? `@${user.createdByUser.username} • ` : ""}
-                  {user.createdByUser.email}
+                  {user.role === 'client' ? maskEmail(user.createdByUser.email): user.createdByUser.email}
                 </Typography>
               </Box>
             </Box>

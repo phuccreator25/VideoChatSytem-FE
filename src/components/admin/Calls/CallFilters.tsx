@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import InputBase from "@mui/material/InputBase";
 import Select from "@mui/material/Select";
@@ -5,29 +6,49 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
 import SearchIcon from "@mui/icons-material/Search";
 import RotateLeftRoundedIcon from "@mui/icons-material/RotateLeftRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import Popover from "@mui/material/Popover";
+import TextField from "@mui/material/TextField";
+import type { typeQueryCallAdmin } from "../../../types/admin/callAdmin.type";
+import {
+  statusCallAdmin,
+  typeCallAdmin,
+  endReasonCallAdmin,
+} from "../../../data/callAdmin.data";
 import { useSearchParams } from "react-router-dom";
-import { useState, useEffect } from "react";
-import type { typeQueryUser } from "../../../types/admin/userAdmin.type";
-import { roleList } from "../../../data/user.data";
 
-type UserFiltersProps = {
-  filters: typeQueryUser;
-  onFetchData: () => Promise<void>;
+type CallFiltersProps = {
+  filters: typeQueryCallAdmin;
+  onGetData: () => void
 };
 
-export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
+export const CallFilters = ({
+  filters,
+  onGetData,
+}: CallFiltersProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState<string>(filters.search || "");
+  const [dateAnchorEl, setDateAnchorEl] = useState<HTMLButtonElement | null>(null);
+
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Sync internal search state when filter prop changes externally (e.g. on reset/popstate)
   useEffect(() => {
     setSearchValue(filters.search || "");
   }, [filters.search]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onGetData();
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   useEffect(() => {
     const currentFilterSearch = filters.search || "";
@@ -72,32 +93,32 @@ export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
     setSearchParams(nextParams);
   };
 
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await onFetchData();
-    } finally {
-      setTimeout(() => setIsRefreshing(false), 500);
-    }
+  const handleDatePopoverOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setDateAnchorEl(event.currentTarget);
   };
 
-  const handleReset = () => {
+  const handleDatePopoverClose = () => {
+    setDateAnchorEl(null);
+  };
+
+  const handleResetFilters = () => {
     setSearchValue("");
     setSearchParams(new URLSearchParams());
   };
 
+  // Tính số lượng bộ lọc đang active
   const activeCount = [
-    Boolean(filters.search?.trim()),
-    Boolean(filters.role && filters.role !== "all"),
-    Boolean(filters.isOnline && filters.isOnline !== "all"),
-    Boolean(filters.isActive && filters.isActive !== "all"),
-    Boolean(filters.isBanned && filters.isBanned !== "all"),
+    Boolean(searchValue.trim() || filters.search?.trim()),
+    Boolean(filters.status && filters.status !== "all"),
+    Boolean(filters.type && filters.type !== "all"),
+    Boolean(filters.endReason && filters.endReason !== "all"),
+    Boolean(filters.startDate && filters.startDate !== "2026-10-01"),
   ].filter(Boolean).length;
 
   const hasActiveFilters = activeCount > 0;
+  const isDateActive = Boolean(filters.startDate || filters.endDate);
 
-  // Custom styling helper for Select filters when active
+  // Custom styling helper for Select filters when active (Chuẩn hệ thống Orbit)
   const getSelectStyle = (isActive: boolean) => ({
     height: 40,
     fontSize: "0.835rem",
@@ -138,7 +159,7 @@ export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
         boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03)",
       }}
     >
-      {/* Top Row: Search Input & Action Buttons */}
+      {/* Top Row: Search Input & Action Buttons (Refresh & Reset) */}
       <Box
         sx={{
           display: "flex",
@@ -197,7 +218,7 @@ export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
           )}
         </Box>
 
-        {/* Action Buttons: Refresh & Clear Filters */}
+        {/* Action Buttons: Refresh & Reset */}
         <Box
           sx={{
             display: "flex",
@@ -211,7 +232,7 @@ export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
           <Button
             variant="outlined"
             size="small"
-            onClick={handleRefresh}
+            onClick={() => handleRefresh()}
             disabled={isRefreshing}
             startIcon={
               <RefreshRoundedIcon
@@ -247,7 +268,7 @@ export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
             <Button
               variant="outlined"
               size="small"
-              onClick={handleReset}
+              onClick={handleResetFilters}
               startIcon={<RotateLeftRoundedIcon sx={{ fontSize: 18 }} />}
               sx={{
                 height: 40,
@@ -284,99 +305,158 @@ export const UserFilters = ({ filters, onFetchData }: UserFiltersProps) => {
           alignItems: "center",
         }}
       >
-        {/* Role Filter */}
+        {/* 1. Status Filter */}
         <FormControl fullWidth size="small">
           <Select
-            value={filters.role || "all"}
-            onChange={(e) => handleSelectChange("role", e.target.value)}
+            value={filters.status || "all"}
+            onChange={(e) => handleSelectChange("status", e.target.value)}
             displayEmpty
-            sx={getSelectStyle(Boolean(filters.role && filters.role !== "all"))}
+            sx={getSelectStyle(Boolean(filters.status && filters.status !== "all"))}
           >
-            {roleList.map((role) => (
-              <MenuItem key={role.value} value={role.value} sx={{ fontSize: "0.835rem" }}>
-                {role.value === "all" ? "Role: All" : `Role: ${role.label}`}
+            {statusCallAdmin.map((item) => (
+              <MenuItem key={item.value} value={item.value} sx={{ fontSize: "0.835rem" }}>
+                {item.color ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: item.color }} />
+                    {item.label}
+                  </Box>
+                ) : (
+                  item.label
+                )}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
 
-        {/* isOnline Filter */}
+        {/* 2. Type Filter */}
         <FormControl fullWidth size="small">
           <Select
-            value={filters.isOnline || "all"}
-            onChange={(e) => handleSelectChange("isOnline", e.target.value)}
+            value={filters.type || "all"}
+            onChange={(e) => handleSelectChange("type", e.target.value)}
             displayEmpty
-            sx={getSelectStyle(Boolean(filters.isOnline && filters.isOnline !== "all"))}
+            sx={getSelectStyle(Boolean(filters.type && filters.type !== "all"))}
           >
-            <MenuItem value="all" sx={{ fontSize: "0.835rem" }}>
-              Status: All
-            </MenuItem>
-            <MenuItem value="true" sx={{ fontSize: "0.835rem" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#10B981" }} />
-                Status: Online
-              </Box>
-            </MenuItem>
-            <MenuItem value="false" sx={{ fontSize: "0.835rem" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#94A3B8" }} />
-                Status: Offline
-              </Box>
-            </MenuItem>
+            {typeCallAdmin.map((item) => (
+              <MenuItem key={item.value} value={item.value} sx={{ fontSize: "0.835rem" }}>
+                {item.color ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: item.color }} />
+                    {item.label}
+                  </Box>
+                ) : (
+                  item.label
+                )}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
-        {/* isActive Filter */}
+        {/* 3. End Reason Filter */}
         <FormControl fullWidth size="small">
           <Select
-            value={filters.isActive || "all"}
-            onChange={(e) => handleSelectChange("isActive", e.target.value)}
+            value={filters.endReason || "all"}
+            onChange={(e) => handleSelectChange("endReason", e.target.value)}
             displayEmpty
-            sx={getSelectStyle(Boolean(filters.isActive && filters.isActive !== "all"))}
+            sx={getSelectStyle(Boolean(filters.endReason && filters.endReason !== "all"))}
           >
-            <MenuItem value="all" sx={{ fontSize: "0.835rem" }}>
-              Verify: All
-            </MenuItem>
-            <MenuItem value="true" sx={{ fontSize: "0.835rem" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#06B6D4" }} />
-                Verify: Active
-              </Box>
-            </MenuItem>
-            <MenuItem value="false" sx={{ fontSize: "0.835rem" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#F59E0B" }} />
-                Verify: Pending
-              </Box>
-            </MenuItem>
+            {endReasonCallAdmin.map((item) => (
+              <MenuItem key={item.value} value={item.value} sx={{ fontSize: "0.835rem" }}>
+                {item.color ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: item.color }} />
+                    {item.label}
+                  </Box>
+                ) : (
+                  item.label
+                )}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
-        {/* isBanned Filter */}
-        <FormControl fullWidth size="small">
-          <Select
-            value={filters.isBanned || "all"}
-            onChange={(e) => handleSelectChange("isBanned", e.target.value)}
-            displayEmpty
-            sx={getSelectStyle(Boolean(filters.isBanned && filters.isBanned !== "all"))}
+        {/* 4. Date Range Filter Button & Popover */}
+        <Box sx={{ width: "100%" }}>
+          <Button
+            fullWidth
+            onClick={handleDatePopoverOpen}
+            startIcon={
+              <CalendarMonthRoundedIcon
+                sx={{
+                  fontSize: 18,
+                  color: isDateActive ? "#7C3AED" : "#64748B",
+                }}
+              />
+            }
+            sx={{
+              ...getSelectStyle(isDateActive),
+              justifyContent: "flex-start",
+              textTransform: "none",
+              px: 1.5,
+              width: "100%",
+            }}
           >
-            <MenuItem value="all" sx={{ fontSize: "0.835rem" }}>
-              Ban: All
-            </MenuItem>
-            <MenuItem value="false" sx={{ fontSize: "0.835rem" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#10B981" }} />
-                Ban: Normal
-              </Box>
-            </MenuItem>
-            <MenuItem value="true" sx={{ fontSize: "0.835rem" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#EF4444" }} />
-                Ban: Banned
-              </Box>
-            </MenuItem>
-          </Select>
-        </FormControl>
+            {isDateActive 
+            ? `Date: ${filters.startDate || '...'} - ${filters.endDate || '...'}` 
+            : "Date: All"}
+          </Button>
+
+          <Popover
+            open={Boolean(dateAnchorEl)}
+            anchorEl={dateAnchorEl}
+            onClose={handleDatePopoverClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{
+              sx: {
+                p: 2,
+                mt: 1,
+                borderRadius: "12px",
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                border: "1px solid #E2E8F0",
+                minWidth: 280,
+              },
+            }}
+          >
+            <Typography sx={{ fontSize: "0.875rem", fontWeight: 700, color: "#0F172A", mb: 1.5 }}>
+              Date range
+            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              <TextField
+                label="From date"
+                type="date"
+                size="small"
+                value={filters.startDate && filters.startDate !== "all" ? filters.startDate : ""}
+                onChange={(e) => handleSelectChange("startDate", e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+              />
+              <TextField
+                label="To date"
+                type="date"
+                size="small"
+                value={filters.endDate && filters.endDate !== "all" ? filters.endDate : ""}
+                onChange={(e) => handleSelectChange("endDate", e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+              />
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleDatePopoverClose}
+                sx={{
+                  bgcolor: "#7C3AED",
+                  color: "#FFFFFF",
+                  borderRadius: "8px",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  "&:hover": { bgcolor: "#6D28D9" },
+                }}
+              >
+                Apply   
+              </Button>
+            </Box>
+          </Popover>
+        </Box>
       </Box>
     </Box>
   );

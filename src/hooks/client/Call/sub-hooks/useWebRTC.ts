@@ -10,7 +10,23 @@ import {
 } from "../../../../socket/client/callSocket.socket";
 import type { incomingType } from "../../../../types/call/call.type";
 
-export const useWebRTC = () => {
+type typeMakeCall = {
+  localStream: MediaStream | null;
+  targetCalleeId?: string;
+  ortherUserId?: string;
+  conversationId?: string;
+  currentUserId?: string;
+  callType?: string;
+}
+
+type typeAnswerCall = {
+  stream: MediaStream | null;
+  incomingCall: incomingType;
+  conversationId?: string;
+  currentUserId?: string;
+}
+
+export const useWebRTC = (options?: { onConnectionFailed?: () => void }) => {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isAccepted, setIsAccepted] = useState(false);
   const [isRinging, setIsRinging] = useState(false);
@@ -24,6 +40,8 @@ export const useWebRTC = () => {
 
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const optionsRef = useRef(options); // Đảm bảo luôn lấy dữ liệu mới nhất tránh khi re-render rồi vẫn bị data cũ
+  optionsRef.current = options;
 
   const makeCall = async ({
     localStream,
@@ -32,14 +50,7 @@ export const useWebRTC = () => {
     conversationId,
     currentUserId,
     callType,
-  }: {
-    localStream: MediaStream | null;
-    targetCalleeId?: string;
-    ortherUserId?: string;
-    conversationId?: string;
-    currentUserId?: string;
-    callType?: string;
-  }) => {
+  }: typeMakeCall) => {
     const activeStream = localStream;
     const calleeId = targetCalleeId || ortherUserId;
 
@@ -120,17 +131,11 @@ export const useWebRTC = () => {
           setConnectionStatusText(
             "Unstable connection. Attempting to reconnect...",
           );
-          enqueueSnackbar("Unstable connection. Attempting to reconnect...", {
-            variant: "warning",
-          });
         } else if (state === "failed") {
           setIsReconnecting(true);
           setConnectionStatusText(
             "Connection interrupted. Attempting to restore...",
           );
-          enqueueSnackbar("Connection interrupted. Attempting to restore...", {
-            variant: "error",
-          });
 
           try {
             if (pc.signalingState === "stable") {
@@ -154,12 +159,28 @@ export const useWebRTC = () => {
       };
 
       pc.onconnectionstatechange = () => {
-        console.log(`⚡ [WebRTC Peer Connection State]: ${pc.connectionState}`);
-        if (pc.connectionState === "connected") {
-          setIsReconnecting(false);
-          setConnectionStatusText(null);
+        const connState = pc.connectionState;
+        console.log(`[WebRTC Peer State]: ${connState}`);
+
+        switch (connState) {
+          case "connected":
+            setIsReconnecting(false);
+            setConnectionStatusText(null);
+            break;
+
+          case "failed":
+            setIsReconnecting(false);
+            enqueueSnackbar("The call was interrupted due to an attempt to transmit data over the network.", { variant: "error" });
+
+            optionsRef.current?.onConnectionFailed?.();
+            break;
+
+          case "closed":
+            closeWebRTC();
+            break;
         }
       };
+
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
@@ -183,12 +204,7 @@ export const useWebRTC = () => {
     incomingCall,
     conversationId,
     currentUserId,
-  }: {
-    stream: MediaStream | null;
-    incomingCall: incomingType;
-    conversationId?: string;
-    currentUserId?: string;
-  }) => {
+  }: typeAnswerCall) => {
     if (!incomingCall?.offer || !incomingCall?.userData) {
       console.error("Không tìm thấy offer của cuộc gọi đến");
       return;
@@ -252,17 +268,10 @@ export const useWebRTC = () => {
           setConnectionStatusText(
             "Unstable connection. Attempting to reconnect...",
           );
-          enqueueSnackbar("Unstable connection. Attempting to reconnect...", {
-            variant: "warning",
-          });
         } else if (state === "failed") {
-          setIsReconnecting(true);
           setConnectionStatusText(
             "Connection interrupted. Attempting to restore...",
           );
-          enqueueSnackbar("Connection interrupted. Attempting to restore...", {
-            variant: "error",
-          });
 
           try {
             if (pc.signalingState === "stable") {
@@ -279,7 +288,6 @@ export const useWebRTC = () => {
           } catch (err) {
             console.error("Lỗi khi Callee thực hiện ICE Restart:", err);
           }
-
         } else if (state === "connected" || state === "completed") {
           setIsReconnecting(false);
           setConnectionStatusText(null);
@@ -288,10 +296,25 @@ export const useWebRTC = () => {
       };
 
       pc.onconnectionstatechange = () => {
-        console.log(`⚡ [WebRTC Callee Peer State]: ${pc.connectionState}`);
-        if (pc.connectionState === "connected") {
-          setIsReconnecting(false);
-          setConnectionStatusText(null);
+        const connState = pc.connectionState;
+        console.log(`[WebRTC Peer State]: ${connState}`);
+
+        switch (connState) {
+          case "connected":
+            setIsReconnecting(false);
+            setConnectionStatusText(null);
+            break;
+
+          case "failed":
+            setIsReconnecting(false);
+            enqueueSnackbar("The call was interrupted due to an attempt to transmit data over the network.", { variant: "error" });
+
+            optionsRef.current?.onConnectionFailed?.();
+            break;
+
+          case "closed":
+            closeWebRTC();
+            break;
         }
       };
 

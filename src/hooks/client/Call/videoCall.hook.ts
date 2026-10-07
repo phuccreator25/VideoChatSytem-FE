@@ -50,7 +50,11 @@ export const useVideoCall = () => {
   // 2. Sub-hooks
   const media = useMediaStream();
   const screen = useScreenShare();
-  const webrtc = useWebRTC();
+  const webrtc = useWebRTC({
+    onConnectionFailed: () => {
+      endCall("network_lost");
+    }
+  });
 
   const {
     startListening,
@@ -123,18 +127,19 @@ export const useVideoCall = () => {
     });
   };
 
-  const endCall = async () => {
+  const endCall = async (endReason?: string) => {
     try {
-      if (!callInfo) return;
+      const activeCallId = callInfo || incomingCall.callId;
+      if (!activeCallId) return;
 
       stopListening();
 
-      await dispatch(onEndCallAction(callInfo));
+      await dispatch(onEndCallAction({ callId: activeCallId, endReason }));
 
-      closeUserMedia();
     } catch (error) {
-      closeUserMedia();
       console.error("Lỗi trong quá trình kết thúc cuộc gọi:", error);
+    } finally {
+      closeUserMedia();
     }
   };
 

@@ -46,11 +46,11 @@ export const AdminHeader = ({
   // Determine current page title from route
   const getPageTitle = () => {
     if (location.pathname.includes("/admin/profile")) return "Admin Profile";
-    if (location.pathname.includes("/admin/users")) return "User Management";
+    if (location.pathname.includes("/admin/users")) return "Users Management";
     if (location.pathname.includes("/admin/analytics")) return "Analytics";
     if (location.pathname.includes("/admin/settings")) return "Settings";
-    if (location.pathname.includes("/admin/calls")) return "Calls";
-    return "User Management";
+    if (location.pathname.includes("/admin/calls")) return "Calls Management";
+    return "Users Management";
   };
 
   return (

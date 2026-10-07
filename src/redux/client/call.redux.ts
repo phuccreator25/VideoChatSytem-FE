@@ -24,8 +24,8 @@ const initialState: initialType = {
 // 1. Thunk chỉ làm nhiệm vụ giao tiếp API và trả về Data
 export const onEndCallAction = createAsyncThunk(
   "call/onEndCall",
-  async (callId: string) => {
-    const res = await callApi.onEndCall(callId);
+  async ({ callId, endReason }: { callId: string, endReason?: string }) => {
+    const res = await callApi.onEndCall({ callId, endReason });
     return res.data;
   },
 );

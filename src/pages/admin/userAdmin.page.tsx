@@ -38,7 +38,7 @@ export function UserAdminPage() {
               color: "#0F172A",
             }}
           >
-            User Management
+            Users Management
           </Typography>
         </Box>
 

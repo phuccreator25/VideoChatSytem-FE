@@ -21,7 +21,7 @@ import { CallSummaryModal } from "./CallSummaryModal.chat";
 import callApi from "../../../../api/client/Call.api";
 import { enqueueSnackbar } from "notistack";
 
-interface CallBubbleProps {
+type CallBubbleProps = {
   msg: MessageType;
   isLeft: boolean;
   shouldShowStatus?: boolean;
