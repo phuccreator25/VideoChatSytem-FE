@@ -10,7 +10,7 @@ type Pagination = {
 }
 
 export function useCallAdmin() {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const [calls, setCalls] = useState<CallItem[]>([])
     const [selectedCallForDetail, setSelectedCallForDetail] = useState<CallItem | null>(null);
 

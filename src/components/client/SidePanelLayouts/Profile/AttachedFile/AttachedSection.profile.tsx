@@ -102,7 +102,7 @@ export function AttachedFilesSection({
                     ))
                 ) : files.length > 0 ? (
                     files.map((item) => (
-                        <AttachedFileRow key={item.attachmentId} item={item} />
+                        <AttachedFileRow key={item.messageId} item={item} />
                     ))
                 ) : (
                     <Typography

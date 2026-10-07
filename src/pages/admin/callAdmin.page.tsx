@@ -1,7 +1,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { keyframes } from "@emotion/react";
-import type { CallItem } from "../../types/admin/callAdmin.type";
 import { useCallAdmin } from "../../hooks/admin/callAdmin.hook";
 import { CallFilters } from "../../components/admin/Calls/CallFilters";
 import { CallTable } from "../../components/admin/Calls/CallTable";

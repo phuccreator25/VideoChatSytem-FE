@@ -13,8 +13,6 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import TablePagination from "@mui/material/TablePagination";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import PhoneDisabledRoundedIcon from "@mui/icons-material/PhoneDisabledRounded";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
 import TimerOffRoundedIcon from "@mui/icons-material/TimerOffRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
@@ -117,7 +115,6 @@ export const CallTable = ({
               calls.map((call) => {
               const caller = call.participants.find((p) => p.role === "caller") || call.participants[0];
               const callee = call.participants.find((p) => p.role === "callee") || call.participants[1];
-              const isLive = call.status === "active" || call.status === "ringing";
 
               return (
                 <TableRow

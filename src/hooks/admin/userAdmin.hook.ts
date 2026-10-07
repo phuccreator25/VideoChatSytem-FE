@@ -16,7 +16,7 @@ type ModalState = {
 }
 
 export default function useUserAdmin() {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const [users, setUsers] = useState<AdminUserItem[]>([]);
 
     const [modals, setModals] = useState<ModalState>({

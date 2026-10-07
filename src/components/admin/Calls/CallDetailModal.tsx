@@ -11,7 +11,6 @@ import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
-import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import FiberManualRecordRoundedIcon from "@mui/icons-material/FiberManualRecordRounded";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 import { CallStatusBadge } from "./CallStatusBadge";
