@@ -84,7 +84,7 @@ export function Header({ userData, onSearchMessage, onOpenProfileDrawer }: Heade
       >
         {isMobile && (
           <IconButton
-            onClick={() => navigate("/chat")}
+            onClick={() => navigate("/chat", { state: { rail: "messages" } })}
             sx={{
               color: "#4b5563",
               mr: 0.5,

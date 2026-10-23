@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import useAuth from "../../../hooks/client/Auth/auth.hook";
 import type { typeLogin } from "../../../types/auth.type";
 import { getVisitorId } from "../../../config/FingerPrintJS";
+import { BannedAccountDialog } from "../../../components/client/Auth/BannedAccountDialog";
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
@@ -26,7 +27,7 @@ export default function LoginPage() {
       }
     })
 
-  const { handleLogin, loading } = useAuth();
+  const { handleLogin, loading, bannedModal, handleCloseBannedModal } = useAuth();
 
   const onLogin = async (data: typeLogin) => {
     try {
@@ -156,6 +157,14 @@ export default function LoginPage() {
           Sign Up now
         </Link>
       </Typography>
+
+      <BannedAccountDialog
+        open={bannedModal.open}
+        onClose={handleCloseBannedModal}
+        banReason={bannedModal.banReason}
+        bannedAt={bannedModal.bannedAt}
+        unBannedAt={bannedModal.unBannedAt}
+      />
     </Box>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 
 import type { ConversationUserInfo } from "../../../../types/chat/chat.conversation.type";
@@ -10,6 +10,7 @@ import type { RootState } from "../../../../redux/store";
 import { ProfileHeader, ProfileTopBar } from "./sub-components/ProfileHeader";
 import { ProfileTabs } from "./sub-components/ProfileTabs";
 import { ProfileDialogs } from "./sub-components/ProfileDialogs";
+import { ReportModal } from "../Dialog/ReportModal";
 
 type ProfileDrawerProps = {
   isOpen: boolean;
@@ -18,11 +19,23 @@ type ProfileDrawerProps = {
 };
 
 export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
-  const { ui, handlers, data } = useProfileDrawer()
-  const { onHandleDownloadFile } = useDownloadFile()
+  const { ui, handlers, data } = useProfileDrawer();
+  const { onHandleDownloadFile } = useDownloadFile();
 
-  const isBlocked = useSelector((state: RootState) => Boolean(ui.userData?.userId && state.block.blockStatusMap[ui.userData?.userId]?.isBlockedByMe === true))
-  const isMeBlocked = useSelector((state: RootState) => Boolean(ui.userData?.userId && state.block.blockStatusMap[ui.userData?.userId]?.isBlockedMe === true))
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  const isBlocked = useSelector((state: RootState) =>
+    Boolean(
+      ui.userData?.userId &&
+        state.block.blockStatusMap[ui.userData?.userId]?.isBlockedByMe === true
+    )
+  );
+  const isMeBlocked = useSelector((state: RootState) =>
+    Boolean(
+      ui.userData?.userId &&
+        state.block.blockStatusMap[ui.userData?.userId]?.isBlockedMe === true
+    )
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -41,7 +54,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
         bgcolor: { xs: "#ffffff", md: "rgba(255, 255, 255, 0.72)" },
         backdropFilter: "blur(30px) saturate(190%)",
         webkitBackdropFilter: "blur(30px) saturate(190%)",
-        borderLeft: isOpen ? "1px solid rgba(255, 255, 255, 0.45)" : "0px solid transparent",
+        borderLeft: isOpen
+          ? "1px solid rgba(255, 255, 255, 0.45)"
+          : "0px solid transparent",
         position: { xs: "absolute", md: "relative" },
         right: { xs: 0, md: "auto" },
         top: { xs: 0, md: "auto" },
@@ -82,6 +97,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
           onOpenDeleteDialog={() => handlers.setIsDeleteDialogOpen(true)}
           targetLanguage={data.targetLanguage}
           onSelectLanguage={handlers.onSelectLanguage}
+          onOpenReportModal={() => setIsReportModalOpen(true)}
         />
 
         {/* Shared Media & Files Segment */}
@@ -115,6 +131,26 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
         onDownloadFile={onHandleDownloadFile}
       />
 
+      {/* Report Account Modal */}
+      <ReportModal
+        open={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetType="account"
+        targetUser={
+          ui.userData
+            ? {
+                userId: ui.userData.userId ?? "",
+                fullname: ui.userData.fullname ?? "",
+                username:
+                  ui.userData.nickname ||
+                  ui.userData.fullname.toLowerCase().replace(/\s+/g, "_"),
+                avatar: ui.userData.avatar ?? "",
+                isOnline: ui.userData.isOnline ?? "",
+                lastSeen: ui.userData.lastSeenAt ?? "",
+              }
+            : undefined
+        }
+      />
     </Box>
   );
 }

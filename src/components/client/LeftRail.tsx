@@ -21,6 +21,8 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import WidgetsOutlinedIcon from "@mui/icons-material/WidgetsOutlined";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 
 import type { LeftRailProps } from "../../types/layout/layout.navigation.type";
 import { COLORS } from "../../utils/Colors";
@@ -40,6 +42,9 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
   };
 
   const user = useSelector((state: RootState) => state.user.currentUser)
+  const warningCount = user?.warningAccount ?? (user?.warning?.length || 0);
+  const hasWarning = Boolean(warningCount && warningCount > 0);
+  const isLevel2 = warningCount >= 2;
 
   const handleClose = () => {
     setAnchorEl(null);
@@ -115,13 +120,46 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
           sx={{ width: "100%", flex: isMobile ? 1 : "initial" }}
         >
           <RailItem
-            title="Profile"
+            title={hasWarning ? `Profile (${warningCount} Warning)` : "Profile"}
             active={activeRail === "profile"}
             onClick={() => onChange("profile")}
             icon={
-              <PersonOutlineRoundedIcon
-                sx={{ fontSize: { xs: 23, sm: 25, md: 27 } }}
-              />
+              <Badge
+                overlap="circular"
+                invisible={!hasWarning}
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                badgeContent={
+                  isLevel2 ? (
+                    <ReportProblemRoundedIcon sx={{ fontSize: 10, color: "#FFFFFF" }} />
+                  ) : (
+                    <WarningAmberRoundedIcon sx={{ fontSize: 10, color: "#FFFFFF" }} />
+                  )
+                }
+                sx={{
+                  "& .MuiBadge-badge": {
+                    bgcolor: isLevel2 ? "#E11D48" : "#F59E0B",
+                    minWidth: 16,
+                    height: 16,
+                    width: 16,
+                    padding: 0,
+                    borderRadius: "50%",
+                    border: "2px solid #FFFFFF",
+                    boxShadow: isLevel2
+                      ? "0 0 8px rgba(225, 29, 72, 0.45)"
+                      : "0 0 8px rgba(245, 158, 11, 0.35)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  },
+                }}
+              >
+                <PersonOutlineRoundedIcon
+                  sx={{ fontSize: { xs: 23, sm: 25, md: 27 } }}
+                />
+              </Badge>
             }
           />
 
@@ -265,7 +303,30 @@ export default function LeftRail({ activeRail, onChange }: LeftRailProps) {
             }}
           >
             <ListItemText
-              primary="Profile"
+              primary={
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <span>Profile</span>
+                  {hasWarning && (
+                    <Box
+                      sx={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        px: 0.6,
+                        py: 0.1,
+                        borderRadius: "4px",
+                        bgcolor: isLevel2 ? "#FFE4E6" : "#FEF3C7",
+                        color: isLevel2 ? "#E11D48" : "#B45309",
+                        border: isLevel2 ? "1px solid #FECDD3" : "1px solid #FDE68A",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {warningCount} Warning
+                    </Box>
+                  )}
+                </Box>
+              }
               primaryTypographyProps={{
                 fontSize: 16,
                 fontWeight: 500,

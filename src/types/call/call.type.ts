@@ -5,7 +5,7 @@ export type CallStatus = "ringing" | "completed" | "rejected" | "missed";
 export type ParticipantRole = "caller" | "callee";
 export type ParticipantStatus = "pending" | "accepted" | "rejected" | "missed";
 
-export interface CallParticipant {
+export type CallParticipant = {
   userId: string;
   role: ParticipantRole;
   joinStatus: ParticipantStatus;
@@ -13,7 +13,7 @@ export interface CallParticipant {
   leftAt: string | Date | null;
 }
 
-export interface CallModel {
+export type CallModel = {
   _id?: string;
   conversationId: string;
   type: CallType;
@@ -25,7 +25,7 @@ export interface CallModel {
   updatedAt: string | Date | null;
 }
 
-export interface CallEndPayload {
+export type CallEndPayload = {
   callId: string;
   userIdWhoLeft: string;
   shouldCloseUI: boolean;

@@ -111,6 +111,13 @@ export type MessageType = {
   deliveries?: MessageDelivery[];
   reactions?: reactionMessage[];
   translations?: Record<string, string>;
+  moderation?: {
+    isModerated: boolean;
+    moderatedAt: string | null;
+    reason: string | null;
+    moderatedBy: string | null;
+    ticketId: string | null;
+  }
 };
 
 export type reactionMessage = {

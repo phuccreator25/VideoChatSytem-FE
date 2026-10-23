@@ -25,6 +25,7 @@ const initialState: ConversationState = {
 };
 
 const getPreviewByMessage = (message: MessageType) => {
+  if (message.moderation?.isModerated) return "This message has been deleted by a moderator.";
   if (message.isRevoked) return "This message has been revoked";
 
   if (message.type === "file") {
@@ -153,6 +154,7 @@ const conversationSlice = createSlice({
         preview: getPreviewByMessage(message),
         time: formatTime(message.createdAt),
         type: conversationType,
+        moderation: message.moderation?.isModerated ? message.moderation : undefined,
         unread:
           !isMyMessage && !isActiveConversation
             ? (conversation.unread || 0) + 1

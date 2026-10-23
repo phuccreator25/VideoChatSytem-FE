@@ -5,7 +5,9 @@ export default function useDownloadFile() {
     try {
       if (!url) return;
 
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        cache: "no-store",
+      });
 
       if (!res.ok) {
         enqueueSnackbar("Download Failed", {

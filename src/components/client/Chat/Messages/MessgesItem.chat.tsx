@@ -20,6 +20,7 @@ import {
 } from "../../../../helpers/client/messageItem.helper";
 
 import { RevokedMessageBubble } from "./sub-components/RevokedMessageBubble";
+import { ModeratedMessageBubble } from "./sub-components/ModeratedMessageBubble";
 import { CallMessageBubbleItem } from "./sub-components/CallMessageBubbleItem";
 import { TextMessageBubble } from "./sub-components/TextMessageBubble";
 import { GifMessageBubble } from "./sub-components/GifMessageBubble";
@@ -111,6 +112,8 @@ export const MessageItem = memo(function MessageItem({
   const hasLinkPreview = Boolean(hasUrl && urlMatches?.length === 1 && (msg.preview || msg.type === "text"));
 
   const replyMessage = msg.replyMessage || null;
+  const isModerated = Boolean(msg.moderation?.isModerated);
+  const isRevoked = Boolean(msg.isRevoked);
 
   return (
     <Stack
@@ -135,97 +138,108 @@ export const MessageItem = memo(function MessageItem({
           flexDirection: "column",
           alignItems: isLeft ? "flex-start" : "flex-end",
           width: "100%",
-          "&:hover .message-actions": {
-            opacity: 1,
-            pointerEvents: "auto",
-          },
+          ...(!isModerated && !isRevoked && {
+            "&:hover .message-actions": {
+              opacity: 1,
+              pointerEvents: "auto",
+            },
+          }),
         }}
-        onMouseEnter={() => setShowEmotionTrigger(true)}
+        onMouseEnter={() => !isModerated && !isRevoked && setShowEmotionTrigger(true)}
         onMouseLeave={() => setShowEmotionTrigger(false)}
       >
-        {msg.isRevoked && <RevokedMessageBubble />}
-
-        {isCall && !msg.isRevoked && (
-          <CallMessageBubbleItem
-            msg={msg}
-            isLeft={isLeft}
-            shouldShowStatus={shouldShowStatus}
-            showEmotionTrigger={showEmotionTrigger}
-            onReCall={onReCall}
-            onReply={(m) => setMessageReplyed(m)}
-            onShare={() => setShareDialogOpen(true)}
-            onReact={onReact}
-            onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
-            onMouseEnter={() => setShowEmotionTrigger(true)}
-            onMouseLeave={() => setShowEmotionTrigger(false)}
+        {isModerated ? (
+          <ModeratedMessageBubble
+            reason={msg.moderation?.reason}
+            moderatedAt={msg.moderation?.moderatedAt}
           />
-        )}
+        ) : isRevoked ? (
+          <RevokedMessageBubble />
+        ) : (
+          <>
+            {isCall && (
+              <CallMessageBubbleItem
+                msg={msg}
+                isLeft={isLeft}
+                shouldShowStatus={shouldShowStatus}
+                showEmotionTrigger={showEmotionTrigger}
+                onReCall={onReCall}
+                onReply={(m) => setMessageReplyed(m)}
+                onShare={() => setShareDialogOpen(true)}
+                onReact={onReact}
+                onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
+                onMouseEnter={() => setShowEmotionTrigger(true)}
+                onMouseLeave={() => setShowEmotionTrigger(false)}
+              />
+            )}
 
-        {isText && !msg.isRevoked && (
-          <TextMessageBubble
-            msg={msg}
-            isLeft={isLeft}
-            effectiveStatus={effectiveStatus}
-            shouldShowStatus={shouldShowStatus}
-            showEmotionTrigger={showEmotionTrigger}
-            hasLinkPreview={hasLinkPreview}
-            replyMessage={replyMessage}
-            onGoToMessage={onGoToMessage}
-            onResend={onResend}
-            onReply={(m) => setMessageReplyed(m)}
-            onShare={() => setShareDialogOpen(true)}
-            onReact={onReact}
-            onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
-            onMouseEnter={() => setShowEmotionTrigger(true)}
-            onMouseLeave={() => setShowEmotionTrigger(false)}
-            onTranslate={onTranslate}
-            targetLanguage={targetLanguage}
-          />
-        )}
+            {isText && (
+              <TextMessageBubble
+                msg={msg}
+                isLeft={isLeft}
+                effectiveStatus={effectiveStatus}
+                shouldShowStatus={shouldShowStatus}
+                showEmotionTrigger={showEmotionTrigger}
+                hasLinkPreview={hasLinkPreview}
+                replyMessage={replyMessage}
+                onGoToMessage={onGoToMessage}
+                onResend={onResend}
+                onReply={(m) => setMessageReplyed(m)}
+                onShare={() => setShareDialogOpen(true)}
+                onReact={onReact}
+                onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
+                onMouseEnter={() => setShowEmotionTrigger(true)}
+                onMouseLeave={() => setShowEmotionTrigger(false)}
+                onTranslate={onTranslate}
+                targetLanguage={targetLanguage}
+              />
+            )}
 
-        {isGif && msg.gifUrl && !msg.isRevoked && (
-          <GifMessageBubble
-            msg={msg}
-            isLeft={isLeft}
-            shouldShowStatus={shouldShowStatus}
-            showEmotionTrigger={showEmotionTrigger}
-            replyMessage={replyMessage}
-            onGoToMessage={onGoToMessage}
-            onResend={onResend}
-            onReply={(m) => setMessageReplyed(m)}
-            onShare={() => setShareDialogOpen(true)}
-            onReact={onReact}
-            onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
-            onMouseEnter={() => setShowEmotionTrigger(true)}
-            onMouseLeave={() => setShowEmotionTrigger(false)}
-          />
-        )}
+            {isGif && msg.gifUrl && (
+              <GifMessageBubble
+                msg={msg}
+                isLeft={isLeft}
+                shouldShowStatus={shouldShowStatus}
+                showEmotionTrigger={showEmotionTrigger}
+                replyMessage={replyMessage}
+                onGoToMessage={onGoToMessage}
+                onResend={onResend}
+                onReply={(m) => setMessageReplyed(m)}
+                onShare={() => setShareDialogOpen(true)}
+                onReact={onReact}
+                onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
+                onMouseEnter={() => setShowEmotionTrigger(true)}
+                onMouseLeave={() => setShowEmotionTrigger(false)}
+              />
+            )}
 
-        {msg.type === "file" && !msg.isRevoked && (
-          <FileMessageBubble
-            msg={msg}
-            isLeft={isLeft}
-            effectiveStatus={effectiveStatus}
-            shouldShowStatus={shouldShowStatus}
-            showEmotionTrigger={showEmotionTrigger}
-            fileNote={fileNote}
-            imageItems={imageItems}
-            nonImageAttachments={nonImageAttachments}
-            audioAttachment={audioAttachment}
-            videoAttachment={videoAttachment}
-            failedAttachmentCount={failedAttachmentCount}
-            replyMessage={replyMessage}
-            isText={isText}
-            onGoToMessage={onGoToMessage}
-            onResend={onResend}
-            onCancelUpload={onCancelUpload}
-            onReply={(m) => setMessageReplyed(m)}
-            onShare={() => setShareDialogOpen(true)}
-            onReact={onReact}
-            onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
-            onMouseEnter={() => setShowEmotionTrigger(true)}
-            onMouseLeave={() => setShowEmotionTrigger(false)}
-          />
+            {msg.type === "file" && (
+              <FileMessageBubble
+                msg={msg}
+                isLeft={isLeft}
+                effectiveStatus={effectiveStatus}
+                shouldShowStatus={shouldShowStatus}
+                showEmotionTrigger={showEmotionTrigger}
+                fileNote={fileNote}
+                imageItems={imageItems}
+                nonImageAttachments={nonImageAttachments}
+                audioAttachment={audioAttachment}
+                videoAttachment={videoAttachment}
+                failedAttachmentCount={failedAttachmentCount}
+                replyMessage={replyMessage}
+                isText={isText}
+                onGoToMessage={onGoToMessage}
+                onResend={onResend}
+                onCancelUpload={onCancelUpload}
+                onReply={(m) => setMessageReplyed(m)}
+                onShare={() => setShareDialogOpen(true)}
+                onReact={onReact}
+                onOpenEmotionDetail={(el) => setPopoverAnchor(el)}
+                onMouseEnter={() => setShowEmotionTrigger(true)}
+                onMouseLeave={() => setShowEmotionTrigger(false)}
+              />
+            )}
+          </>
         )}
 
         <Typography

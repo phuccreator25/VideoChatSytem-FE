@@ -13,10 +13,13 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import ReportGmailerrorredRoundedIcon from "@mui/icons-material/ReportGmailerrorredRounded";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 
 import { customScrollbarSx } from "../../../../utils/CustomScroll";
 import { AboutSection } from "./About/AboutSection.profile";
 import { AttachedFilesSection } from "./AttachedFile/AttachedSection.profile";
+import { AccountWarningSection } from "./AccountWarning/AccountWarningSection";
 import { useProfile } from "../../../../hooks/client/Profile/profile.hook";
 import OpenAvatar from "./OpenAvatar/OpenAvatar.profile";
 
@@ -28,6 +31,7 @@ export function MyProfile() {
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+    const warningCount = initialProfile?.warningAccount ?? (initialProfile?.warning?.length || 0);
 
     return (
         <>
@@ -258,7 +262,7 @@ export function MyProfile() {
                                 {initialProfile?.fullname}
                             </Typography>
 
-                            <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.5 }}>
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.5, flexWrap: "wrap", justifyContent: "center" }}>
                                 <Box
                                     sx={{
                                         width: 8,
@@ -277,7 +281,50 @@ export function MyProfile() {
                                 >
                                     {initialProfile?.isActive ? "Active" : "Inactive"}
                                 </Typography>
+
+                              
                             </Stack>
+                            <Box sx={{mt: 1}}>
+                                  {warningCount >= 2 ? (
+                                    <Box
+                                        sx={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 0.5,
+                                            px: 1,
+                                            py: 0.25,
+                                            borderRadius: "6px",
+                                            bgcolor: "#FFE4E6",
+                                            border: "1px solid #FDA4AF",
+                                            color: "#E11D48",
+                                            fontSize: "10px",
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        <ReportGmailerrorredRoundedIcon sx={{ fontSize: 13 }} />
+                                        2 Warning (Risk of Ban)
+                                    </Box>
+                                ) : warningCount === 1 ? (
+                                    <Box
+                                        sx={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 0.5,
+                                            px: 1,
+                                            py: 0.25,
+                                            borderRadius: "6px",
+                                            bgcolor: "#FEF3C7",
+                                            border: "1px solid #FDE68A",
+                                            color: "#B45309",
+                                            fontSize: "10px",
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        <WarningAmberRoundedIcon sx={{ fontSize: 13 }} />
+                                        1 Warning
+                                    </Box>
+                                ) : null}
+                            </Box>
                         </Box>
                     </Box>
 
@@ -305,6 +352,9 @@ export function MyProfile() {
                         >
                             Update your profile information, manage your avatar, and change your password to better protect your account.
                         </Typography>
+
+                        {/* Card Cảnh Báo Tài Khoản & Lịch Sử Vi Phạm */}
+                        <AccountWarningSection profile={initialProfile} />
 
                         {/* Pill Segment Tabs */}
                         <Tabs

@@ -93,7 +93,6 @@ export function MediaPreviewModal({
     >
       {currentItem && (
         <Box sx={{ position: "relative", display: "inline-block" }}>
-          {/* Close Button */}
           <IconButton
             onClick={onClose}
             sx={{
@@ -110,7 +109,6 @@ export function MediaPreviewModal({
             <CloseRoundedIcon sx={{ fontSize: 20 }} />
           </IconButton>
 
-          {/* Counter Badge */}
           {items.length > 1 && (
             <Box
               sx={{
@@ -133,7 +131,6 @@ export function MediaPreviewModal({
             </Box>
           )}
 
-          {/* Prev / Next Arrows */}
           {items.length > 1 && (
             <>
               <IconButton
@@ -175,7 +172,6 @@ export function MediaPreviewModal({
             </>
           )}
 
-          {/* Media Content (Video vs Image) */}
           {currentItem.mimeType?.startsWith("video/") ||
           currentItem.resourceType === "video" ? (
             <Box
@@ -211,7 +207,6 @@ export function MediaPreviewModal({
             />
           )}
 
-          {/* Floating Download Button */}
           {onDownload && (
             <IconButton
               onClick={() =>

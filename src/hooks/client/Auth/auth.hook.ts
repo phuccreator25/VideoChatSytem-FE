@@ -58,6 +58,19 @@ function useAuth() {
     }
   };
 
+  const [bannedModal, setBannedModal] = useState<{
+    open: boolean;
+    banReason?: string;
+    bannedAt?: string | Date | null;
+    unBannedAt?: string | Date | null;
+  }>({
+    open: false,
+  });
+
+  const handleCloseBannedModal = () => {
+    setBannedModal((prev) => ({ ...prev, open: false }));
+  };
+
   const handleLogin = async ({ email, password, deviceId }: typeLogin) => {
     try {
       setLoading(true);
@@ -65,14 +78,34 @@ function useAuth() {
       const res = await dispatch(onLogin({ email, password, deviceId })).unwrap();
 
       if (res) {
+        navigate("/chat");
         enqueueSnackbar("Signed in successfully", {
           variant: "success",
         });
-        navigate("/chat");
       }
     } catch (error: any) {
-      console.error("Login failed:", error.response?.data?.message);
-      enqueueSnackbar(error?.response?.data?.message, {
+      console.error("Login failed:", error);
+
+      const isBanned = Boolean(
+        error?.isBanned ||
+        error?.response?.data?.isBanned ||
+        error?.message?.toLowerCase().includes("banned")
+      );
+
+      const banDetails = error?.banDetails || error?.response?.data?.banDetails;
+
+      if (isBanned) {
+        setBannedModal({
+          open: true,
+          banReason: banDetails?.banReason,
+          bannedAt: banDetails?.bannedAt,
+          unBannedAt: banDetails?.unBannedAt,
+        });
+        return;
+      }
+
+      const message = error?.message || error?.response?.data?.message || "Login failed";
+      enqueueSnackbar(message, {
         variant: "error",
       });
       throw error;
@@ -166,6 +199,8 @@ function useAuth() {
     handleLogOut,
     handleForgotPass,
     handleResetPass,
+    bannedModal,
+    handleCloseBannedModal,
   };
 }
 

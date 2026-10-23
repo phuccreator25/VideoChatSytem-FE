@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import ChatLayout from '../../../layouts/client/Chat.layout';
 import ChatFrame from '../../../components/client/Chat/ChatFrame';
 import ConversationList from '../../../components/client/SidePanelLayouts/ConversationList/ConversationList';
@@ -13,7 +14,17 @@ import { onGetConversations } from '../../../redux/client/conversation.redux';
 import type { RailKey } from '../../../types/layout/layout.navigation.type';
 
 export default function ChatPages() {
-  const [activeRail, setActiveRail] = useState<RailKey>('messages');
+  const location = useLocation(); // dùng location để lấy đuọce state truyền vào
+  const [activeRail, setActiveRail] = useState<RailKey>(
+    (location.state as any)?.rail || 'messages'
+  );
+
+  useEffect(() => {
+    if ((location.state as any)?.rail) {
+      setActiveRail((location.state as any).rail);
+    }
+  }, [location.state]);
+
   const dispatch = useDispatch<AppDispatch>();
   const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 

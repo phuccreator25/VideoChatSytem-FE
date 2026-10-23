@@ -18,7 +18,14 @@ export type Conversation = {
   active?: boolean;
   userId?: string;
   isBlocked: boolean;
-  translation: string
+  translation: string;
+  moderation?: {
+    isModerated: boolean;
+    moderatedAt: string | null;
+    reason: string | null;
+    moderatedBy: string | null;
+    ticketId: string | null;
+  }
 };
 
 export type Message =

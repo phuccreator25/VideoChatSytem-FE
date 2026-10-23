@@ -20,7 +20,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { enqueueSnackbar } from "notistack";
 import type { SpeechTranscriptItem } from "../../../../types/call/call.type";
 
-interface CallSummaryModalProps {
+type CallSummaryModalProps = {
   open: boolean;
   onClose: () => void;
   aiSummary?: {
@@ -34,7 +34,7 @@ interface CallSummaryModalProps {
   onGenerateAI?: () => void;
 }
 
-interface TabPanelProps {
+type TabPanelProps = {
   children?: React.ReactNode;
   index: number;
   value: number;

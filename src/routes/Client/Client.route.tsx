@@ -12,6 +12,7 @@ const ResetPasswordPage = lazy(() => import("../../pages/client/Auth/ResetPasswo
 const ActiveSuccess = lazy(() => import("../../pages/client/Auth/ActiveSuccess.page"));
 const ChatPage = lazy(() => import("../../pages/client/Chat/Chat.page"));
 const InvitationPages = lazy(() => import("../../pages/client/Invitation/Invitaiton.page"));
+const ReportPage = lazy(() => import("../../pages/client/Report/report.page"));
 
 const CheckAuth = () => {
   const user = useSelector((state: RootState) => state.user.currentUser);
@@ -39,6 +40,7 @@ export default function ClientRoute() {
       <Route element={<CheckAuth />}>
         <Route path="/chat/:conversationId?" element={<ChatPage />} />
         <Route path="/invitation" element={<InvitationPages />} />
+        <Route path="/report" element={<ReportPage />} />
       </Route>
 
       <Route path="/" element={<HomeRedirect />} />

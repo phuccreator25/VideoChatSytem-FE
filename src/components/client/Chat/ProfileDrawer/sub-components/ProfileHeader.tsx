@@ -8,6 +8,7 @@ import Tooltip from "@mui/material/Tooltip";
 import InputBase from "@mui/material/InputBase";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import Button from "@mui/material/Button";
 
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
@@ -18,6 +19,7 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import TranslateRoundedIcon from "@mui/icons-material/TranslateRounded";
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../../../../../redux/store";
@@ -94,6 +96,7 @@ type ProfileHeaderProps = {
   onOpenDeleteDialog: () => void;
   targetLanguage: string;
   onSelectLanguage: (val: string) => void;
+  onOpenReportModal?: () => void;
 };
 
 export function ProfileHeader({
@@ -110,6 +113,7 @@ export function ProfileHeader({
   onOpenDeleteDialog,
   targetLanguage,
   onSelectLanguage,
+  onOpenReportModal,
 }: ProfileHeaderProps) {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -359,6 +363,23 @@ export function ProfileHeader({
             <DeleteRoundedIcon sx={{ fontSize: 18 }} />
           </IconButton>
         </Tooltip>
+        <Tooltip title="Báo cáo tài khoản" arrow>
+          <IconButton
+            onClick={onOpenReportModal}
+            sx={{
+              ...actionButtonSx,
+              "&:hover": {
+                backgroundColor: "#ef4444",
+                color: "#ffffff",
+                borderColor: "#ef4444",
+                transform: "scale(1.12) translateY(-2px)",
+                boxShadow: "0 8px 16px rgba(239, 68, 68, 0.28)",
+              },
+            }}
+          >
+            <FlagOutlinedIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        </Tooltip>
       </Stack>
 
       {/* Target Language Selection Card */}
@@ -515,6 +536,37 @@ export function ProfileHeader({
           ))}
         </Stack>
       </Paper>
+
+      {/* Report Account Action Button */}
+      {userData?.userId && (
+        <Box sx={{ mt: 0.5 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={onOpenReportModal}
+            startIcon={<FlagOutlinedIcon sx={{ fontSize: 18 }} />}
+            sx={{
+              py: 1.1,
+              borderRadius: "14px",
+              borderColor: "rgba(239, 68, 68, 0.35)",
+              color: "#ef4444",
+              bgcolor: "rgba(239, 68, 68, 0.04)",
+              fontSize: "13px",
+              fontWeight: 700,
+              textTransform: "none",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                borderColor: "#ef4444",
+                bgcolor: "rgba(239, 68, 68, 0.1)",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 12px rgba(239, 68, 68, 0.15)",
+              },
+            }}
+          >
+            Report this account
+          </Button>
+        </Box>
+      )}
     </>
   );
 }

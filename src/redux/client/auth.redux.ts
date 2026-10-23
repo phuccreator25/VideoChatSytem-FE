@@ -10,9 +10,13 @@ const initialState: { currentUser: ProfileData | null } = {
 
 export const onLogin = createAsyncThunk(
   'user/onLogin',
-  async ({ email, password, deviceId }: typeLogin) => {
-    const res = await authApi.onLogin({ email, password, deviceId })
-    return res.data.data as ProfileData
+  async ({ email, password, deviceId }: typeLogin, { rejectWithValue }) => {
+    try {
+      const res = await authApi.onLogin({ email, password, deviceId })
+      return res.data.data as ProfileData
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || { message: error.message })
+    }
   }
 )
 

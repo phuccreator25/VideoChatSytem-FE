@@ -17,7 +17,7 @@ import { ActiveList } from "./ActiveList/ActiveList.conversation";
 import { ConversationItem } from "./ConversationItem/ConversaationItem.conversation";
 import { useConversation } from "../../../../hooks/client/Conversation/ConversationList.hook";
 import { useNavigate, useParams } from "react-router-dom";
-import { ConversationItemSkeleton } from "./Skeleton/Skeleton.conversation";
+import { ConversationItemSkeleton } from "../../Sketon/Skeleton.conversation";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../../redux/store";
 import useOpenConversation from "../../../../helpers/client/openConversation.helper";

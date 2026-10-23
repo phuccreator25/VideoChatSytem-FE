@@ -31,6 +31,21 @@ export function ReplyQuoteBubble({
     const accentColor = isLeft ? "#6366f1" : "rgba(165, 180, 252, 0.9)";
 
     const renderContent = () => {
+        if (replyMsg.moderation?.isModerated) {
+            return (
+                <Typography sx={{ fontSize: 12.5, color: textColor, fontStyle: "italic", textAlign: "left" }}>
+                    This message was removed by moderator
+                </Typography>
+            );
+        }
+
+        if (replyMsg.isRevoked) {
+            return (
+                <Typography sx={{ fontSize: 12.5, color: textColor, fontStyle: "italic", textAlign: "left" }}>
+                    This message has been revoked
+                </Typography>
+            );
+        }
 
         if (replyMsg.type === "text") {
             return (

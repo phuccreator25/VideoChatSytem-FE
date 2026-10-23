@@ -9,6 +9,7 @@ import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import type { MessageType } from "../../../../types/chat.type";
 import useDownloadFile from "../../../../helpers/client/downloadFile.helper";
 import { enqueueSnackbar } from "notistack";
@@ -25,7 +26,8 @@ type Props = {
     open: boolean;
     onClose: () => void;
     variant?: MessageMorePopoverVariant;
-    message: MessageType
+    message: MessageType;
+    onReport?: () => void;
 };
 
 type MenuItem = {
@@ -41,7 +43,8 @@ export function MessageMorePopover({
     open,
     onClose,
     variant = "text",
-    message
+    message,
+    onReport,
 }: Props) {
 
     const { onHandleDownloadFile } = useDownloadFile()
@@ -148,7 +151,21 @@ export function MessageMorePopover({
 
     const isSender = message.senderId === currentUserId;
 
+    const isReportable = message.type !== "call" && message.type !== "gif";
+
     const dangerItems: MenuItem[] = [
+        ...((isReportable && message.senderId !== currentUserId) && onReport ? [
+            {
+                key: "report",
+                label: "Report Message",
+                icon: <FlagOutlinedIcon sx={iconSx} />,
+                color: "#f59e0b",
+                onClick: () => {
+                    onClose();
+                    onReport();
+                }
+            }
+        ] : []),
         ...(isSender ? [
             {
                 key: "revoke",

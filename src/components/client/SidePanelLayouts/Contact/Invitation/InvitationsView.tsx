@@ -113,7 +113,7 @@ export default function InvitationsFrame() {
         <Stack spacing={0.75}>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: isMobile ? -0.5 : 0 }}>
             {isMobile && (
-              <IconButton onClick={() => navigate("/chat")} sx={{ color: "#13213f", p: 0.5 }}>
+              <IconButton onClick={() => navigate("/chat", { state: { rail: "contact" } })} sx={{ color: "#13213f", p: 0.5 }}>
                 <ArrowBackIosNewRoundedIcon sx={{ fontSize: 20 }} />
               </IconButton>
             )}

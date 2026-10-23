@@ -22,13 +22,12 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import TagRoundedIcon from '@mui/icons-material/TagRounded';
 import { useChatbot } from '../../../hooks/client/Chatbot/chatbot.hook';
 
-export interface ChatbotProps {
+export type ChatbotProps = {
   isOpen?: boolean;
   onClose?: () => void;
   onToggle?: () => void;
 }
 
-// 🎨 Helper Component để Format Markdown (Bullet points, Bold text, Inline code, Line breaks)
 function parseInlineMarkdown(text: string) {
   const regex = /(\*\*.*?\*\*|`.*?`)/g;
   const parts = text.split(regex);

@@ -1,6 +1,7 @@
 import axiosInterceptorAdmin from "../../config/axiosInterceptorAdmin";
 import type { typeUpdateAdmin } from "../../types/admin/profileAdmin.type";
 import type { typeLogin } from "../../types/auth.type";
+import type { avatarFile } from "../../types/upload.type";
 
 const authAdminAPI = {
     onLogin: (data: typeLogin) => axiosInterceptorAdmin.post("/admin/login", data),
@@ -9,7 +10,7 @@ const authAdminAPI = {
 
     onGetProfileAdmin: () => axiosInterceptorAdmin.get("/admin/profile"),
     onUpdateProfileAdmin: (data: typeUpdateAdmin) => axiosInterceptorAdmin.put("/admin/update-profile", data),
-    onUploadPresign: (data: { files: any; type?: string }) => axiosInterceptorAdmin.post("/admin/upload/presign", data),
+    onUploadPresign: (data: { files: avatarFile[]; type?: string }) => axiosInterceptorAdmin.post("/admin/upload/presign", data),
 }
 
 export default authAdminAPI

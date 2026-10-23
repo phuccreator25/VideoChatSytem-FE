@@ -21,7 +21,7 @@ import { TypingIndicator } from "./TypingIndicator/TypingIndicator.chat";
 import { PinnedMessageStrip } from "./PinnedMessageStrip/pinnedMessageStrip.chat";
 import { SearchDrawer } from "./SearchDrawer/SearchDrawer.chat";
 import { ProfileDrawer } from "./ProfileDrawer/ProfileDrawer.chat";
-import { MessageItemSkeleton } from "./Messages/SkeletonLoading.chat";
+import { MessageItemSkeleton } from "../Sketon/SkeletonLoading.chat";
 
 export default function ChatFrame() {
   const {

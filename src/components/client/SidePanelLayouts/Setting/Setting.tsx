@@ -21,14 +21,16 @@ import type { RailKey } from "../../../../types/layout/layout.navigation.type";
 import { SettingRow } from "./SettingRow/SettingRow.setting";
 import { RestrictedAccountsModal } from "./RestrictedAccountsModal";
 import { ActiveSessionsModal } from "./ActiveSessionsModal";
-import { PrivacySecurityModal } from "./PrivacySecurityModal";
 import useAuth from "../../../../hooks/client/Auth/auth.hook";
+import { useNavigate } from "react-router-dom";
+import { PrivacySecurityModal } from "./PrivacySecurityModal";
 
 type SettingProps = {
   onRailChange?: (key: RailKey) => void;
 };
 
 export function Setting({ onRailChange }: SettingProps) {
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [openRestrictedModal, setOpenRestrictedModal] = useState<boolean>(false);
@@ -81,7 +83,7 @@ export function Setting({ onRailChange }: SettingProps) {
       description: "Submit feedback or report system errors",
       icon: <ReportProblemOutlinedIcon />,
       onClick: () => {
-        console.log("report");
+        navigate('/report')
       },
     },
     {

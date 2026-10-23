@@ -33,6 +33,7 @@ type PreviewFiles = {
     previewUrl: string | null;
     recordDuration: number | null;
 }
+
 export const uploadControllers = new Map<string, AbortController>();
 
 export const handleCancelSingleFile = async (item: {
@@ -168,7 +169,7 @@ export const updateAvatarS3 = async (avatarFile: File) => {
     const compressed = await compressImageHelper(avatarFile);
 
     const presignURL = await uploadAPI.onPresignURL({
-        files: { fileName: compressed.name, mimeType: compressed.type, fileSize: compressed.size },
+        files: [{ fileName: compressed.name, mimeType: compressed.type, fileSize: compressed.size }],
         type: "avatar",
     });
 
@@ -191,7 +192,7 @@ export const updateAdminAvatarS3 = async (avatarFile: File) => {
     const compressed = await compressImageHelper(avatarFile);
 
     const presignURL = await authAdminAPI.onUploadPresign({
-        files: { fileName: compressed.name, mimeType: compressed.type, fileSize: compressed.size },
+        files: [{ fileName: compressed.name, mimeType: compressed.type, fileSize: compressed.size }],
         type: "avatar",
     });
 
@@ -209,6 +210,53 @@ export const updateAdminAvatarS3 = async (avatarFile: File) => {
 
     return { success: true, fileName: compressed.name };
 };
+
+export const uploadReportAttachments = async (files: File[]) => {
+    const compressedFiles = await Promise.all(files.map((file) => compressImageHelper(file)));
+    const payload = compressedFiles.map((file) => ({
+        fileName: file.name,
+        mimeType: file.type,
+        fileSize: file.size,
+    }));
+
+    const presignURL = await uploadAPI.onPresignURL({
+        files: payload,
+        type: "reports",
+    });
+
+    if (!presignURL.data.data?.[0]?.presignedUrl) {
+        enqueueSnackbar("An error occurred while uploading file. Please try again", { variant: "error" });
+        return { success: false };
+    }
+
+    const uploadRes = await Promise.allSettled(
+        presignURL.data.data.map(async (item: any, index: number) => {
+            return await putBinaryToS3(item.presignedUrl, compressedFiles[index], compressedFiles[index].type);
+        })
+    );
+
+    const successFiles: { file: File; s3Key: string }[] = [];
+    const failedFiles: { file: File; s3Key: string }[] = [];
+
+    // 4. Dùng chính INDEX để ánh xạ ngược lại mảng files gốc
+    uploadRes.forEach((res, index) => {
+        const originalFile = files[index]; // File gốc người dùng đã chọn
+
+        if (res.status === "fulfilled") {
+            successFiles.push({
+                file: originalFile,
+                s3Key: presignURL.data.data[index].s3Key,
+            });
+        } else {
+            failedFiles.push({
+                file: originalFile,
+                s3Key: presignURL.data.data[index].s3Key,
+            });
+        }
+    });
+
+    return { uploadSessionId: presignURL.data.data[0].uploadSessionId, successFiles, failedFiles };
+}
 
 window.addEventListener("pagehide", () => {
     const tempIdUploads = Array.from(uploadControllers.keys());

@@ -199,6 +199,7 @@ export function RestrictedAccountsModal({
               ),
             }}
             sx={{
+              mt: 2,
               "& .MuiOutlinedInput-root": {
                 borderRadius: 3,
                 bgcolor: "#ffffff",

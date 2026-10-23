@@ -22,7 +22,10 @@ export default function ChatLayout({ middlePanel, activeRail, onRailChange, cont
   const location = useLocation();
   const isMobile = useMediaQuery('(max-width:600px)');
 
-  const isChatActive = !!conversationId || location.pathname.includes('/invitation');
+  const isChatActive =
+    !!conversationId ||
+    location.pathname.includes('/invitation') ||
+    location.pathname.includes('/report');
 
   return (
     <ThemeProvider theme={theme}>

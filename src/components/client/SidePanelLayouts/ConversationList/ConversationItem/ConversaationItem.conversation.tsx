@@ -8,6 +8,7 @@ import type { Conversation } from "../../../../../types/conversation/conversatio
 import { COLORS } from "../../../../../utils/Colors";
 import { StatusActive } from "../DotStatusActive/StatusActiveDot.conversaation";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import { CountMessageUnread } from "../MessageUnread/CountMessageUnread.conversation";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -212,6 +213,25 @@ export function ConversationItem({ item }: { item: Conversation }) {
                                                 />
                                             ))}
                                         </Stack>
+                                    </Stack>
+                                ) : item.moderation?.isModerated ? (
+                                    <Stack direction="row" spacing={0.6} alignItems="center" sx={{ minWidth: 0 }}>
+                                        <ShieldOutlinedIcon sx={{ fontSize: 14, color: "#E11D48", flexShrink: 0 }} />
+                                        <Typography
+                                            sx={{
+                                                minWidth: 0,
+                                                fontSize: 13,
+                                                color: "#E11D48",
+                                                fontStyle: "italic",
+                                                whiteSpace: "nowrap",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                lineHeight: 1.2,
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            This message has been deleted by a moderator.
+                                        </Typography>
                                     </Stack>
                                 ) : (
                                     <>

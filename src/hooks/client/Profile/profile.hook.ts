@@ -34,6 +34,8 @@ export const useProfile = () => {
 
   useEffect(() => {
     dispatch(onGetProfile()).unwrap();
+    console.log(initialProfile);
+
   }, [dispatch]);
 
   const handleUpdateUser = async (payload: object) => {

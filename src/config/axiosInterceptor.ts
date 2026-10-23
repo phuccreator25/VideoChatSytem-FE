@@ -44,6 +44,11 @@ axiosInterceptor.interceptors.response.use(
     const message =
       error.response?.data?.message || error.message || 'An error occurred'
 
+    const isBanned = error.response?.data?.isBanned
+    if (isBanned) {
+      return Promise.reject(error)
+    }
+
     if (!isUnauthorized || isRefreshRequest || isLoginRequest) {
       enqueueSnackbar(message, { variant: 'error' })
       return Promise.reject(error)

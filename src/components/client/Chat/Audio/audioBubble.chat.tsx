@@ -8,7 +8,7 @@ import { ChatTime } from "../ChatTime/ChatTime.chat";
 import { MessageStatus } from "../Status/messageStatus.chat";
 import { COLORS } from "../../../../utils/Colors";
 
-export interface AudioBubbleProps {
+export type AudioBubbleProps = {
   src: string;
   durationProp?: number | null;
   isLeft: boolean;

@@ -11,3 +11,4 @@ export const roleLabel: Record<string, string> = {
     client: "Client",
 };
 
+export const EMAIL_ADDRESS = 'nguyentruongphuc.25022004@gmail.com'

@@ -7,6 +7,11 @@ export type ProfileData = {
   avatar: string;
   email: string;
   isActive?: boolean;
+  warningAccount?: number;
+  warning?: Array<{
+    reason: string;
+    warningAt: string;
+  }>
 };
 
 export type FileItem = {

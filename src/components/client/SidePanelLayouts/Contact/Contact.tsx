@@ -20,7 +20,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../../../../redux/store";
 import { useContact } from "../../../../hooks/client/Contact/contact.hook";
 import { useBlock } from "../../../../hooks/client/Block/block.hook";
-import { ContactRowSkeleton } from "./Skeleton/skeleton.contact";
+import { ContactRowSkeleton } from "../../Sketon/skeleton.contact";
 
 export function ContactsView() {
   const theme = useTheme();
