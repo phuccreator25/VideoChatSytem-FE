@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
@@ -70,7 +70,7 @@ export const AccountWarningSection = ({ profile } : AccountWarningSectionProps) 
           const meta = getWarningReasonMeta(item.reason);
           return (
             <Box key={idx} sx={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.95)", lineHeight: 1.35 }}>
-              <b>• Times {idx + 1}:</b> {meta.label}
+              <b>• Times {idx + 1}:</b> {meta?.label}
               {item.warningAt && (
                 <Box component="span" sx={{ display: "block", fontSize: "10px", color: "rgba(255, 255, 255, 0.7)", pl: 1 }}>
                   {formatDate(item.warningAt, true)}
@@ -303,7 +303,7 @@ export const AccountWarningSection = ({ profile } : AccountWarningSectionProps) 
                     </Box>
 
                     <Box sx={{ color: isItemLevel2 ? "#E11D48" : "#D97706", display: "flex", flexShrink: 0 }}>
-                      {meta.icon}
+                      {meta?.icon}
                     </Box>
 
                     <Box sx={{ minWidth: 0 }}>
@@ -317,7 +317,7 @@ export const AccountWarningSection = ({ profile } : AccountWarningSectionProps) 
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {meta.label}
+                        {meta?.label}
                       </Typography>
                     </Box>
                   </Box>
