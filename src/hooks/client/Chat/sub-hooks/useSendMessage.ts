@@ -319,6 +319,14 @@ export const useSendMessage = ({
 
     let payload: SendMessagePayload;
 
+    const isRealDbMessage = Boolean(
+      messageFailed.id &&
+      !messageFailed.id.startsWith("temp-") &&
+      messageFailed.id !== messageFailed.tempMessageId
+    );
+
+    const isResendExisting = isRealDbMessage && type === ChatItemTypes.FILE;
+
     if (type === ChatItemTypes.FILE) {
       payload = {
         messageId: messageFailed?.id,
@@ -355,7 +363,7 @@ export const useSendMessage = ({
       };
     }
 
-    await handleSendMessage(payload, (messageFailed.attachments as any[]) || [], tempMessageId, true);
+    await handleSendMessage(payload, (messageFailed.attachments as any[]) || [], tempMessageId, isResendExisting);
   };
 
   const handleUploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
