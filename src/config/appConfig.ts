@@ -1,8 +1,8 @@
 export const CONFIG = {
-  API_HOST: "http://localhost:3000/api",
-  APP_HOST: "http://localhost:5173",
-  // APP_HOST: "https://videochatsystem-fe.vercel.app",
-  // API_HOST: "https://videochatsytem-be.onrender.com/api",
+  // API_HOST: "http://localhost:3000/api",
+  // APP_HOST: "http://localhost:5173",
+  APP_HOST: "https://visionnary.site",
+  API_HOST: "https://visionnary.site/api",
   // API_HOST: "http://localhost:30002/api",
   // APP_HOST: "http://localhost:30081",
   MODE: "development",
