@@ -6,6 +6,7 @@ import type { RootState } from "../../../redux/store";
 import type { IAdminReportItem, AdminResolutionAction } from "../../../types/admin/reportAdmin.type";
 import { MediaPreviewModal } from "../../client/Chat/Dialog/MediaPreviewModal";
 import useDownloadFile from "../../../helpers/client/downloadFile.helper";
+import { useBanDuration } from "../../../hooks/admin/useBanDuration.hook";
 
 // Subcomponents
 import { ReportDrawerHeader } from "./subcomponents/ReportDrawerHeader";
@@ -41,9 +42,9 @@ export const ReportInspectorDrawer: React.FC<ReportInspectorDrawerProps> = ({
   const [selectedActions, setSelectedActions] = useState<AdminResolutionAction[]>([]);
   const [feedbackText, setFeedbackText] = useState(report?.feedbackToReporter || "");
   const [internalNotes, setInternalNotes] = useState(report?.adminNotes || "");
-  const [banDurationType, setBanDurationType] = useState<"permanent" | "temporary">("permanent");
-  const [banPreset, setBanPreset] = useState<string>("7d");
-  const [customUnbanDate, setCustomUnbanDate] = useState<string>("");
+
+  const isBannedSelected = selectedActions.includes("banned_user");
+  const banDuration = useBanDuration({ isEnabled: isBannedSelected });
 
   const [openMediaPreview, setOpenMediaPreview] = useState<boolean>(false);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -77,17 +78,7 @@ export const ReportInspectorDrawer: React.FC<ReportInspectorDrawerProps> = ({
       setFeedbackText(report.feedbackToReporter || "");
       setInternalNotes(report.adminNotes || "");
 
-      if (report.unBannedAt) {
-        setBanDurationType("temporary");
-        setBanPreset("custom");
-        const dateStr = new Date(report.unBannedAt).toISOString().slice(0, 16);
-        setCustomUnbanDate(dateStr);
-      } else {
-        setBanDurationType("permanent");
-        setBanPreset("7d");
-        const defaultCustom = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
-        setCustomUnbanDate(defaultCustom);
-      }
+      banDuration.setFromExistingDate(report.unBannedAt);
     }
   }, [report?.id, report?.resolutionActions, report?.feedbackToReporter, report?.adminNotes, report?.unBannedAt]);
 
@@ -115,34 +106,6 @@ export const ReportInspectorDrawer: React.FC<ReportInspectorDrawerProps> = ({
       }
     });
   };
-
-  const isBannedSelected = selectedActions.includes("banned_user");
-
-  const computedUnbanDate = useMemo(() => {
-    if (!isBannedSelected || banDurationType === "permanent") {
-      return null;
-    }
-    const now = new Date();
-    if (banPreset === "1d") {
-      return new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000);
-    }
-    if (banPreset === "3d") {
-      return new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-    }
-    if (banPreset === "7d") {
-      return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    }
-    if (banPreset === "14d") {
-      return new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-    }
-    if (banPreset === "30d") {
-      return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    }
-    if (banPreset === "custom") {
-      return customUnbanDate ? new Date(customUnbanDate) : null;
-    }
-    return null;
-  }, [isBannedSelected, banDurationType, banPreset, customUnbanDate]);
 
   if (!report) return null;
 
@@ -172,8 +135,8 @@ export const ReportInspectorDrawer: React.FC<ReportInspectorDrawerProps> = ({
     try {
       setIsResolving(true);
       const unBannedAt =
-        status === "resolved" && isBannedSelected && banDurationType === "temporary" && computedUnbanDate
-          ? computedUnbanDate.toISOString()
+        status === "resolved" && isBannedSelected
+          ? banDuration.getUnbanDateISO()
           : null;
 
       const actionsToSubmit =
@@ -293,13 +256,13 @@ export const ReportInspectorDrawer: React.FC<ReportInspectorDrawerProps> = ({
             selectedActions={selectedActions}
             onToggleAction={handleToggleAction}
             isFinished={isFinished}
-            banDurationType={banDurationType}
-            setBanDurationType={setBanDurationType}
-            banPreset={banPreset}
-            setBanPreset={setBanPreset}
-            customUnbanDate={customUnbanDate}
-            setCustomUnbanDate={setCustomUnbanDate}
-            computedUnbanDate={computedUnbanDate}
+            banDurationType={banDuration.banDurationType}
+            setBanDurationType={banDuration.setBanDurationType}
+            banPreset={banDuration.banPreset}
+            setBanPreset={banDuration.setBanPreset}
+            customUnbanDate={banDuration.customUnbanDate}
+            setCustomUnbanDate={banDuration.setCustomUnbanDate}
+            computedUnbanDate={banDuration.computedUnbanDate}
             reportUnBannedAt={report.unBannedAt}
           />
 

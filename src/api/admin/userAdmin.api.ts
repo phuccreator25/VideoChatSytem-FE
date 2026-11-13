@@ -18,8 +18,8 @@ const userAdminAPI = {
     onUpdateAdmin: ({ updatedAdmin }: { updatedAdmin: typeDataUpdateUser }) =>
         axiosInterceptorAdmin.put(`/admin/update-admin/${updatedAdmin._id}`, updatedAdmin),
 
-    onBanAdmin: ({ _id, banReason }: { _id: string, banReason: string }) =>
-        axiosInterceptorAdmin.put(`/admin/ban-user/${_id}`, { banReason }),
+    onBanAdmin: ({ _id, banReason, unBannedAt }: { _id: string, banReason: string, unBannedAt?: string | null }) =>
+        axiosInterceptorAdmin.put(`/admin/ban-user/${_id}`, { banReason, unBannedAt }),
 
     onUnbanAdmin: (_id: string) =>
         axiosInterceptorAdmin.put(`/admin/unban-user/${_id}`),

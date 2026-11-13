@@ -109,10 +109,10 @@ export default function useUserAdmin() {
         }
     }
 
-    const onBanAdmin = async ({ _id, banReason }: { _id: string, banReason: string }) => {
+    const onBanAdmin = async ({ _id, banReason, unBannedAt }: { _id: string, banReason: string, unBannedAt?: string | null }) => {
         try {
             if (!_id || !banReason) return;
-            const res = await userAdminAPI.onBanAdmin({ _id, banReason });
+            const res = await userAdminAPI.onBanAdmin({ _id, banReason, unBannedAt });
 
             if (res.status === 200) {
                 enqueueSnackbar('User banned successfully', {

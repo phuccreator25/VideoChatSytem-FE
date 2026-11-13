@@ -83,7 +83,7 @@ export function Setting({ onRailChange }: SettingProps) {
       description: "Submit feedback or report system errors",
       icon: <ReportProblemOutlinedIcon />,
       onClick: () => {
-        navigate('/report')
+        navigate('/report?page=1')
       },
     },
     {

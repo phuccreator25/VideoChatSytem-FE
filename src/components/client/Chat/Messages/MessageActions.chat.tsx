@@ -193,7 +193,7 @@ export function MessageActions({
         onReport={() => setIsReportOpen(true)}
       />
 
-      {(isReportable && isLeft) && (
+      {(isReportable && isLeft && isReportOpen ) && (
         <ReportModal
           open={isReportOpen}
           onClose={() => setIsReportOpen(false)}

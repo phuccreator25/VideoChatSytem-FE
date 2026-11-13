@@ -61,7 +61,11 @@ export const UserDetailModal = ({
           bgcolor: "#FFFFFF",
           color: "#0F172A",
           boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
-          p: 1,
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          p: 0,
         },
       }}
     >
@@ -72,8 +76,9 @@ export const UserDetailModal = ({
           alignItems: "flex-start",
           justifyContent: "space-between",
           px: 3,
-          pt: 3,
-          pb: 2,
+          pt: 2.5,
+          pb: 1.5,
+          flexShrink: 0,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.75 }}>
@@ -133,7 +138,30 @@ export const UserDetailModal = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ px: 3, py: 2 }}>
+      <DialogContent
+        sx={{
+          px: 3,
+          py: 1.5,
+          flexGrow: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          "&::-webkit-scrollbar": {
+            width: "6px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: "transparent",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: "#E2E8F0",
+            borderRadius: "10px",
+            "&:hover": {
+              background: "#CBD5E1",
+            },
+          },
+          scrollbarWidth: "thin",
+          scrollbarColor: "#E2E8F0 transparent",
+        }}
+      >
         {/* User Profile Header Card */}
         <Box
           sx={{
@@ -238,7 +266,7 @@ export const UserDetailModal = ({
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+            gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
             gap: 2,
             mb: 3,
           }}
@@ -656,12 +684,12 @@ export const UserDetailModal = ({
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+                  gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" },
                   gap: 1.5,
                   mb: 1.5,
                 }}
               >
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <Typography
                     variant="caption"
                     sx={{ color: "#991B1B", display: "block" }}
@@ -670,13 +698,18 @@ export const UserDetailModal = ({
                   </Typography>
                   <Typography
                     variant="body2"
-                    sx={{ fontWeight: 600, color: "#7F1D1D" }}
+                    sx={{
+                      fontWeight: 600,
+                      color: "#7F1D1D",
+                      fontSize: "0.825rem",
+                      wordBreak: "break-word",
+                    }}
                   >
                     {formatDate(user.bannedAt, true)}
                   </Typography>
                 </Box>
 
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <Typography
                     variant="caption"
                     sx={{ color: "#991B1B", display: "block" }}
@@ -685,9 +718,36 @@ export const UserDetailModal = ({
                   </Typography>
                   <Typography
                     variant="body2"
-                    sx={{ fontWeight: 600, color: "#7F1D1D" }}
+                    sx={{
+                      fontWeight: 600,
+                      color: "#7F1D1D",
+                      fontSize: "0.825rem",
+                      wordBreak: "break-word",
+                    }}
                   >
                     {user.bannedByInfo?.fullname || user.bannedByInfo?.username}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "#991B1B", display: "block" }}
+                  >
+                    Unban Date:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#7F1D1D",
+                      fontSize: "0.825rem",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {user.unBannedAt
+                      ? formatDate(user.unBannedAt, true)
+                      : "Permanent"}
                   </Typography>
                 </Box>
               </Box>
@@ -725,10 +785,12 @@ export const UserDetailModal = ({
         <DialogActions
           sx={{
             px: 3,
-            pb: 2.5,
-            pt: 1.5,
+            py: 2,
             justifyContent: "space-between",
             alignItems: "center",
+            flexShrink: 0,
+            borderTop: "1px solid #F1F5F9",
+            bgcolor: "#FFFFFF",
           }}
         >
           {user.isBanned ? (

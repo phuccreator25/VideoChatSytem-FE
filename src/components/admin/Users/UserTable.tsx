@@ -261,10 +261,25 @@ export const UserTable = ({
 
                   {/* Ban Status */}
                   <TableCell sx={{ py: 1.75 }}>
-                    <UserStatusBadge
-                      variant={user.isBanned ? "banned" : "normal"}
-                      label={user.isBanned ? "Banned" : "Normal"}
-                    />
+                    {user.isBanned ? (
+                      <Tooltip
+                        title={
+                          user.unBannedAt
+                            ? `Temporary Ban until: ${formatDate(user.unBannedAt, true)}`
+                            : "Permanent Ban (No auto-release)"
+                        }
+                        arrow
+                      >
+                        <Box sx={{ display: "inline-block" }}>
+                          <UserStatusBadge
+                            variant="banned"
+                            label={user.unBannedAt ? "Banned (Temp)" : "Banned"}
+                          />
+                        </Box>
+                      </Tooltip>
+                    ) : (
+                      <UserStatusBadge variant="normal" label="Normal" />
+                    )}
                   </TableCell>
 
                   {/* Last Seen */}

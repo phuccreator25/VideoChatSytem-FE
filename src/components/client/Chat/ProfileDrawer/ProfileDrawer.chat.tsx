@@ -132,7 +132,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       />
 
       {/* Report Account Modal */}
-      <ReportModal
+      {(isReportModalOpen) && (
+        <ReportModal
         open={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         targetType="account"
@@ -150,7 +151,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               }
             : undefined
         }
-      />
+        />
+      )}
     </Box>
   );
 }

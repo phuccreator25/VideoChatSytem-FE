@@ -7,6 +7,7 @@ import TextField from "@mui/material/TextField";
 import AccessTimeFilledRoundedIcon from "@mui/icons-material/AccessTimeFilledRounded";
 import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import { formatDate } from "../../../../helpers/formatDate.helper";
+import { PRESET_OPTIONS } from "../../../../hooks/admin/useBanDuration.hook";
 
 type ReportBanDurationBoxProps = {
   isFinished: boolean;
@@ -19,15 +20,6 @@ type ReportBanDurationBoxProps = {
   computedUnbanDate: Date | null;
   reportUnBannedAt?: string | null;
 }
-
-const PRESET_OPTIONS = [
-  { label: "1 day", value: "1d" },
-  { label: "3 days", value: "3d" },
-  { label: "7 days", value: "7d" },
-  { label: "14 days", value: "14d" },
-  { label: "30 days", value: "30d" },
-  { label: "Custom date", value: "custom" },
-];
 
 export const ReportBanDurationBox = ({
   isFinished,

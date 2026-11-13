@@ -18,12 +18,22 @@ import GppBadRoundedIcon from "@mui/icons-material/GppBadRounded";
 import type { AdminUserItem } from "../../../types/admin/userAdmin.type";
 import { useForm } from "react-hook-form";
 import { enqueueSnackbar } from "notistack";
+import { ReportBanDurationBox } from "../Reports/subcomponents/ReportBanDurationBox";
+import { useBanDuration } from "../../../hooks/admin/useBanDuration.hook";
 
 type UserBanModalProps = {
   user: AdminUserItem | null;
   open: boolean;
   onClose: () => void;
-  onConfirmBan: ({_id, banReason}: {_id: string, banReason: string}) => void;
+  onConfirmBan: ({
+    _id,
+    banReason,
+    unBannedAt,
+  }: {
+    _id: string;
+    banReason: string;
+    unBannedAt?: string | null;
+  }) => void;
 };
 
 const quickBanReasons = [
@@ -52,11 +62,14 @@ export const UserBanModal = ({
     mode: "onBlur",
   });
 
+  const banDuration = useBanDuration();
+
   const banReason = watch("banReason") || "";
 
   const handleClose = () => {
     onClose();
     reset();
+    banDuration.resetBanDuration();
   };
 
   const handleSelectQuickReason = (quickReason: string) => {
@@ -65,15 +78,25 @@ export const UserBanModal = ({
   };
 
   const onSubmit = async (data: { banReason: string }) => {
-    if(!user) return;
+    if (!user) return;
 
     if (!data.banReason.trim()) {
-      enqueueSnackbar("Please provide a specific reason for banning this account.", {variant: "error"});
+      enqueueSnackbar("Please provide a specific reason for banning this account.", { variant: "error" });
       return;
     }
 
-    await onConfirmBan({_id:user?._id, banReason:data.banReason.trim()});
-    reset();
+    if (banDuration.banDurationType === "temporary" && !banDuration.computedUnbanDate) {
+      enqueueSnackbar("Please select a valid unban date.", { variant: "error" });
+      return;
+    }
+
+    const unBannedAt = banDuration.getUnbanDateISO();
+
+    await onConfirmBan({
+      _id: user._id,
+      banReason: data.banReason.trim(),
+      unBannedAt,
+    });
     handleClose();
   };
 
@@ -87,12 +110,26 @@ export const UserBanModal = ({
         sx: {
           borderRadius: "16px",
           bgcolor: "#FFFFFF",
-          p: 1,
           boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          p: 0,
         },
       }}
     >
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          maxHeight: "90vh",
+          overflow: "hidden",
+        }}
+      >
         {/* Modal Header */}
         <DialogTitle
           sx={{
@@ -100,8 +137,9 @@ export const UserBanModal = ({
             alignItems: "flex-start",
             justifyContent: "space-between",
             px: 3,
-            pt: 3,
-            pb: 3,
+            pt: 2.5,
+            pb: 1.5,
+            flexShrink: 0,
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.75 }}>
@@ -160,12 +198,34 @@ export const UserBanModal = ({
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ py: 2 }}>
+        <DialogContent
+          sx={{
+            px: 3,
+            py: 1.5,
+            flexGrow: 1,
+            overflowY: "auto",
+            "&::-webkit-scrollbar": {
+              width: "6px",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "#E2E8F0",
+              borderRadius: "10px",
+              "&:hover": {
+                background: "#CBD5E1",
+              },
+            },
+            scrollbarWidth: "thin",
+            scrollbarColor: "#E2E8F0 transparent",
+          }}
+        >
           {/* Target User Info Summary Card */}
           <Box
             sx={{
-              p: 2,
-              mb: 2.5,
+              p: 1.75,
+              mb: 1.75,
               borderRadius: "12px",
               bgcolor: "#F8FAFC",
               border: "1px solid #E2E8F0",
@@ -216,7 +276,7 @@ export const UserBanModal = ({
             severity="error"
             icon={<WarningAmberRoundedIcon sx={{ fontSize: 20, color: "#DC2626" }} />}
             sx={{
-              mb: 2.5,
+              mb: 1.75,
               borderRadius: "10px",
               fontSize: "0.825rem",
               bgcolor: "rgba(239, 68, 68, 0.06)",
@@ -226,6 +286,20 @@ export const UserBanModal = ({
           >
             <strong>Warning:</strong> The user will be immediately disconnected from any live video/chat rooms and blocked from signing in until unbanned.
           </Alert>
+
+          {/* Ban Duration Section */}
+          <Box sx={{ mb: 1.75 }}>
+            <ReportBanDurationBox
+              isFinished={isSubmitting}
+              banDurationType={banDuration.banDurationType}
+              setBanDurationType={banDuration.setBanDurationType}
+              banPreset={banDuration.banPreset}
+              setBanPreset={banDuration.setBanPreset}
+              customUnbanDate={banDuration.customUnbanDate}
+              setCustomUnbanDate={banDuration.setCustomUnbanDate}
+              computedUnbanDate={banDuration.computedUnbanDate}
+            />
+          </Box>
 
           {/* Reason Input */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
@@ -286,7 +360,17 @@ export const UserBanModal = ({
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, pb: 2, justifyContent: "flex-end", gap: 1 }}>
+        <DialogActions
+          sx={{
+            px: 3,
+            py: 2,
+            justifyContent: "flex-end",
+            gap: 1,
+            flexShrink: 0,
+            borderTop: "1px solid #F1F5F9",
+            bgcolor: "#FFFFFF",
+          }}
+        >
           <Button
             onClick={handleClose}
             sx={{ textTransform: "none", color: "#64748B", fontWeight: 600 }}

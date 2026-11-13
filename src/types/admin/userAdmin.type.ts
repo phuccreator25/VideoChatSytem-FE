@@ -11,6 +11,7 @@ export type AdminUserItem = {
   bannedBy: null | string,
   banReason: null | string,
   bannedAt: null | string,
+  unBannedAt?: null | string,
   lastSeenAt: string,
   createdAt: string,
   updatedAt: string,
